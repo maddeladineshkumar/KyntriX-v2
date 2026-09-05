@@ -1,0 +1,118 @@
+{
+  "id": "skeleton_PPPRR",
+  "name": "Skeleton PPPRR",
+  "manufacturer": "Generic",
+  "model": "5-DOF PPPRR",
+  "dof": 5,
+  "dhConvention": "standard",
+  "joints": [
+    {
+      "id": "PPPRR_j1",
+      "name": "Joint 1 (P)",
+      "index": 0,
+      "type": "prismatic",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": 0.0,
+      "max": 0.5,
+      "home": 0.1
+    },
+    {
+      "id": "PPPRR_j2",
+      "name": "Joint 2 (P)",
+      "index": 1,
+      "type": "prismatic",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": 0.0,
+      "max": 0.5,
+      "home": 0.1
+    },
+    {
+      "id": "PPPRR_j3",
+      "name": "Joint 3 (P)",
+      "index": 2,
+      "type": "prismatic",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": 0.0,
+      "max": 0.5,
+      "home": 0.1
+    },
+    {
+      "id": "PPPRR_j4",
+      "name": "Joint 4 (R)",
+      "index": 3,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.3,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -3.141592653589793,
+      "max": 3.141592653589793,
+      "home": 0.0
+    },
+    {
+      "id": "PPPRR_j5",
+      "name": "Joint 5 (R)",
+      "index": 4,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.254,
+      "alpha": -1.5707963267948966,
+      "offset": 0.0,
+      "min": -3.141592653589793,
+      "max": 3.141592653589793,
+      "home": 0.5235987755982988
+    }
+  ],
+  "links": [
+    {
+      "id": "PPPRR_link0",
+      "name": "Base",
+      "index": 0,
+      "color": "#64748b"
+    },
+    {
+      "id": "PPPRR_link1",
+      "name": "Link 1",
+      "index": 1,
+      "color": "#3b82f6"
+    },
+    {
+      "id": "PPPRR_link2",
+      "name": "Link 2",
+      "index": 2,
+      "color": "#f97316"
+    },
+    {
+      "id": "PPPRR_link3",
+      "name": "Link 3",
+      "index": 3,
+      "color": "#06b6d4"
+    },
+    {
+      "id": "PPPRR_link4",
+      "name": "Link 4",
+      "index": 4,
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "PPPRR_link5",
+      "name": "Link 5",
+      "index": 5,
+      "color": "#10b981"
+    }
+  ]
+}

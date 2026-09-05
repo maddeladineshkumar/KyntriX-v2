@@ -1,0 +1,38 @@
+{
+  "id": "skeleton_1P",
+  "name": "Skeleton 1P",
+  "manufacturer": "Generic",
+  "model": "1-DOF 1P",
+  "dof": 1,
+  "dhConvention": "standard",
+  "joints": [
+    {
+      "id": "1P_j1",
+      "name": "Joint 1 (P)",
+      "index": 0,
+      "type": "prismatic",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.15,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": 0.0,
+      "max": 0.5,
+      "home": 0.05
+    }
+  ],
+  "links": [
+    {
+      "id": "1P_link0",
+      "name": "Base",
+      "index": 0,
+      "color": "#64748b"
+    },
+    {
+      "id": "1P_link1",
+      "name": "Link 1",
+      "index": 1,
+      "color": "#3b82f6"
+    }
+  ]
+}

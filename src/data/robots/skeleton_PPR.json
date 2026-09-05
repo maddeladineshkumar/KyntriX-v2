@@ -1,0 +1,78 @@
+{
+  "id": "skeleton_PPR",
+  "name": "Skeleton PPR",
+  "manufacturer": "Generic",
+  "model": "3-DOF PPR",
+  "dof": 3,
+  "dhConvention": "standard",
+  "joints": [
+    {
+      "id": "PPR_j1",
+      "name": "Joint 1 (P)",
+      "index": 0,
+      "type": "prismatic",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.1,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": 0.0,
+      "max": 0.5,
+      "home": 0.1
+    },
+    {
+      "id": "PPR_j2",
+      "name": "Joint 2 (P)",
+      "index": 1,
+      "type": "prismatic",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.1,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": 0.0,
+      "max": 0.5,
+      "home": 0.1
+    },
+    {
+      "id": "PPR_j3",
+      "name": "Joint 3 (R)",
+      "index": 2,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.05,
+      "a": 0.08,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -3.141592653589793,
+      "max": 3.141592653589793,
+      "home": 1.5707963267948966
+    }
+  ],
+  "links": [
+    {
+      "id": "PPR_link0",
+      "name": "Base",
+      "index": 0,
+      "color": "#64748b"
+    },
+    {
+      "id": "PPR_link1",
+      "name": "Link 1",
+      "index": 1,
+      "color": "#3b82f6"
+    },
+    {
+      "id": "PPR_link2",
+      "name": "Link 2",
+      "index": 2,
+      "color": "#f97316"
+    },
+    {
+      "id": "PPR_link3",
+      "name": "Link 3",
+      "index": 3,
+      "color": "#06b6d4"
+    }
+  ]
+}

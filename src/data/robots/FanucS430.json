@@ -1,0 +1,280 @@
+{
+  "id": "FanucS430",
+  "name": "FanucS430i",
+  "manufacturer": "Fanuc",
+  "model": "S 430i",
+  "dof": 6,
+  "dhConvention": "standard",
+  "joints": [
+    {
+      "id": "FanucS430_joint1",
+      "name": "Joint 1",
+      "index": 0,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.74,
+      "a": 0.305,
+      "alpha": -1.5707963267948966,
+      "offset": 0.0,
+      "min": -3.141592653589793,
+      "max": 3.141592653589793,
+      "home": 0.0
+    },
+    {
+      "id": "FanucS430_joint2",
+      "name": "Joint 2",
+      "index": 1,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 1.075,
+      "alpha": -3.141592653589793,
+      "offset": 0.0,
+      "min": -2.6179938779914944,
+      "max": -0.2617993877991494,
+      "home": -1.5707963267948966
+    },
+    {
+      "id": "FanucS430_joint3",
+      "name": "Joint 3",
+      "index": 2,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.25,
+      "alpha": -1.5707963267948966,
+      "offset": 0.0,
+      "min": -2.321287905152458,
+      "max": 3.9968039870670147,
+      "home": 0.0
+    },
+    {
+      "id": "FanucS430_joint4",
+      "name": "Joint 4",
+      "index": 3,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": -1.2750000000000001,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -6.283185307179586,
+      "max": 6.283185307179586,
+      "home": 0.0
+    },
+    {
+      "id": "FanucS430_joint5",
+      "name": "Joint 5",
+      "index": 4,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -2.181661564992912,
+      "max": 2.181661564992912,
+      "home": -1.5707963267948966
+    },
+    {
+      "id": "FanucS430_joint6",
+      "name": "Joint 6",
+      "index": 5,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.24,
+      "a": 0.0,
+      "alpha": 0.0,
+      "offset": 0.0,
+      "min": -6.283185307179586,
+      "max": 6.283185307179586,
+      "home": 0.0
+    }
+  ],
+  "links": [
+    {
+      "id": "FanucS430_link0",
+      "name": "Base",
+      "index": 0,
+      "meshFile": "/models/FanucS430/link0.stl",
+      "color": "#71717a",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "FanucS430_link1",
+      "name": "Link 1",
+      "index": 1,
+      "meshFile": "/models/FanucS430/link1.stl",
+      "color": "#a0522d",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "FanucS430_link2",
+      "name": "Link 2",
+      "index": 2,
+      "meshFile": "/models/FanucS430/link2.stl",
+      "color": "#cd853f",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "FanucS430_link3",
+      "name": "Link 3",
+      "index": 3,
+      "meshFile": "/models/FanucS430/link3.stl",
+      "color": "#d8b4e2",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "FanucS430_link4",
+      "name": "Link 4",
+      "index": 4,
+      "meshFile": "/models/FanucS430/link4.stl",
+      "color": "#a0522d",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "FanucS430_link5",
+      "name": "Link 5",
+      "index": 5,
+      "meshFile": "/models/FanucS430/link5.stl",
+      "color": "#cd853f",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "FanucS430_link6",
+      "name": "Link 6",
+      "index": 6,
+      "meshFile": "/models/FanucS430/link6.stl",
+      "color": "#eab308",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    }
+  ],
+  "payload": 125.0,
+  "totalWeight": 1300.0
+}

@@ -1,0 +1,364 @@
+{
+  "id": "ABBIRB1410",
+  "name": "ABBIRB1410",
+  "manufacturer": "ABB",
+  "model": "IRB 1410",
+  "dof": 6,
+  "dhConvention": "standard",
+  "joints": [
+    {
+      "id": "ABBIRB1410_joint1",
+      "name": "Joint 1",
+      "index": 0,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.47500000000000003,
+      "a": 0.17,
+      "alpha": -1.5707963267948966,
+      "offset": 0.0,
+      "min": -2.9670597283903604,
+      "max": 2.9670597283903604,
+      "home": 0.0
+    },
+    {
+      "id": "ABBIRB1410_joint2",
+      "name": "Joint 2",
+      "index": 1,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.6,
+      "alpha": 0.0,
+      "offset": 0.0,
+      "min": -2.792526803190927,
+      "max": -0.3490658503988659,
+      "home": -1.5707963267948966
+    },
+    {
+      "id": "ABBIRB1410_joint3",
+      "name": "Joint 3",
+      "index": 2,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.12,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -1.1344640137963142,
+      "max": 1.2217304763960306,
+      "home": 0.0
+    },
+    {
+      "id": "ABBIRB1410_joint4",
+      "name": "Joint 4",
+      "index": 3,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": -0.72,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -2.6179938779914944,
+      "max": 2.6179938779914944,
+      "home": 0.0
+    },
+    {
+      "id": "ABBIRB1410_joint5",
+      "name": "Joint 5",
+      "index": 4,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -2.007128639793479,
+      "max": 2.007128639793479,
+      "home": -1.5707963267948966
+    },
+    {
+      "id": "ABBIRB1410_joint6",
+      "name": "Joint 6",
+      "index": 5,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.085,
+      "a": 0.0,
+      "alpha": 0.0,
+      "offset": 0.0,
+      "min": -5.235987755982989,
+      "max": 5.235987755982989,
+      "home": 0.0
+    }
+  ],
+  "links": [
+    {
+      "id": "ABBIRB1410_link0",
+      "name": "Base",
+      "index": 0,
+      "meshFile": "/models/ABBIRB1410/link0.stl",
+      "color": "#a0522d",
+      "massProperty": {
+        "mass": 68.549,
+        "ixx": 0.936,
+        "iyy": 1.911,
+        "izz": 2.63,
+        "ixy": -0.001,
+        "ixz": 0.098,
+        "iyz": 0.001
+      },
+      "centerOfMass": [
+        -0.112,
+        -0.0,
+        0.058
+      ],
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "ABBIRB1410_link1",
+      "name": "Link 1",
+      "index": 1,
+      "meshFile": "/models/ABBIRB1410/link1.stl",
+      "color": "#71717a",
+      "massProperty": {
+        "mass": 85.711,
+        "ixx": 2.858,
+        "iyy": 2.618,
+        "izz": 2.171,
+        "ixy": 0.611,
+        "ixz": 0.071,
+        "iyz": -0.002
+      },
+      "centerOfMass": [
+        -0.122,
+        0.13,
+        0.005
+      ],
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "ABBIRB1410_link2",
+      "name": "Link 2",
+      "index": 2,
+      "meshFile": "/models/ABBIRB1410/link2.stl",
+      "color": "#cd853f",
+      "massProperty": {
+        "mass": 20.44,
+        "ixx": 0.049,
+        "iyy": 0.759,
+        "izz": 0.76,
+        "ixy": -0.001,
+        "ixz": 0.002,
+        "iyz": 0.001
+      },
+      "centerOfMass": [
+        -0.332,
+        0.026,
+        -0.009
+      ],
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "ABBIRB1410_link3",
+      "name": "Link 3",
+      "index": 3,
+      "meshFile": "/models/ABBIRB1410/link3.stl",
+      "color": "#f97316",
+      "massProperty": {
+        "mass": 19.939,
+        "ixx": 0.214,
+        "iyy": 0.194,
+        "izz": 0.15,
+        "ixy": 0.014,
+        "ixz": 0.02,
+        "iyz": -0.022
+      },
+      "centerOfMass": [
+        -0.012,
+        -0.028,
+        -0.033
+      ],
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "ABBIRB1410_link4",
+      "name": "Link 4",
+      "index": 4,
+      "meshFile": "/models/ABBIRB1410/link4.stl",
+      "color": "#a0522d",
+      "massProperty": {
+        "mass": 29.522,
+        "ixx": 2.804,
+        "iyy": 0.062,
+        "izz": 2.806,
+        "ixy": 0.0,
+        "ixz": -0.004,
+        "iyz": 0.0
+      },
+      "centerOfMass": [
+        -0.0,
+        0.535,
+        0.0
+      ],
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "ABBIRB1410_link5",
+      "name": "Link 5",
+      "index": 5,
+      "meshFile": "/models/ABBIRB1410/link5.stl",
+      "color": "#9400d3",
+      "massProperty": {
+        "mass": 0.794,
+        "ixx": 0.001,
+        "iyy": 0.001,
+        "izz": 0.0,
+        "ixy": 0.0,
+        "ixz": 0.0,
+        "iyz": -0.0
+      },
+      "centerOfMass": [
+        -0.0,
+        -0.0,
+        0.008
+      ],
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "ABBIRB1410_link6",
+      "name": "Link 6",
+      "index": 6,
+      "meshFile": "/models/ABBIRB1410/link6.stl",
+      "color": "#ef4444",
+      "massProperty": {
+        "mass": 0.046,
+        "ixx": 0.0,
+        "iyy": 0.0,
+        "izz": 0.0,
+        "ixy": 0.0,
+        "ixz": -0.0,
+        "iyz": -0.0
+      },
+      "centerOfMass": [
+        0.0,
+        0.0,
+        -0.006
+      ],
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    }
+  ],
+  "payload": 5.0,
+  "totalWeight": 225.0
+}

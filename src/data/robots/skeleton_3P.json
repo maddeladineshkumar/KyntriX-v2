@@ -1,0 +1,78 @@
+{
+  "id": "skeleton_3P",
+  "name": "Skeleton 3P",
+  "manufacturer": "Generic",
+  "model": "3-DOF 3P",
+  "dof": 3,
+  "dhConvention": "standard",
+  "joints": [
+    {
+      "id": "3P_j1",
+      "name": "Joint 1 (P)",
+      "index": 0,
+      "type": "prismatic",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": 0.0,
+      "max": 0.5,
+      "home": 0.1
+    },
+    {
+      "id": "3P_j2",
+      "name": "Joint 2 (P)",
+      "index": 1,
+      "type": "prismatic",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.15,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": 0.0,
+      "max": 0.5,
+      "home": 0.1
+    },
+    {
+      "id": "3P_j3",
+      "name": "Joint 3 (P)",
+      "index": 2,
+      "type": "prismatic",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.15,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": 0.0,
+      "max": 0.5,
+      "home": 0.1
+    }
+  ],
+  "links": [
+    {
+      "id": "3P_link0",
+      "name": "Base",
+      "index": 0,
+      "color": "#64748b"
+    },
+    {
+      "id": "3P_link1",
+      "name": "Link 1",
+      "index": 1,
+      "color": "#3b82f6"
+    },
+    {
+      "id": "3P_link2",
+      "name": "Link 2",
+      "index": 2,
+      "color": "#f97316"
+    },
+    {
+      "id": "3P_link3",
+      "name": "Link 3",
+      "index": 3,
+      "color": "#06b6d4"
+    }
+  ]
+}

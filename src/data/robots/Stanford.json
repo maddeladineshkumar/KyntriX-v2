@@ -1,0 +1,266 @@
+{
+  "id": "Stanford",
+  "name": "Stanford Arm",
+  "manufacturer": "Stanford",
+  "model": "Stanford Arm (RRP-RRR)",
+  "dof": 6,
+  "dhConvention": "standard",
+  "joints": [
+    {
+      "id": "stanford_j1",
+      "name": "Joint 1 (Waist)",
+      "index": 0,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.6604,
+      "a": 0.0,
+      "alpha": -1.5707963267948966,
+      "offset": 0.0,
+      "min": -3.141592653589793,
+      "max": 3.141592653589793,
+      "home": 0.0
+    },
+    {
+      "id": "stanford_j2",
+      "name": "Joint 2 (Shoulder)",
+      "index": 1,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.162,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -1.5707963267948966,
+      "max": 1.5707963267948966,
+      "home": 0.0
+    },
+    {
+      "id": "stanford_j3",
+      "name": "Joint 3 (Boom Prismatic)",
+      "index": 2,
+      "type": "prismatic",
+      "theta": 0.0,
+      "d": 0.381,
+      "a": 0.0,
+      "alpha": 0.0,
+      "offset": 0.0,
+      "min": 0.1,
+      "max": 1.0,
+      "home": 0.381
+    },
+    {
+      "id": "stanford_j4",
+      "name": "Joint 4 (Wrist Roll)",
+      "index": 3,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.0,
+      "alpha": -1.5707963267948966,
+      "offset": 0.0,
+      "min": -3.141592653589793,
+      "max": 3.141592653589793,
+      "home": 0.0
+    },
+    {
+      "id": "stanford_j5",
+      "name": "Joint 5 (Wrist Pitch)",
+      "index": 4,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -1.5707963267948966,
+      "max": 1.5707963267948966,
+      "home": 0.0
+    },
+    {
+      "id": "stanford_j6",
+      "name": "Joint 6 (Wrist Yaw)",
+      "index": 5,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.15,
+      "a": 0.0,
+      "alpha": 0.0,
+      "offset": 0.0,
+      "min": -3.141592653589793,
+      "max": 3.141592653589793,
+      "home": 0.0
+    }
+  ],
+  "links": [
+    {
+      "id": "stanford_link0",
+      "name": "Base",
+      "index": 0,
+      "meshFile": "/models/Stanford/link0.stl",
+      "color": "#71717a",
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "stanford_link1",
+      "name": "Link 1",
+      "index": 1,
+      "meshFile": "/models/Stanford/link1.stl",
+      "color": "#a0522d",
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "stanford_link2",
+      "name": "Link 2",
+      "index": 2,
+      "meshFile": "/models/Stanford/link2.stl",
+      "color": "#eab308",
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "stanford_link3",
+      "name": "Link 3",
+      "index": 3,
+      "meshFile": "/models/Stanford/link3.stl",
+      "color": "#3b82f6",
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "stanford_link4",
+      "name": "Link 4",
+      "index": 4,
+      "meshFile": "/models/Stanford/link4.stl",
+      "color": "#22c55e",
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "stanford_link5",
+      "name": "Link 5",
+      "index": 5,
+      "meshFile": "/models/Stanford/link5.stl",
+      "color": "#d946ef",
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "stanford_link6",
+      "name": "Link 6",
+      "index": 6,
+      "meshFile": "/models/Stanford/link6.stl",
+      "color": "#06b6d4",
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    }
+  ],
+  "payload": 2.0,
+  "totalWeight": 40.0
+}

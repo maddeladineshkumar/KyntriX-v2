@@ -1,0 +1,280 @@
+{
+  "id": "ABBIRB4400L30",
+  "name": "ABBIRB4400L30",
+  "manufacturer": "ABB",
+  "model": "IRB 4400 L30",
+  "dof": 6,
+  "dhConvention": "standard",
+  "joints": [
+    {
+      "id": "ABBIRB4400L30_joint1",
+      "name": "Joint 1",
+      "index": 0,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.68,
+      "a": 0.2,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -2.8797932657906435,
+      "max": 2.8797932657906435,
+      "home": 0.0
+    },
+    {
+      "id": "ABBIRB4400L30_joint2",
+      "name": "Joint 2",
+      "index": 1,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.89,
+      "alpha": -3.141592653589793,
+      "offset": 0.0,
+      "min": -0.08726646259971647,
+      "max": 2.792526803190927,
+      "home": 1.5707963267948966
+    },
+    {
+      "id": "ABBIRB4400L30_joint3",
+      "name": "Joint 3",
+      "index": 2,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.15,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -1.0471975511965976,
+      "max": 1.1344640137963142,
+      "home": 0.0
+    },
+    {
+      "id": "ABBIRB4400L30_joint4",
+      "name": "Joint 4",
+      "index": 3,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": -1.4000000000000001,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -3.490658503988659,
+      "max": 3.490658503988659,
+      "home": 0.0
+    },
+    {
+      "id": "ABBIRB4400L30_joint5",
+      "name": "Joint 5",
+      "index": 4,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -2.0943951023931953,
+      "max": 2.0943951023931953,
+      "home": -1.5707963267948966
+    },
+    {
+      "id": "ABBIRB4400L30_joint6",
+      "name": "Joint 6",
+      "index": 5,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.12,
+      "a": 0.0,
+      "alpha": 0.0,
+      "offset": 0.0,
+      "min": -6.981317007977318,
+      "max": 6.981317007977318,
+      "home": 0.0
+    }
+  ],
+  "links": [
+    {
+      "id": "ABBIRB4400L30_link0",
+      "name": "Base",
+      "index": 0,
+      "meshFile": "/models/ABBIRB4400L30/link0.stl",
+      "color": "#71717a",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "ABBIRB4400L30_link1",
+      "name": "Link 1",
+      "index": 1,
+      "meshFile": "/models/ABBIRB4400L30/link1.stl",
+      "color": "#a0522d",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "ABBIRB4400L30_link2",
+      "name": "Link 2",
+      "index": 2,
+      "meshFile": "/models/ABBIRB4400L30/link2.stl",
+      "color": "#eab308",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "ABBIRB4400L30_link3",
+      "name": "Link 3",
+      "index": 3,
+      "meshFile": "/models/ABBIRB4400L30/link3.stl",
+      "color": "#cd853f",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "ABBIRB4400L30_link4",
+      "name": "Link 4",
+      "index": 4,
+      "meshFile": "/models/ABBIRB4400L30/link4.stl",
+      "color": "#a0522d",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "ABBIRB4400L30_link5",
+      "name": "Link 5",
+      "index": 5,
+      "meshFile": "/models/ABBIRB4400L30/link5.stl",
+      "color": "#22c55e",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "ABBIRB4400L30_link6",
+      "name": "Link 6",
+      "index": 6,
+      "meshFile": "/models/ABBIRB4400L30/link6.stl",
+      "color": "#eab308",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    }
+  ],
+  "payload": 30.0,
+  "totalWeight": 1020.0
+}

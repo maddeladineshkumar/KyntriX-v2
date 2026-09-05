@@ -1,0 +1,280 @@
+{
+  "id": "KukaKR210Ultra",
+  "name": "KukaKR210 Ultra",
+  "manufacturer": "Kuka",
+  "model": "KR 210 Ultra",
+  "dof": 6,
+  "dhConvention": "standard",
+  "joints": [
+    {
+      "id": "KukaKR210Ultra_joint1",
+      "name": "Joint 1",
+      "index": 0,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.675,
+      "a": 0.35000000000000003,
+      "alpha": -1.5707963267948966,
+      "offset": 0.0,
+      "min": -3.2288591161895095,
+      "max": 3.2288591161895095,
+      "home": 0.0
+    },
+    {
+      "id": "KukaKR210Ultra_joint2",
+      "name": "Joint 2",
+      "index": 1,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 1.35,
+      "alpha": -3.141592653589793,
+      "offset": 0.0,
+      "min": -2.443460952792061,
+      "max": 0.0,
+      "home": -1.5707963267948966
+    },
+    {
+      "id": "KukaKR210Ultra_joint3",
+      "name": "Joint 3",
+      "index": 2,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.041,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -4.276056667386108,
+      "max": 0.5235987755982988,
+      "home": -3.141592653589793
+    },
+    {
+      "id": "KukaKR210Ultra_joint4",
+      "name": "Joint 4",
+      "index": 3,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": -1.4000000000000001,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -6.1086523819801535,
+      "max": 6.1086523819801535,
+      "home": 0.0
+    },
+    {
+      "id": "KukaKR210Ultra_joint5",
+      "name": "Joint 5",
+      "index": 4,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -2.181661564992912,
+      "max": 2.181661564992912,
+      "home": 1.5707963267948966
+    },
+    {
+      "id": "KukaKR210Ultra_joint6",
+      "name": "Joint 6",
+      "index": 5,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.25,
+      "a": 0.0,
+      "alpha": 0.0,
+      "offset": 0.0,
+      "min": -6.1086523819801535,
+      "max": 6.1086523819801535,
+      "home": 3.141592653589793
+    }
+  ],
+  "links": [
+    {
+      "id": "KukaKR210Ultra_link0",
+      "name": "Base",
+      "index": 0,
+      "meshFile": "/models/KukaKR210Ultra/link0.stl",
+      "color": "#94a3b8",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "KukaKR210Ultra_link1",
+      "name": "Link 1",
+      "index": 1,
+      "meshFile": "/models/KukaKR210Ultra/link1.stl",
+      "color": "#94a3b8",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "KukaKR210Ultra_link2",
+      "name": "Link 2",
+      "index": 2,
+      "meshFile": "/models/KukaKR210Ultra/link2.stl",
+      "color": "#71717a",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "KukaKR210Ultra_link3",
+      "name": "Link 3",
+      "index": 3,
+      "meshFile": "/models/KukaKR210Ultra/link3.stl",
+      "color": "#94a3b8",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "KukaKR210Ultra_link4",
+      "name": "Link 4",
+      "index": 4,
+      "meshFile": "/models/KukaKR210Ultra/link4.stl",
+      "color": "#94a3b8",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "KukaKR210Ultra_link5",
+      "name": "Link 5",
+      "index": 5,
+      "meshFile": "/models/KukaKR210Ultra/link5.stl",
+      "color": "#94a3b8",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "KukaKR210Ultra_link6",
+      "name": "Link 6",
+      "index": 6,
+      "meshFile": "/models/KukaKR210Ultra/link6.stl",
+      "color": "#94a3b8",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    }
+  ],
+  "payload": 210.0,
+  "totalWeight": 1078.0
+}

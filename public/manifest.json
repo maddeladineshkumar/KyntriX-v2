@@ -1,0 +1,21 @@
+{
+  "name": "RoboAnalyzer Web",
+  "short_name": "RoboAnalyzer",
+  "description": "Professional web-native robotics kinematics and simulation laboratory",
+  "theme_color": "#f7f4ed",
+  "background_color": "#f7f4ed",
+  "display": "standalone",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

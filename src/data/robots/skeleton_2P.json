@@ -1,0 +1,58 @@
+{
+  "id": "skeleton_2P",
+  "name": "Skeleton 2P",
+  "manufacturer": "Generic",
+  "model": "2-DOF 2P",
+  "dof": 2,
+  "dhConvention": "standard",
+  "joints": [
+    {
+      "id": "2P_j1",
+      "name": "Joint 1 (P)",
+      "index": 0,
+      "type": "prismatic",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": 0.0,
+      "max": 0.5,
+      "home": 0.0
+    },
+    {
+      "id": "2P_j2",
+      "name": "Joint 2 (P)",
+      "index": 1,
+      "type": "prismatic",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.15,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": 0.0,
+      "max": 0.5,
+      "home": 0.0
+    }
+  ],
+  "links": [
+    {
+      "id": "2P_link0",
+      "name": "Base",
+      "index": 0,
+      "color": "#64748b"
+    },
+    {
+      "id": "2P_link1",
+      "name": "Link 1",
+      "index": 1,
+      "color": "#3b82f6"
+    },
+    {
+      "id": "2P_link2",
+      "name": "Link 2",
+      "index": 2,
+      "color": "#f97316"
+    }
+  ]
+}

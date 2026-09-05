@@ -1,0 +1,98 @@
+{
+  "id": "skeleton_4R",
+  "name": "Skeleton 4R",
+  "manufacturer": "Generic",
+  "model": "4-DOF 4R",
+  "dof": 4,
+  "dhConvention": "standard",
+  "joints": [
+    {
+      "id": "4R_j1",
+      "name": "Joint 1 (R)",
+      "index": 0,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.4,
+      "a": 0.18,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -3.141592653589793,
+      "max": 3.141592653589793,
+      "home": 0.0
+    },
+    {
+      "id": "4R_j2",
+      "name": "Joint 2 (R)",
+      "index": 1,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.135,
+      "a": 0.6,
+      "alpha": 3.141592653589793,
+      "offset": 0.0,
+      "min": -3.141592653589793,
+      "max": 3.141592653589793,
+      "home": 0.0
+    },
+    {
+      "id": "4R_j3",
+      "name": "Joint 3 (R)",
+      "index": 2,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.135,
+      "a": 0.12,
+      "alpha": -1.5707963267948966,
+      "offset": 0.0,
+      "min": -3.141592653589793,
+      "max": 3.141592653589793,
+      "home": 0.0
+    },
+    {
+      "id": "4R_j4",
+      "name": "Joint 4 (R)",
+      "index": 3,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.62,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -3.141592653589793,
+      "max": 3.141592653589793,
+      "home": 0.0
+    }
+  ],
+  "links": [
+    {
+      "id": "4R_link0",
+      "name": "Base",
+      "index": 0,
+      "color": "#64748b"
+    },
+    {
+      "id": "4R_link1",
+      "name": "Link 1",
+      "index": 1,
+      "color": "#3b82f6"
+    },
+    {
+      "id": "4R_link2",
+      "name": "Link 2",
+      "index": 2,
+      "color": "#f97316"
+    },
+    {
+      "id": "4R_link3",
+      "name": "Link 3",
+      "index": 3,
+      "color": "#06b6d4"
+    },
+    {
+      "id": "4R_link4",
+      "name": "Link 4",
+      "index": 4,
+      "color": "#8b5cf6"
+    }
+  ]
+}

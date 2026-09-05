@@ -1,0 +1,240 @@
+{
+  "id": "MTAB_Mini",
+  "name": "MTAB Minirobot",
+  "manufacturer": "MTAB",
+  "model": "Minirobot-5 Axis",
+  "dof": 5,
+  "dhConvention": "standard",
+  "joints": [
+    {
+      "id": "MTAB_Mini_joint1",
+      "name": "Joint 1",
+      "index": 0,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.1512248,
+      "a": 0.0500428,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -2.705260340591211,
+      "max": 2.705260340591211,
+      "home": 0.0
+    },
+    {
+      "id": "MTAB_Mini_joint2",
+      "name": "Joint 2",
+      "index": 1,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.12,
+      "alpha": 0.0,
+      "offset": 0.0,
+      "min": 0.0,
+      "max": 2.0943951023931953,
+      "home": 1.5707963267948966
+    },
+    {
+      "id": "MTAB_Mini_joint3",
+      "name": "Joint 3",
+      "index": 2,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.1,
+      "alpha": 0.0,
+      "offset": 0.0,
+      "min": -2.0943951023931953,
+      "max": 0.2617993877991494,
+      "home": -1.5707963267948966
+    },
+    {
+      "id": "MTAB_Mini_joint4",
+      "name": "Joint 4",
+      "index": 3,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.017499,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": 0.0,
+      "max": 3.141592653589793,
+      "home": 0.0
+    },
+    {
+      "id": "MTAB_Mini_joint5",
+      "name": "Joint 5",
+      "index": 4,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0840007,
+      "a": 0.0095151,
+      "alpha": 0.0,
+      "offset": 0.0,
+      "min": 0.8726646259971648,
+      "max": 5.410520681182422,
+      "home": 3.141592653589793
+    }
+  ],
+  "links": [
+    {
+      "id": "MTAB_Mini_link0",
+      "name": "Base",
+      "index": 0,
+      "meshFile": "/models/MTAB_Mini/link0.stl",
+      "color": "#94a3b8",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "MTAB_Mini_link1",
+      "name": "Link 1",
+      "index": 1,
+      "meshFile": "/models/MTAB_Mini/link1.stl",
+      "color": "#94a3b8",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "MTAB_Mini_link2",
+      "name": "Link 2",
+      "index": 2,
+      "meshFile": "/models/MTAB_Mini/link2.stl",
+      "color": "#94a3b8",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "MTAB_Mini_link3",
+      "name": "Link 3",
+      "index": 3,
+      "meshFile": "/models/MTAB_Mini/link3.stl",
+      "color": "#94a3b8",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "MTAB_Mini_link4",
+      "name": "Link 4",
+      "index": 4,
+      "meshFile": "/models/MTAB_Mini/link4.stl",
+      "color": "#d946ef",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "MTAB_Mini_link5",
+      "name": "Link 5",
+      "index": 5,
+      "meshFile": "/models/MTAB_Mini/link5.stl",
+      "color": "#f97316",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    }
+  ],
+  "payload": 0.25,
+  "totalWeight": 8.0
+}

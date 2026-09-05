@@ -1,0 +1,280 @@
+{
+  "id": "MTAB_ARISTO",
+  "name": "ARISTO",
+  "manufacturer": "MTAB",
+  "model": "Aristo",
+  "dof": 6,
+  "dhConvention": "standard",
+  "joints": [
+    {
+      "id": "MTAB_ARISTO_joint1",
+      "name": "Joint 1",
+      "index": 0,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.322,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -2.6179938779914944,
+      "max": 2.6179938779914944,
+      "home": 0.0
+    },
+    {
+      "id": "MTAB_ARISTO_joint2",
+      "name": "Joint 2",
+      "index": 1,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.3,
+      "alpha": 0.0,
+      "offset": 0.0,
+      "min": 1.0471975511965976,
+      "max": 2.0943951023931953,
+      "home": 1.5707963267948966
+    },
+    {
+      "id": "MTAB_ARISTO_joint3",
+      "name": "Joint 3",
+      "index": 2,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": 2.2689280275926285,
+      "max": 3.3161255787892263,
+      "home": 3.141592653589793
+    },
+    {
+      "id": "MTAB_ARISTO_joint4",
+      "name": "Joint 4",
+      "index": 3,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": -0.375,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -3.6651914291880923,
+      "max": -2.6179938779914944,
+      "home": -3.141592653589793
+    },
+    {
+      "id": "MTAB_ARISTO_joint5",
+      "name": "Joint 5",
+      "index": 4,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.0,
+      "alpha": 1.5707963267948966,
+      "offset": 0.0,
+      "min": -1.7453292519943295,
+      "max": 1.5707963267948966,
+      "home": -1.5707963267948966
+    },
+    {
+      "id": "MTAB_ARISTO_joint6",
+      "name": "Joint 6",
+      "index": 5,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.063,
+      "a": 0.0,
+      "alpha": 0.0,
+      "offset": 0.0,
+      "min": -2.8797932657906435,
+      "max": 2.8797932657906435,
+      "home": 0.0
+    }
+  ],
+  "links": [
+    {
+      "id": "MTAB_ARISTO_link0",
+      "name": "Base",
+      "index": 0,
+      "meshFile": "/models/MTAB_ARISTO/link0.stl",
+      "color": "#94a3b8",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "MTAB_ARISTO_link1",
+      "name": "Link 1",
+      "index": 1,
+      "meshFile": "/models/MTAB_ARISTO/link1.stl",
+      "color": "#a0522d",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "MTAB_ARISTO_link2",
+      "name": "Link 2",
+      "index": 2,
+      "meshFile": "/models/MTAB_ARISTO/link2.stl",
+      "color": "#eab308",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "MTAB_ARISTO_link3",
+      "name": "Link 3",
+      "index": 3,
+      "meshFile": "/models/MTAB_ARISTO/link3.stl",
+      "color": "#8b5cf6",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "MTAB_ARISTO_link4",
+      "name": "Link 4",
+      "index": 4,
+      "meshFile": "/models/MTAB_ARISTO/link4.stl",
+      "color": "#cd853f",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "MTAB_ARISTO_link5",
+      "name": "Link 5",
+      "index": 5,
+      "meshFile": "/models/MTAB_ARISTO/link5.stl",
+      "color": "#9400d3",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    },
+    {
+      "id": "MTAB_ARISTO_link6",
+      "name": "Link 6",
+      "index": 6,
+      "meshFile": "/models/MTAB_ARISTO/link6.stl",
+      "color": "#800000",
+      "massProperty": null,
+      "centerOfMass": null,
+      "calibration": {
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          0.001,
+          0.001,
+          0.001
+        ]
+      }
+    }
+  ],
+  "payload": 2.5,
+  "totalWeight": 35.0
+}

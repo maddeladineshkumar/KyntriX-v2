@@ -1,0 +1,38 @@
+{
+  "id": "skeleton_1R",
+  "name": "Skeleton 1R",
+  "manufacturer": "Generic",
+  "model": "1-DOF 1R",
+  "dof": 1,
+  "dhConvention": "standard",
+  "joints": [
+    {
+      "id": "1R_j1",
+      "name": "Joint 1 (R)",
+      "index": 0,
+      "type": "revolute",
+      "theta": 0.0,
+      "d": 0.0,
+      "a": 0.2,
+      "alpha": 0.0,
+      "offset": 0.0,
+      "min": -3.141592653589793,
+      "max": 3.141592653589793,
+      "home": -1.5707963267948966
+    }
+  ],
+  "links": [
+    {
+      "id": "1R_link0",
+      "name": "Base",
+      "index": 0,
+      "color": "#64748b"
+    },
+    {
+      "id": "1R_link1",
+      "name": "Link 1",
+      "index": 1,
+      "color": "#3b82f6"
+    }
+  ]
+}

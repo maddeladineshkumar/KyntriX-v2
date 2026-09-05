@@ -1,0 +1,5564 @@
+[
+  {
+    "id": "ABBIRB120",
+    "name": "ABBIRB120",
+    "manufacturer": "ABB",
+    "model": "IRB 120",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "ABBIRB120_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.29,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.8797932657906435,
+        "max": 2.8797932657906435,
+        "home": 0.0
+      },
+      {
+        "id": "ABBIRB120_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.27,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -0.3490658503988659,
+        "max": 3.490658503988659,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "ABBIRB120_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.07,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -1.2217304763960306,
+        "max": 1.5707963267948966,
+        "home": 0.0
+      },
+      {
+        "id": "ABBIRB120_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -0.302,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -5.934119456780721,
+        "max": -0.3490658503988659,
+        "home": -3.141592653589793
+      },
+      {
+        "id": "ABBIRB120_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 1.0471975511965976,
+        "max": 5.235987755982989,
+        "home": 4.71238898038469
+      },
+      {
+        "id": "ABBIRB120_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -0.07200000000000001,
+        "a": 0.0,
+        "alpha": -3.141592653589793,
+        "offset": 0.0,
+        "min": -6.981317007977318,
+        "max": 6.981317007977318,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "ABBIRB120_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/ABBIRB120/link0.stl",
+        "color": "#ef4444",
+        "massProperty": {
+          "mass": 8.617,
+          "ixx": 0.034,
+          "iyy": 0.068,
+          "izz": 0.065,
+          "ixy": 0.0,
+          "ixz": -0.002,
+          "iyz": 0.0
+        },
+        "centerOfMass": [
+          -0.042,
+          0.0,
+          0.08
+        ]
+      },
+      {
+        "id": "ABBIRB120_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/ABBIRB120/link1.stl",
+        "color": "#eab308",
+        "massProperty": {
+          "mass": 4.254,
+          "ixx": 0.02,
+          "iyy": 0.015,
+          "izz": 0.02,
+          "ixy": -0.0,
+          "ixz": -0.0,
+          "iyz": -0.0
+        },
+        "centerOfMass": [
+          -0.0,
+          -0.052,
+          -0.0
+        ]
+      },
+      {
+        "id": "ABBIRB120_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/ABBIRB120/link2.stl",
+        "color": "#22c55e",
+        "massProperty": {
+          "mass": 5.42,
+          "ixx": 0.036,
+          "iyy": 0.084,
+          "izz": 0.058,
+          "ixy": 0.0,
+          "ixz": -0.001,
+          "iyz": -0.0
+        },
+        "centerOfMass": [
+          -0.169,
+          -0.001,
+          0.004
+        ]
+      },
+      {
+        "id": "ABBIRB120_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/ABBIRB120/link3.stl",
+        "color": "#3b82f6",
+        "massProperty": {
+          "mass": 4.083,
+          "ixx": 0.018,
+          "iyy": 0.023,
+          "izz": 0.012,
+          "ixy": 0.0,
+          "ixz": 0.002,
+          "iyz": -0.0
+        },
+        "centerOfMass": [
+          -0.012,
+          0.001,
+          -0.023
+        ]
+      },
+      {
+        "id": "ABBIRB120_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/ABBIRB120/link4.stl",
+        "color": "#71717a",
+        "massProperty": {
+          "mass": 1.841,
+          "ixx": 0.007,
+          "iyy": 0.004,
+          "izz": 0.006,
+          "ixy": 0.0,
+          "ixz": 0.0,
+          "iyz": -0.0
+        },
+        "centerOfMass": [
+          -0.0,
+          0.077,
+          0.0
+        ]
+      },
+      {
+        "id": "ABBIRB120_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/ABBIRB120/link5.stl",
+        "color": "#06b6d4",
+        "massProperty": {
+          "mass": 0.758,
+          "ixx": 0.001,
+          "iyy": 0.001,
+          "izz": 0.001,
+          "ixy": 0.0,
+          "ixz": 0.0,
+          "iyz": 0.0
+        },
+        "centerOfMass": [
+          0.0,
+          0.0,
+          0.001
+        ]
+      },
+      {
+        "id": "ABBIRB120_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/ABBIRB120/link6.stl",
+        "color": "#dc2626",
+        "massProperty": {
+          "mass": 0.019,
+          "ixx": 0.0,
+          "iyy": 0.0,
+          "izz": 0.0,
+          "ixy": -0.0,
+          "ixz": 0.0,
+          "iyz": -0.0
+        },
+        "centerOfMass": [
+          -0.0,
+          -0.0,
+          -0.007
+        ]
+      }
+    ],
+    "payload": 3.0,
+    "totalWeight": 25.0
+  },
+  {
+    "id": "ABBIRB1410",
+    "name": "ABBIRB1410",
+    "manufacturer": "ABB",
+    "model": "IRB 1410",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "ABBIRB1410_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.47500000000000003,
+        "a": 0.17,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.9670597283903604,
+        "max": 2.9670597283903604,
+        "home": 0.0
+      },
+      {
+        "id": "ABBIRB1410_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.6,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -2.792526803190927,
+        "max": -0.3490658503988659,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "ABBIRB1410_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.12,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -1.1344640137963142,
+        "max": 1.2217304763960306,
+        "home": 0.0
+      },
+      {
+        "id": "ABBIRB1410_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -0.72,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.6179938779914944,
+        "max": 2.6179938779914944,
+        "home": 0.0
+      },
+      {
+        "id": "ABBIRB1410_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.007128639793479,
+        "max": 2.007128639793479,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "ABBIRB1410_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.085,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -5.235987755982989,
+        "max": 5.235987755982989,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "ABBIRB1410_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/ABBIRB1410/link0.stl",
+        "color": "#a0522d",
+        "massProperty": {
+          "mass": 68.549,
+          "ixx": 0.936,
+          "iyy": 1.911,
+          "izz": 2.63,
+          "ixy": -0.001,
+          "ixz": 0.098,
+          "iyz": 0.001
+        },
+        "centerOfMass": [
+          -0.112,
+          -0.0,
+          0.058
+        ]
+      },
+      {
+        "id": "ABBIRB1410_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/ABBIRB1410/link1.stl",
+        "color": "#71717a",
+        "massProperty": {
+          "mass": 85.711,
+          "ixx": 2.858,
+          "iyy": 2.618,
+          "izz": 2.171,
+          "ixy": 0.611,
+          "ixz": 0.071,
+          "iyz": -0.002
+        },
+        "centerOfMass": [
+          -0.122,
+          0.13,
+          0.005
+        ]
+      },
+      {
+        "id": "ABBIRB1410_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/ABBIRB1410/link2.stl",
+        "color": "#cd853f",
+        "massProperty": {
+          "mass": 20.44,
+          "ixx": 0.049,
+          "iyy": 0.759,
+          "izz": 0.76,
+          "ixy": -0.001,
+          "ixz": 0.002,
+          "iyz": 0.001
+        },
+        "centerOfMass": [
+          -0.332,
+          0.026,
+          -0.009
+        ]
+      },
+      {
+        "id": "ABBIRB1410_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/ABBIRB1410/link3.stl",
+        "color": "#f97316",
+        "massProperty": {
+          "mass": 19.939,
+          "ixx": 0.214,
+          "iyy": 0.194,
+          "izz": 0.15,
+          "ixy": 0.014,
+          "ixz": 0.02,
+          "iyz": -0.022
+        },
+        "centerOfMass": [
+          -0.012,
+          -0.028,
+          -0.033
+        ]
+      },
+      {
+        "id": "ABBIRB1410_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/ABBIRB1410/link4.stl",
+        "color": "#a0522d",
+        "massProperty": {
+          "mass": 29.522,
+          "ixx": 2.804,
+          "iyy": 0.062,
+          "izz": 2.806,
+          "ixy": 0.0,
+          "ixz": -0.004,
+          "iyz": 0.0
+        },
+        "centerOfMass": [
+          -0.0,
+          0.535,
+          0.0
+        ]
+      },
+      {
+        "id": "ABBIRB1410_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/ABBIRB1410/link5.stl",
+        "color": "#9400d3",
+        "massProperty": {
+          "mass": 0.794,
+          "ixx": 0.001,
+          "iyy": 0.001,
+          "izz": 0.0,
+          "ixy": 0.0,
+          "ixz": 0.0,
+          "iyz": -0.0
+        },
+        "centerOfMass": [
+          -0.0,
+          -0.0,
+          0.008
+        ]
+      },
+      {
+        "id": "ABBIRB1410_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/ABBIRB1410/link6.stl",
+        "color": "#ef4444",
+        "massProperty": {
+          "mass": 0.046,
+          "ixx": 0.0,
+          "iyy": 0.0,
+          "izz": 0.0,
+          "ixy": 0.0,
+          "ixz": -0.0,
+          "iyz": -0.0
+        },
+        "centerOfMass": [
+          0.0,
+          0.0,
+          -0.006
+        ]
+      }
+    ],
+    "payload": 5.0,
+    "totalWeight": 225.0
+  },
+  {
+    "id": "ABBIRB2400",
+    "name": "ABBIRB2400",
+    "manufacturer": "ABB",
+    "model": "IRB 2400",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "ABBIRB2400_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.615,
+        "a": 0.1,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "ABBIRB2400_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.705,
+        "alpha": -3.141592653589793,
+        "offset": 0.0,
+        "min": -0.2617993877991494,
+        "max": 3.4033920413889427,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "ABBIRB2400_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.135,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -1.0471975511965976,
+        "max": 1.1344640137963142,
+        "home": 0.0
+      },
+      {
+        "id": "ABBIRB2400_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -0.755,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.490658503988659,
+        "max": 3.490658503988659,
+        "home": 0.0
+      },
+      {
+        "id": "ABBIRB2400_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.0943951023931953,
+        "max": 2.0943951023931953,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "ABBIRB2400_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.15,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -6.981317007977318,
+        "max": 6.981317007977318,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "ABBIRB2400_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/ABBIRB2400/link0.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB2400_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/ABBIRB2400/link1.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB2400_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/ABBIRB2400/link2.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB2400_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/ABBIRB2400/link3.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB2400_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/ABBIRB2400/link4.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB2400_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/ABBIRB2400/link5.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB2400_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/ABBIRB2400/link6.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      }
+    ],
+    "payload": 20.0,
+    "totalWeight": 380.0
+  },
+  {
+    "id": "ABBIRB4400L30",
+    "name": "ABBIRB4400L30",
+    "manufacturer": "ABB",
+    "model": "IRB 4400 L30",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "ABBIRB4400L30_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.68,
+        "a": 0.2,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.8797932657906435,
+        "max": 2.8797932657906435,
+        "home": 0.0
+      },
+      {
+        "id": "ABBIRB4400L30_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.89,
+        "alpha": -3.141592653589793,
+        "offset": 0.0,
+        "min": -0.08726646259971647,
+        "max": 2.792526803190927,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "ABBIRB4400L30_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.15,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -1.0471975511965976,
+        "max": 1.1344640137963142,
+        "home": 0.0
+      },
+      {
+        "id": "ABBIRB4400L30_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -1.4000000000000001,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.490658503988659,
+        "max": 3.490658503988659,
+        "home": 0.0
+      },
+      {
+        "id": "ABBIRB4400L30_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.0943951023931953,
+        "max": 2.0943951023931953,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "ABBIRB4400L30_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.12,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -6.981317007977318,
+        "max": 6.981317007977318,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "ABBIRB4400L30_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/ABBIRB4400L30/link0.stl",
+        "color": "#71717a",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB4400L30_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/ABBIRB4400L30/link1.stl",
+        "color": "#a0522d",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB4400L30_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/ABBIRB4400L30/link2.stl",
+        "color": "#eab308",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB4400L30_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/ABBIRB4400L30/link3.stl",
+        "color": "#cd853f",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB4400L30_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/ABBIRB4400L30/link4.stl",
+        "color": "#a0522d",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB4400L30_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/ABBIRB4400L30/link5.stl",
+        "color": "#22c55e",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB4400L30_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/ABBIRB4400L30/link6.stl",
+        "color": "#eab308",
+        "massProperty": null,
+        "centerOfMass": null
+      }
+    ],
+    "payload": 30.0,
+    "totalWeight": 1020.0
+  },
+  {
+    "id": "ABBIRB6620",
+    "name": "ABBIRB6620",
+    "manufacturer": "ABB",
+    "model": "IRB 6620",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "ABBIRB6620_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.68,
+        "a": 0.32,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.9670597283903604,
+        "max": 2.9670597283903604,
+        "home": 0.0
+      },
+      {
+        "id": "ABBIRB6620_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.975,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -1.1344640137963142,
+        "max": 2.443460952792061,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "ABBIRB6620_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.2,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -1.2217304763960306,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "ABBIRB6620_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -0.887,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -5.235987755982989,
+        "max": 5.235987755982989,
+        "home": 0.0
+      },
+      {
+        "id": "ABBIRB6620_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -5.410520681182422,
+        "max": -0.8726646259971648,
+        "home": -4.71238898038469
+      },
+      {
+        "id": "ABBIRB6620_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -0.2,
+        "a": 0.0,
+        "alpha": -3.141592653589793,
+        "offset": 0.0,
+        "min": -8.377580409572781,
+        "max": 2.0943951023931953,
+        "home": -3.141592653589793
+      }
+    ],
+    "links": [
+      {
+        "id": "ABBIRB6620_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/ABBIRB6620/link0.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB6620_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/ABBIRB6620/link1.stl",
+        "color": "#d8b4e2",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB6620_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/ABBIRB6620/link2.stl",
+        "color": "#cd853f",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB6620_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/ABBIRB6620/link3.stl",
+        "color": "#a0522d",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB6620_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/ABBIRB6620/link4.stl",
+        "color": "#cd853f",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB6620_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/ABBIRB6620/link5.stl",
+        "color": "#f97316",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB6620_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/ABBIRB6620/link6.stl",
+        "color": "#eab308",
+        "massProperty": null,
+        "centerOfMass": null
+      }
+    ],
+    "payload": 150.0,
+    "totalWeight": 900.0
+  },
+  {
+    "id": "ABBIRB6650",
+    "name": "ABBIRB6650",
+    "manufacturer": "ABB",
+    "model": "IRB 6650",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "ABBIRB6650_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.78,
+        "a": 0.32,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "ABBIRB6650_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 1.28,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -2.2689280275926285,
+        "max": 1.2217304763960306,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "ABBIRB6650_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.2,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 1.2217304763960306,
+        "home": 0.0
+      },
+      {
+        "id": "ABBIRB6650_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -1.592,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -5.235987755982989,
+        "max": 5.235987755982989,
+        "home": 0.0
+      },
+      {
+        "id": "ABBIRB6650_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.0943951023931953,
+        "max": 2.0943951023931953,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "ABBIRB6650_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.2,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -6.283185307179586,
+        "max": 6.283185307179586,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "ABBIRB6650_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/ABBIRB6650/link0.stl",
+        "color": "#71717a",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB6650_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/ABBIRB6650/link1.stl",
+        "color": "#a0522d",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB6650_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/ABBIRB6650/link2.stl",
+        "color": "#cd853f",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB6650_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/ABBIRB6650/link3.stl",
+        "color": "#d8b4e2",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB6650_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/ABBIRB6650/link4.stl",
+        "color": "#a0522d",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB6650_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/ABBIRB6650/link5.stl",
+        "color": "#cd853f",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "ABBIRB6650_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/ABBIRB6650/link6.stl",
+        "color": "#eab308",
+        "massProperty": null,
+        "centerOfMass": null
+      }
+    ],
+    "payload": 125.0,
+    "totalWeight": 2250.0
+  },
+  {
+    "id": "EpsonC3A60CT",
+    "name": "EpsonC3A60CT",
+    "manufacturer": "Epson",
+    "model": "C 3",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "EpsonC3A60CT_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.32,
+        "a": 0.1,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.9670597283903604,
+        "max": 2.9670597283903604,
+        "home": 0.0
+      },
+      {
+        "id": "EpsonC3A60CT_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.25,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -2.792526803190927,
+        "max": 1.1344640137963142,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "EpsonC3A60CT_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -0.8901179185171081,
+        "max": 3.9269908169872414,
+        "home": 3.141592653589793
+      },
+      {
+        "id": "EpsonC3A60CT_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.25,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.490658503988659,
+        "max": 3.490658503988659,
+        "home": 0.0
+      },
+      {
+        "id": "EpsonC3A60CT_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.356194490192345,
+        "max": 2.356194490192345,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "EpsonC3A60CT_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -0.065,
+        "a": 0.0,
+        "alpha": 3.141592653589793,
+        "offset": 0.0,
+        "min": -6.283185307179586,
+        "max": 6.283185307179586,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "EpsonC3A60CT_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/EpsonC3A60CT/link0.stl",
+        "color": "#f97316",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "EpsonC3A60CT_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/EpsonC3A60CT/link1.stl",
+        "color": "#cd853f",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "EpsonC3A60CT_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/EpsonC3A60CT/link2.stl",
+        "color": "#a0522d",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "EpsonC3A60CT_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/EpsonC3A60CT/link3.stl",
+        "color": "#f97316",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "EpsonC3A60CT_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/EpsonC3A60CT/link4.stl",
+        "color": "#a0522d",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "EpsonC3A60CT_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/EpsonC3A60CT/link5.stl",
+        "color": "#d8b4e2",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "EpsonC3A60CT_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/EpsonC3A60CT/link6.stl",
+        "color": "#eab308",
+        "massProperty": null,
+        "centerOfMass": null
+      }
+    ],
+    "payload": 3.0,
+    "totalWeight": 27.0
+  },
+  {
+    "id": "FanucM10iA",
+    "name": "FanucM10iA",
+    "manufacturer": "Fanuc",
+    "model": "M 10 iA",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "FanucM10iA_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.45,
+        "a": 0.15,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "FanucM10iA_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.6,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -3.3161255787892263,
+        "max": 1.0471975511965976,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "FanucM10iA_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.2,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -6.19591884457987,
+        "max": 1.5707963267948966,
+        "home": 0.0
+      },
+      {
+        "id": "FanucM10iA_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -0.64,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.3161255787892263,
+        "max": 3.3161255787892263,
+        "home": 0.0
+      },
+      {
+        "id": "FanucM10iA_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.3161255787892263,
+        "max": 3.3161255787892263,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "FanucM10iA_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.1,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -6.283185307179586,
+        "max": 6.283185307179586,
+        "home": -3.141592653589793
+      }
+    ],
+    "links": [
+      {
+        "id": "FanucM10iA_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/FanucM10iA/link0.stl",
+        "color": "#cd853f",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucM10iA_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/FanucM10iA/link1.stl",
+        "color": "#a0522d",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucM10iA_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/FanucM10iA/link2.stl",
+        "color": "#d8b4e2",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucM10iA_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/FanucM10iA/link3.stl",
+        "color": "#eab308",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucM10iA_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/FanucM10iA/link4.stl",
+        "color": "#a0522d",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucM10iA_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/FanucM10iA/link5.stl",
+        "color": "#cd853f",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucM10iA_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/FanucM10iA/link6.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      }
+    ],
+    "payload": 10.0,
+    "totalWeight": 130.0
+  },
+  {
+    "id": "FanucM410iB",
+    "name": "FanucM410iB",
+    "manufacturer": "Fanuc",
+    "model": "M 410 iB",
+    "dof": 5,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "FanucM410iB_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 1.596,
+        "a": 0.3899965,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "FanucM410iB_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 1.22,
+        "alpha": -3.141592653589793,
+        "offset": 0.0,
+        "min": -2.356194490192345,
+        "max": 0.17453292519943295,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "FanucM410iB_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 1.3,
+        "alpha": 3.141592653589793,
+        "offset": 0.0,
+        "min": -2.181661564992912,
+        "max": 0.17453292519943295,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "FanucM410iB_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.225,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.356194490192345,
+        "max": 2.356194490192345,
+        "home": 0.0
+      },
+      {
+        "id": "FanucM410iB_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -0.17200000000000001,
+        "a": 0.0,
+        "alpha": -3.141592653589793,
+        "offset": 0.0,
+        "min": -6.283185307179586,
+        "max": 6.283185307179586,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "FanucM410iB_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/FanucM410iB/link0.stl",
+        "color": "#eab308",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucM410iB_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/FanucM410iB/link1.stl",
+        "color": "#a0522d",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucM410iB_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/FanucM410iB/link2.stl",
+        "color": "#cd853f",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucM410iB_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/FanucM410iB/link3.stl",
+        "color": "#a0522d",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucM410iB_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/FanucM410iB/link4.stl",
+        "color": "#d8b4e2",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucM410iB_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/FanucM410iB/link5.stl",
+        "color": "#ef4444",
+        "massProperty": null,
+        "centerOfMass": null
+      }
+    ],
+    "payload": 300.0,
+    "totalWeight": 1940.0
+  },
+  {
+    "id": "FanucR1000i",
+    "name": "FanucR1000i",
+    "manufacturer": "Fanuc",
+    "model": "R 1000i",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "FanucR1000i_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.45,
+        "a": 0.32,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "FanucR1000i_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.87,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 1.1344640137963142,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "FanucR1000i_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.225,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -4.71238898038469,
+        "max": 1.5707963267948966,
+        "home": 0.0
+      },
+      {
+        "id": "FanucR1000i_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 1.0150000000000001,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -6.283185307179586,
+        "max": 6.283185307179586,
+        "home": 0.0
+      },
+      {
+        "id": "FanucR1000i_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.9599310885968813,
+        "max": 5.323254218582705,
+        "home": 4.71238898038469
+      },
+      {
+        "id": "FanucR1000i_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.17500000000000002,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -6.283185307179586,
+        "max": 6.283185307179586,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "FanucR1000i_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/FanucR1000i/link0.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucR1000i_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/FanucR1000i/link1.stl",
+        "color": "#eab308",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucR1000i_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/FanucR1000i/link2.stl",
+        "color": "#a0522d",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucR1000i_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/FanucR1000i/link3.stl",
+        "color": "#eab308",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucR1000i_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/FanucR1000i/link4.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucR1000i_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/FanucR1000i/link5.stl",
+        "color": "#a0522d",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucR1000i_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/FanucR1000i/link6.stl",
+        "color": "#f97316",
+        "massProperty": null,
+        "centerOfMass": null
+      }
+    ],
+    "payload": 80.0,
+    "totalWeight": 620.0
+  },
+  {
+    "id": "FanucR2000i",
+    "name": "FanucR2000i",
+    "manufacturer": "Fanuc",
+    "model": "R 2000i",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "FanucR2000i_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.67,
+        "a": 0.312,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "FanucR2000i_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 1.075,
+        "alpha": 3.141592653589793,
+        "offset": 0.0,
+        "min": 0.2617993877991494,
+        "max": 2.6179938779914944,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "FanucR2000i_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.225,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.8746309394274117,
+        "max": 2.4085543677521746,
+        "home": 0.0
+      },
+      {
+        "id": "FanucR2000i_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -1.28,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -6.283185307179586,
+        "max": 6.283185307179586,
+        "home": 0.0
+      },
+      {
+        "id": "FanucR2000i_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 1.1344640137963142,
+        "max": 5.846852994181004,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "FanucR2000i_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -0.215,
+        "a": 0.0,
+        "alpha": 3.141592653589793,
+        "offset": 0.0,
+        "min": -6.283185307179586,
+        "max": 6.283185307179586,
+        "home": 3.141592653589793
+      }
+    ],
+    "links": [
+      {
+        "id": "FanucR2000i_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/FanucR2000i/link0.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucR2000i_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/FanucR2000i/link1.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucR2000i_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/FanucR2000i/link2.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucR2000i_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/FanucR2000i/link3.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucR2000i_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/FanucR2000i/link4.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucR2000i_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/FanucR2000i/link5.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucR2000i_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/FanucR2000i/link6.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      }
+    ],
+    "payload": 165.0,
+    "totalWeight": 1240.0
+  },
+  {
+    "id": "FanucS430",
+    "name": "FanucS430i",
+    "manufacturer": "Fanuc",
+    "model": "S 430i",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "FanucS430_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.74,
+        "a": 0.305,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "FanucS430_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 1.075,
+        "alpha": -3.141592653589793,
+        "offset": 0.0,
+        "min": -2.6179938779914944,
+        "max": -0.2617993877991494,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "FanucS430_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.25,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.321287905152458,
+        "max": 3.9968039870670147,
+        "home": 0.0
+      },
+      {
+        "id": "FanucS430_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -1.2750000000000001,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -6.283185307179586,
+        "max": 6.283185307179586,
+        "home": 0.0
+      },
+      {
+        "id": "FanucS430_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.181661564992912,
+        "max": 2.181661564992912,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "FanucS430_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.24,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -6.283185307179586,
+        "max": 6.283185307179586,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "FanucS430_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/FanucS430/link0.stl",
+        "color": "#71717a",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucS430_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/FanucS430/link1.stl",
+        "color": "#a0522d",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucS430_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/FanucS430/link2.stl",
+        "color": "#cd853f",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucS430_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/FanucS430/link3.stl",
+        "color": "#d8b4e2",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucS430_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/FanucS430/link4.stl",
+        "color": "#a0522d",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucS430_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/FanucS430/link5.stl",
+        "color": "#cd853f",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "FanucS430_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/FanucS430/link6.stl",
+        "color": "#eab308",
+        "massProperty": null,
+        "centerOfMass": null
+      }
+    ],
+    "payload": 125.0,
+    "totalWeight": 1300.0
+  },
+  {
+    "id": "KukaKR210Ultra",
+    "name": "KukaKR210 Ultra",
+    "manufacturer": "Kuka",
+    "model": "KR 210 Ultra",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "KukaKR210Ultra_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.675,
+        "a": 0.35000000000000003,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.2288591161895095,
+        "max": 3.2288591161895095,
+        "home": 0.0
+      },
+      {
+        "id": "KukaKR210Ultra_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 1.35,
+        "alpha": -3.141592653589793,
+        "offset": 0.0,
+        "min": -2.443460952792061,
+        "max": 0.0,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "KukaKR210Ultra_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.041,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -4.276056667386108,
+        "max": 0.5235987755982988,
+        "home": -3.141592653589793
+      },
+      {
+        "id": "KukaKR210Ultra_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -1.4000000000000001,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -6.1086523819801535,
+        "max": 6.1086523819801535,
+        "home": 0.0
+      },
+      {
+        "id": "KukaKR210Ultra_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.181661564992912,
+        "max": 2.181661564992912,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "KukaKR210Ultra_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.25,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -6.1086523819801535,
+        "max": 6.1086523819801535,
+        "home": 3.141592653589793
+      }
+    ],
+    "links": [
+      {
+        "id": "KukaKR210Ultra_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/KukaKR210Ultra/link0.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR210Ultra_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/KukaKR210Ultra/link1.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR210Ultra_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/KukaKR210Ultra/link2.stl",
+        "color": "#71717a",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR210Ultra_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/KukaKR210Ultra/link3.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR210Ultra_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/KukaKR210Ultra/link4.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR210Ultra_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/KukaKR210Ultra/link5.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR210Ultra_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/KukaKR210Ultra/link6.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      }
+    ],
+    "payload": 210.0,
+    "totalWeight": 1078.0
+  },
+  {
+    "id": "KukaKR5",
+    "name": "KukaKR5",
+    "manufacturer": "Kuka",
+    "model": "KR 5 Arc",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "KukaKR5_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.4,
+        "a": 0.18,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.705260340591211,
+        "max": 2.705260340591211,
+        "home": 0.0
+      },
+      {
+        "id": "KukaKR5_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.6,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -1.1344640137963142,
+        "max": 3.141592653589793,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "KukaKR5_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.12,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -1.1868238913561442,
+        "max": 1.8325957145940461,
+        "home": 0.0
+      },
+      {
+        "id": "KukaKR5_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.62,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -6.1086523819801535,
+        "max": 6.1086523819801535,
+        "home": 0.0
+      },
+      {
+        "id": "KukaKR5_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.8726646259971648,
+        "max": 5.410520681182422,
+        "home": 4.71238898038469
+      },
+      {
+        "id": "KukaKR5_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.115,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -9.250245035569947,
+        "max": 2.9670597283903604,
+        "home": -3.141592653589793
+      }
+    ],
+    "links": [
+      {
+        "id": "KukaKR5_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/KukaKR5/link0.stl",
+        "color": "#71717a",
+        "massProperty": {
+          "mass": 49.249,
+          "ixx": 0.485,
+          "iyy": 1.117,
+          "izz": 1.239,
+          "ixy": -0.011,
+          "ixz": -0.014,
+          "iyz": -0.001
+        },
+        "centerOfMass": [
+          -0.068,
+          -0.001,
+          0.11
+        ]
+      },
+      {
+        "id": "KukaKR5_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/KukaKR5/link1.stl",
+        "color": "#a0522d",
+        "massProperty": {
+          "mass": 31.277,
+          "ixx": 0.345,
+          "iyy": 0.511,
+          "izz": 0.52,
+          "ixy": -0.123,
+          "ixz": 0.019,
+          "iyz": 0.012
+        },
+        "centerOfMass": [
+          -0.105,
+          -0.059,
+          -0.005
+        ]
+      },
+      {
+        "id": "KukaKR5_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/KukaKR5/link2.stl",
+        "color": "#eab308",
+        "massProperty": {
+          "mass": 15.578,
+          "ixx": 0.043,
+          "iyy": 0.53,
+          "izz": 0.54,
+          "ixy": 0.004,
+          "ixz": -0.017,
+          "iyz": 0.0
+        },
+        "centerOfMass": [
+          -0.333,
+          -0.002,
+          0.174
+        ]
+      },
+      {
+        "id": "KukaKR5_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/KukaKR5/link3.stl",
+        "color": "#8b5cf6",
+        "massProperty": {
+          "mass": 25.298,
+          "ixx": 0.759,
+          "iyy": 0.734,
+          "izz": 0.203,
+          "ixy": 0.009,
+          "ixz": -0.024,
+          "iyz": 0.007
+        },
+        "centerOfMass": [
+          -0.032,
+          0.008,
+          0.034
+        ]
+      },
+      {
+        "id": "KukaKR5_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/KukaKR5/link4.stl",
+        "color": "#cd853f",
+        "massProperty": {
+          "mass": 4.001,
+          "ixx": 0.024,
+          "iyy": 0.009,
+          "izz": 0.02,
+          "ixy": 0.0,
+          "ixz": 0.0,
+          "iyz": -0.002
+        },
+        "centerOfMass": [
+          -0.0,
+          -0.109,
+          0.008
+        ]
+      },
+      {
+        "id": "KukaKR5_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/KukaKR5/link5.stl",
+        "color": "#9400d3",
+        "massProperty": {
+          "mass": 1.581,
+          "ixx": 0.004,
+          "iyy": 0.003,
+          "izz": 0.001,
+          "ixy": -0.0,
+          "ixz": 0.0,
+          "iyz": -0.0
+        },
+        "centerOfMass": [
+          0.0,
+          -0.01,
+          0.033
+        ]
+      },
+      {
+        "id": "KukaKR5_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/KukaKR5/link6.stl",
+        "color": "#800000",
+        "massProperty": {
+          "mass": 0.016,
+          "ixx": 0.0,
+          "iyy": 0.0,
+          "izz": 0.0,
+          "ixy": 0.0,
+          "ixz": 0.0,
+          "iyz": 0.0
+        },
+        "centerOfMass": [
+          -0.0,
+          -0.0,
+          -0.003
+        ]
+      }
+    ],
+    "payload": 5.0,
+    "totalWeight": 127.0
+  },
+  {
+    "id": "KukaKR5Sixx",
+    "name": "KukaKR5Sixx",
+    "manufacturer": "Kuka",
+    "model": "KR 5 Sixx",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "KukaKR5Sixx_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.335,
+        "a": 0.075,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.9670597283903604,
+        "max": 2.9670597283903604,
+        "home": 0.0
+      },
+      {
+        "id": "KukaKR5Sixx_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.365,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -3.3161255787892263,
+        "max": 0.7853981633974483,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "KukaKR5Sixx_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.09,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.6477381366681487,
+        "max": 1.3089969389957472,
+        "home": 0.0
+      },
+      {
+        "id": "KukaKR5Sixx_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.405,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.3161255787892263,
+        "max": 3.3161255787892263,
+        "home": 0.0
+      },
+      {
+        "id": "KukaKR5Sixx_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.0943951023931953,
+        "max": 2.0943951023931953,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "KukaKR5Sixx_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -0.08,
+        "a": 0.0,
+        "alpha": 3.141592653589793,
+        "offset": 0.0,
+        "min": -6.1086523819801535,
+        "max": 6.1086523819801535,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "KukaKR5Sixx_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/KukaKR5Sixx/link0.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR5Sixx_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/KukaKR5Sixx/link1.stl",
+        "color": "#eab308",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR5Sixx_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/KukaKR5Sixx/link2.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR5Sixx_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/KukaKR5Sixx/link3.stl",
+        "color": "#eab308",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR5Sixx_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/KukaKR5Sixx/link4.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR5Sixx_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/KukaKR5Sixx/link5.stl",
+        "color": "#cd853f",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR5Sixx_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/KukaKR5Sixx/link6.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      }
+    ],
+    "payload": 5.0,
+    "totalWeight": 28.0
+  },
+  {
+    "id": "KukaKR5_IND",
+    "name": "KukaKR5",
+    "manufacturer": "Kuka",
+    "model": "KR 5 Arc",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "KukaKR5_IND_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.4,
+        "a": 0.18,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.705260340591211,
+        "max": 2.705260340591211,
+        "home": 0.0
+      },
+      {
+        "id": "KukaKR5_IND_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.6,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -1.1344640137963142,
+        "max": 3.141592653589793,
+        "home": 1.7278759594743862
+      },
+      {
+        "id": "KukaKR5_IND_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.12,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -1.1868238913561442,
+        "max": 1.8325957145940461,
+        "home": -0.6632251157578453
+      },
+      {
+        "id": "KukaKR5_IND_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.62,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -6.1086523819801535,
+        "max": 6.1086523819801535,
+        "home": -3.141592653589793
+      },
+      {
+        "id": "KukaKR5_IND_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.8726646259971648,
+        "max": 5.410520681182422,
+        "home": 3.6477381366681487
+      },
+      {
+        "id": "KukaKR5_IND_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.115,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -9.250245035569947,
+        "max": 2.9670597283903604,
+        "home": -1.5707963267948966
+      }
+    ],
+    "links": [
+      {
+        "id": "KukaKR5_IND_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/KukaKR5_IND/link0.stl",
+        "color": "#22c55e",
+        "massProperty": {
+          "mass": 49.249,
+          "ixx": 0.485,
+          "iyy": 1.117,
+          "izz": 1.239,
+          "ixy": -0.011,
+          "ixz": -0.014,
+          "iyz": -0.001
+        },
+        "centerOfMass": [
+          -0.068,
+          -0.001,
+          0.11
+        ]
+      },
+      {
+        "id": "KukaKR5_IND_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/KukaKR5_IND/link1.stl",
+        "color": "#22c55e",
+        "massProperty": {
+          "mass": 31.277,
+          "ixx": 0.345,
+          "iyy": 0.511,
+          "izz": 0.52,
+          "ixy": -0.123,
+          "ixz": 0.019,
+          "iyz": 0.012
+        },
+        "centerOfMass": [
+          -0.105,
+          -0.059,
+          -0.005
+        ]
+      },
+      {
+        "id": "KukaKR5_IND_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/KukaKR5_IND/link2.stl",
+        "color": "#94a3b8",
+        "massProperty": {
+          "mass": 15.578,
+          "ixx": 0.043,
+          "iyy": 0.53,
+          "izz": 0.54,
+          "ixy": 0.004,
+          "ixz": -0.017,
+          "iyz": 0.0
+        },
+        "centerOfMass": [
+          -0.333,
+          -0.002,
+          0.174
+        ]
+      },
+      {
+        "id": "KukaKR5_IND_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/KukaKR5_IND/link3.stl",
+        "color": "#f97316",
+        "massProperty": {
+          "mass": 25.298,
+          "ixx": 0.759,
+          "iyy": 0.734,
+          "izz": 0.203,
+          "ixy": 0.009,
+          "ixz": -0.024,
+          "iyz": 0.007
+        },
+        "centerOfMass": [
+          -0.032,
+          0.008,
+          0.034
+        ]
+      },
+      {
+        "id": "KukaKR5_IND_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/KukaKR5_IND/link4.stl",
+        "color": "#f97316",
+        "massProperty": {
+          "mass": 4.001,
+          "ixx": 0.024,
+          "iyy": 0.009,
+          "izz": 0.02,
+          "ixy": 0.0,
+          "ixz": 0.0,
+          "iyz": -0.002
+        },
+        "centerOfMass": [
+          -0.0,
+          -0.109,
+          0.008
+        ]
+      },
+      {
+        "id": "KukaKR5_IND_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/KukaKR5_IND/link5.stl",
+        "color": "#f97316",
+        "massProperty": {
+          "mass": 1.581,
+          "ixx": 0.004,
+          "iyy": 0.003,
+          "izz": 0.001,
+          "ixy": -0.0,
+          "ixz": 0.0,
+          "iyz": -0.0
+        },
+        "centerOfMass": [
+          0.0,
+          -0.01,
+          0.033
+        ]
+      },
+      {
+        "id": "KukaKR5_IND_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/KukaKR5_IND/link6.stl",
+        "color": "#f97316",
+        "massProperty": {
+          "mass": 0.016,
+          "ixx": 0.0,
+          "iyy": 0.0,
+          "izz": 0.0,
+          "ixy": 0.0,
+          "ixz": 0.0,
+          "iyz": 0.0
+        },
+        "centerOfMass": [
+          -0.0,
+          -0.0,
+          -0.003
+        ]
+      }
+    ],
+    "payload": 5.0,
+    "totalWeight": 127.0
+  },
+  {
+    "id": "KukaKR62",
+    "name": "KukaKR62",
+    "manufacturer": "Kuka",
+    "model": "KR 6 2 W",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "KukaKR62_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.675,
+        "a": 0.26,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.2288591161895095,
+        "max": 3.2288591161895095,
+        "home": 0.0
+      },
+      {
+        "id": "KukaKR62_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.68,
+        "alpha": 3.141592653589793,
+        "offset": 0.0,
+        "min": -2.705260340591211,
+        "max": 0.6108652381980153,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "KukaKR62_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.035,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -4.258603374866164,
+        "max": 0.6981317007977318,
+        "home": -3.141592653589793
+      },
+      {
+        "id": "KukaKR62_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -0.67,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -9.250245035569947,
+        "max": 2.9670597283903604,
+        "home": -3.141592653589793
+      },
+      {
+        "id": "KukaKR62_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.2689280275926285,
+        "max": 2.2689280275926285,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "KukaKR62_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.115,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -6.1086523819801535,
+        "max": 6.1086523819801535,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "KukaKR62_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/KukaKR62/link0.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR62_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/KukaKR62/link1.stl",
+        "color": "#f97316",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR62_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/KukaKR62/link2.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR62_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/KukaKR62/link3.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR62_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/KukaKR62/link4.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR62_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/KukaKR62/link5.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "KukaKR62_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/KukaKR62/link6.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      }
+    ],
+    "payload": 6.0,
+    "totalWeight": 240.0
+  },
+  {
+    "id": "MTAB_ARISTO",
+    "name": "ARISTO",
+    "manufacturer": "MTAB",
+    "model": "Aristo",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "MTAB_ARISTO_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.322,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.6179938779914944,
+        "max": 2.6179938779914944,
+        "home": 0.0
+      },
+      {
+        "id": "MTAB_ARISTO_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.3,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": 1.0471975511965976,
+        "max": 2.0943951023931953,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "MTAB_ARISTO_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 2.2689280275926285,
+        "max": 3.3161255787892263,
+        "home": 3.141592653589793
+      },
+      {
+        "id": "MTAB_ARISTO_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -0.375,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.6651914291880923,
+        "max": -2.6179938779914944,
+        "home": -3.141592653589793
+      },
+      {
+        "id": "MTAB_ARISTO_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -1.7453292519943295,
+        "max": 1.5707963267948966,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "MTAB_ARISTO_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.063,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -2.8797932657906435,
+        "max": 2.8797932657906435,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "MTAB_ARISTO_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/MTAB_ARISTO/link0.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "MTAB_ARISTO_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/MTAB_ARISTO/link1.stl",
+        "color": "#a0522d",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "MTAB_ARISTO_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/MTAB_ARISTO/link2.stl",
+        "color": "#eab308",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "MTAB_ARISTO_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/MTAB_ARISTO/link3.stl",
+        "color": "#8b5cf6",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "MTAB_ARISTO_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/MTAB_ARISTO/link4.stl",
+        "color": "#cd853f",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "MTAB_ARISTO_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/MTAB_ARISTO/link5.stl",
+        "color": "#9400d3",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "MTAB_ARISTO_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/MTAB_ARISTO/link6.stl",
+        "color": "#800000",
+        "massProperty": null,
+        "centerOfMass": null
+      }
+    ],
+    "payload": 2.5,
+    "totalWeight": 35.0
+  },
+  {
+    "id": "MTAB_Mini",
+    "name": "MTAB Minirobot",
+    "manufacturer": "MTAB",
+    "model": "Minirobot-5 Axis",
+    "dof": 5,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "MTAB_Mini_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.1512248,
+        "a": 0.0500428,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.705260340591211,
+        "max": 2.705260340591211,
+        "home": 0.0
+      },
+      {
+        "id": "MTAB_Mini_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.12,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 2.0943951023931953,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "MTAB_Mini_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.1,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -2.0943951023931953,
+        "max": 0.2617993877991494,
+        "home": -1.5707963267948966
+      },
+      {
+        "id": "MTAB_Mini_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.017499,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "MTAB_Mini_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0840007,
+        "a": 0.0095151,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": 0.8726646259971648,
+        "max": 5.410520681182422,
+        "home": 3.141592653589793
+      }
+    ],
+    "links": [
+      {
+        "id": "MTAB_Mini_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/MTAB_Mini/link0.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "MTAB_Mini_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/MTAB_Mini/link1.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "MTAB_Mini_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/MTAB_Mini/link2.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "MTAB_Mini_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/MTAB_Mini/link3.stl",
+        "color": "#94a3b8",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "MTAB_Mini_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/MTAB_Mini/link4.stl",
+        "color": "#d946ef",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "MTAB_Mini_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/MTAB_Mini/link5.stl",
+        "color": "#f97316",
+        "massProperty": null,
+        "centerOfMass": null
+      }
+    ],
+    "payload": 0.25,
+    "totalWeight": 8.0
+  },
+  {
+    "id": "Puma560",
+    "name": "Puma560",
+    "manufacturer": "Unimation",
+    "model": "PUMA 560",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "Puma560_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.66,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.792526803190927,
+        "max": 2.792526803190927,
+        "home": 0.0
+      },
+      {
+        "id": "Puma560_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.432,
+        "alpha": 3.141592653589793,
+        "offset": 0.0,
+        "min": -0.6108652381980153,
+        "max": 3.7524578917878086,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "Puma560_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.15,
+        "a": 0.002,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.9269908169872414,
+        "max": 0.7853981633974483,
+        "home": 0.0
+      },
+      {
+        "id": "Puma560_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -0.432,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -4.642575810304916,
+        "max": 4.642575810304916,
+        "home": 0.0
+      },
+      {
+        "id": "Puma560_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -4.886921905584122,
+        "max": -1.3962634015954636,
+        "home": -4.71238898038469
+      },
+      {
+        "id": "Puma560_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": -0.056,
+        "a": 0.0,
+        "alpha": -3.141592653589793,
+        "offset": 0.0,
+        "min": -6.283185307179586,
+        "max": 6.283185307179586,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "Puma560_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/Puma560/link0.stl",
+        "color": "#a0522d",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "Puma560_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/Puma560/link1.stl",
+        "color": "#71717a",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "Puma560_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/Puma560/link2.stl",
+        "color": "#ef4444",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "Puma560_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/Puma560/link3.stl",
+        "color": "#d8b4e2",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "Puma560_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/Puma560/link4.stl",
+        "color": "#71717a",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "Puma560_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/Puma560/link5.stl",
+        "color": "#14b8a6",
+        "massProperty": null,
+        "centerOfMass": null
+      },
+      {
+        "id": "Puma560_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/Puma560/link6.stl",
+        "color": "#d946ef",
+        "massProperty": null,
+        "centerOfMass": null
+      }
+    ],
+    "payload": 2.5,
+    "totalWeight": 54.5
+  },
+  {
+    "id": "SmallArm",
+    "name": "SmallArm",
+    "manufacturer": "Small",
+    "model": "Arm",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "SmallArm_joint1",
+        "name": "Joint 1",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.305,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -2.705260340591211,
+        "max": 2.705260340591211,
+        "home": 0.0
+      },
+      {
+        "id": "SmallArm_joint2",
+        "name": "Joint 2",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.22,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -0.6108652381980153,
+        "max": 3.141592653589793,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "SmallArm_joint3",
+        "name": "Joint 3",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -1.1868238913561442,
+        "max": 1.8325957145940461,
+        "home": 0.0
+      },
+      {
+        "id": "SmallArm_joint4",
+        "name": "Joint 4",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.352,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -6.1086523819801535,
+        "max": 6.1086523819801535,
+        "home": 0.0
+      },
+      {
+        "id": "SmallArm_joint5",
+        "name": "Joint 5",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -1.5707963267948966,
+        "max": 1.5707963267948966,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "SmallArm_joint6",
+        "name": "Joint 6",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.1315,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -6.1086523819801535,
+        "max": 6.1086523819801535,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "SmallArm_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/SmallArm/link0.stl",
+        "color": "#71717a",
+        "massProperty": {
+          "mass": 49.249,
+          "ixx": 0.485,
+          "iyy": 1.117,
+          "izz": 1.239,
+          "ixy": -0.011,
+          "ixz": -0.014,
+          "iyz": -0.001
+        },
+        "centerOfMass": [
+          -0.068,
+          -0.001,
+          0.11
+        ]
+      },
+      {
+        "id": "SmallArm_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/SmallArm/link1.stl",
+        "color": "#a0522d",
+        "massProperty": {
+          "mass": 31.277,
+          "ixx": 0.345,
+          "iyy": 0.511,
+          "izz": 0.52,
+          "ixy": -0.123,
+          "ixz": 0.019,
+          "iyz": 0.012
+        },
+        "centerOfMass": [
+          -0.105,
+          -0.059,
+          -0.005
+        ]
+      },
+      {
+        "id": "SmallArm_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/SmallArm/link2.stl",
+        "color": "#eab308",
+        "massProperty": {
+          "mass": 15.578,
+          "ixx": 0.043,
+          "iyy": 0.53,
+          "izz": 0.54,
+          "ixy": 0.004,
+          "ixz": -0.017,
+          "iyz": 0.0
+        },
+        "centerOfMass": [
+          -0.333,
+          -0.002,
+          0.174
+        ]
+      },
+      {
+        "id": "SmallArm_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/SmallArm/link3.stl",
+        "color": "#8b5cf6",
+        "massProperty": {
+          "mass": 25.298,
+          "ixx": 0.759,
+          "iyy": 0.734,
+          "izz": 0.203,
+          "ixy": 0.009,
+          "ixz": -0.024,
+          "iyz": 0.007
+        },
+        "centerOfMass": [
+          -0.032,
+          0.008,
+          0.034
+        ]
+      },
+      {
+        "id": "SmallArm_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/SmallArm/link4.stl",
+        "color": "#cd853f",
+        "massProperty": {
+          "mass": 4.001,
+          "ixx": 0.024,
+          "iyy": 0.009,
+          "izz": 0.02,
+          "ixy": 0.0,
+          "ixz": 0.0,
+          "iyz": -0.002
+        },
+        "centerOfMass": [
+          -0.0,
+          -0.109,
+          0.008
+        ]
+      },
+      {
+        "id": "SmallArm_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/SmallArm/link5.stl",
+        "color": "#9400d3",
+        "massProperty": {
+          "mass": 1.581,
+          "ixx": 0.004,
+          "iyy": 0.003,
+          "izz": 0.001,
+          "ixy": -0.0,
+          "ixz": 0.0,
+          "iyz": -0.0
+        },
+        "centerOfMass": [
+          0.0,
+          -0.01,
+          0.033
+        ]
+      },
+      {
+        "id": "SmallArm_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/SmallArm/link6.stl",
+        "color": "#800000",
+        "massProperty": {
+          "mass": 0.016,
+          "ixx": 0.0,
+          "iyy": 0.0,
+          "izz": 0.0,
+          "ixy": 0.0,
+          "ixz": 0.0,
+          "iyz": 0.0
+        },
+        "centerOfMass": [
+          -0.0,
+          -0.0,
+          -0.003
+        ]
+      }
+    ],
+    "payload": 1.0,
+    "totalWeight": 40.0
+  },
+  {
+    "id": "Stanford",
+    "name": "Stanford Arm",
+    "manufacturer": "Stanford",
+    "model": "Stanford Arm (RRP-RRR)",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "stanford_j1",
+        "name": "Joint 1 (Waist)",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.6604,
+        "a": 0.0,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "stanford_j2",
+        "name": "Joint 2 (Shoulder)",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.162,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -1.5707963267948966,
+        "max": 1.5707963267948966,
+        "home": 0.0
+      },
+      {
+        "id": "stanford_j3",
+        "name": "Joint 3 (Boom Prismatic)",
+        "index": 2,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.381,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": 0.1,
+        "max": 1.0,
+        "home": 0.381
+      },
+      {
+        "id": "stanford_j4",
+        "name": "Joint 4 (Wrist Roll)",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "stanford_j5",
+        "name": "Joint 5 (Wrist Pitch)",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -1.5707963267948966,
+        "max": 1.5707963267948966,
+        "home": 0.0
+      },
+      {
+        "id": "stanford_j6",
+        "name": "Joint 6 (Wrist Yaw)",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.15,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "stanford_link0",
+        "name": "Base",
+        "index": 0,
+        "meshFile": "/assets/robots/Stanford/link0.stl",
+        "color": "#71717a"
+      },
+      {
+        "id": "stanford_link1",
+        "name": "Link 1",
+        "index": 1,
+        "meshFile": "/assets/robots/Stanford/link1.stl",
+        "color": "#a0522d"
+      },
+      {
+        "id": "stanford_link2",
+        "name": "Link 2",
+        "index": 2,
+        "meshFile": "/assets/robots/Stanford/link2.stl",
+        "color": "#eab308"
+      },
+      {
+        "id": "stanford_link3",
+        "name": "Link 3",
+        "index": 3,
+        "meshFile": "/assets/robots/Stanford/link3.stl",
+        "color": "#3b82f6"
+      },
+      {
+        "id": "stanford_link4",
+        "name": "Link 4",
+        "index": 4,
+        "meshFile": "/assets/robots/Stanford/link4.stl",
+        "color": "#22c55e"
+      },
+      {
+        "id": "stanford_link5",
+        "name": "Link 5",
+        "index": 5,
+        "meshFile": "/assets/robots/Stanford/link5.stl",
+        "color": "#d946ef"
+      },
+      {
+        "id": "stanford_link6",
+        "name": "Link 6",
+        "index": 6,
+        "meshFile": "/assets/robots/Stanford/link6.stl",
+        "color": "#06b6d4"
+      }
+    ],
+    "payload": 2.0,
+    "totalWeight": 40.0
+  },
+  {
+    "id": "skeleton_1P",
+    "name": "Skeleton 1P",
+    "manufacturer": "Generic",
+    "model": "1-DOF 1P",
+    "dof": 1,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "1P_j1",
+        "name": "Joint 1 (P)",
+        "index": 0,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.15,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.05
+      }
+    ],
+    "links": [
+      {
+        "id": "1P_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "1P_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_1R",
+    "name": "Skeleton 1R",
+    "manufacturer": "Generic",
+    "model": "1-DOF 1R",
+    "dof": 1,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "1R_j1",
+        "name": "Joint 1 (R)",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.2,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": -1.5707963267948966
+      }
+    ],
+    "links": [
+      {
+        "id": "1R_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "1R_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_2P",
+    "name": "Skeleton 2P",
+    "manufacturer": "Generic",
+    "model": "2-DOF 2P",
+    "dof": 2,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "2P_j1",
+        "name": "Joint 1 (P)",
+        "index": 0,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.0
+      },
+      {
+        "id": "2P_j2",
+        "name": "Joint 2 (P)",
+        "index": 1,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.15,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "2P_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "2P_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "2P_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_2R",
+    "name": "Skeleton 2R",
+    "manufacturer": "Generic",
+    "model": "2-DOF 2R",
+    "dof": 2,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "2R_j1",
+        "name": "Joint 1 (R)",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.2,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "2R_j2",
+        "name": "Joint 2 (R)",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.2,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "2R_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "2R_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "2R_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_PR",
+    "name": "Skeleton PR",
+    "manufacturer": "Generic",
+    "model": "2-DOF PR",
+    "dof": 2,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "PR_j1",
+        "name": "Joint 1 (P)",
+        "index": 0,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.0
+      },
+      {
+        "id": "PR_j2",
+        "name": "Joint 2 (R)",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 1.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "PR_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "PR_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "PR_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_RP",
+    "name": "Skeleton RP",
+    "manufacturer": "Generic",
+    "model": "2-DOF RP",
+    "dof": 2,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "RP_j1",
+        "name": "Joint 1 (R)",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "RP_j2",
+        "name": "Joint 2 (P)",
+        "index": 1,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "RP_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "RP_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "RP_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_3P",
+    "name": "Skeleton 3P",
+    "manufacturer": "Generic",
+    "model": "3-DOF 3P",
+    "dof": 3,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "3P_j1",
+        "name": "Joint 1 (P)",
+        "index": 0,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.1
+      },
+      {
+        "id": "3P_j2",
+        "name": "Joint 2 (P)",
+        "index": 1,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.15,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.1
+      },
+      {
+        "id": "3P_j3",
+        "name": "Joint 3 (P)",
+        "index": 2,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.15,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.1
+      }
+    ],
+    "links": [
+      {
+        "id": "3P_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "3P_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "3P_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      },
+      {
+        "id": "3P_link3",
+        "name": "Link 3",
+        "index": 3,
+        "color": "#06b6d4"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_3R",
+    "name": "Skeleton 3R",
+    "manufacturer": "Generic",
+    "model": "3-DOF 3R",
+    "dof": 3,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "3R_j1",
+        "name": "Joint 1 (R)",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.3,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "3R_j2",
+        "name": "Joint 2 (R)",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.25,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "3R_j3",
+        "name": "Joint 3 (R)",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.1,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "3R_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "3R_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "3R_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      },
+      {
+        "id": "3R_link3",
+        "name": "Link 3",
+        "index": 3,
+        "color": "#06b6d4"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_PPR",
+    "name": "Skeleton PPR",
+    "manufacturer": "Generic",
+    "model": "3-DOF PPR",
+    "dof": 3,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "PPR_j1",
+        "name": "Joint 1 (P)",
+        "index": 0,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.1,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.1
+      },
+      {
+        "id": "PPR_j2",
+        "name": "Joint 2 (P)",
+        "index": 1,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.1,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.1
+      },
+      {
+        "id": "PPR_j3",
+        "name": "Joint 3 (R)",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.05,
+        "a": 0.08,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 1.5707963267948966
+      }
+    ],
+    "links": [
+      {
+        "id": "PPR_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "PPR_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "PPR_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      },
+      {
+        "id": "PPR_link3",
+        "name": "Link 3",
+        "index": 3,
+        "color": "#06b6d4"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_PRP",
+    "name": "Skeleton PRP",
+    "manufacturer": "Generic",
+    "model": "3-DOF PRP",
+    "dof": 3,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "PRP_j1",
+        "name": "Joint 1 (P)",
+        "index": 0,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.1,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.1
+      },
+      {
+        "id": "PRP_j2",
+        "name": "Joint 2 (R)",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.05,
+        "a": 0.08,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "PRP_j3",
+        "name": "Joint 3 (P)",
+        "index": 2,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.08,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.1
+      }
+    ],
+    "links": [
+      {
+        "id": "PRP_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "PRP_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "PRP_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      },
+      {
+        "id": "PRP_link3",
+        "name": "Link 3",
+        "index": 3,
+        "color": "#06b6d4"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_PRR",
+    "name": "Skeleton PRR",
+    "manufacturer": "Generic",
+    "model": "3-DOF PRR",
+    "dof": 3,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "PRR_j1",
+        "name": "Joint 1 (P)",
+        "index": 0,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.0
+      },
+      {
+        "id": "PRR_j2",
+        "name": "Joint 2 (R)",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.2,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "PRR_j3",
+        "name": "Joint 3 (R)",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.2,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "PRR_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "PRR_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "PRR_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      },
+      {
+        "id": "PRR_link3",
+        "name": "Link 3",
+        "index": 3,
+        "color": "#06b6d4"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_RPP",
+    "name": "Skeleton RPP",
+    "manufacturer": "Generic",
+    "model": "3-DOF RPP",
+    "dof": 3,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "RPP_j1",
+        "name": "Joint 1 (R)",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "RPP_j2",
+        "name": "Joint 2 (P)",
+        "index": 1,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.05
+      },
+      {
+        "id": "RPP_j3",
+        "name": "Joint 3 (P)",
+        "index": 2,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.1
+      }
+    ],
+    "links": [
+      {
+        "id": "RPP_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "RPP_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "RPP_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      },
+      {
+        "id": "RPP_link3",
+        "name": "Link 3",
+        "index": 3,
+        "color": "#06b6d4"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_RPR",
+    "name": "Skeleton RPR",
+    "manufacturer": "Generic",
+    "model": "3-DOF RPR",
+    "dof": 3,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "RPR_j1",
+        "name": "Joint 1 (R)",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.05,
+        "a": 0.08,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "RPR_j2",
+        "name": "Joint 2 (P)",
+        "index": 1,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.075,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.08
+      },
+      {
+        "id": "RPR_j3",
+        "name": "Joint 3 (R)",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.05,
+        "a": 0.08,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 1.5707963267948966
+      }
+    ],
+    "links": [
+      {
+        "id": "RPR_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "RPR_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "RPR_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      },
+      {
+        "id": "RPR_link3",
+        "name": "Link 3",
+        "index": 3,
+        "color": "#06b6d4"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_RRP",
+    "name": "Skeleton RRP",
+    "manufacturer": "Generic",
+    "model": "3-DOF RRP",
+    "dof": 3,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "RRP_j1",
+        "name": "Joint 1 (R)",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.05,
+        "a": 0.08,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "RRP_j2",
+        "name": "Joint 2 (R)",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.05,
+        "a": 0.08,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 1.5707963267948966
+      },
+      {
+        "id": "RRP_j3",
+        "name": "Joint 3 (P)",
+        "index": 2,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.075,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "RRP_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "RRP_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "RRP_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      },
+      {
+        "id": "RRP_link3",
+        "name": "Link 3",
+        "index": 3,
+        "color": "#06b6d4"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_4R",
+    "name": "Skeleton 4R",
+    "manufacturer": "Generic",
+    "model": "4-DOF 4R",
+    "dof": 4,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "4R_j1",
+        "name": "Joint 1 (R)",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.4,
+        "a": 0.18,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "4R_j2",
+        "name": "Joint 2 (R)",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.135,
+        "a": 0.6,
+        "alpha": 3.141592653589793,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "4R_j3",
+        "name": "Joint 3 (R)",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.135,
+        "a": 0.12,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "4R_j4",
+        "name": "Joint 4 (R)",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.62,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "4R_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "4R_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "4R_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      },
+      {
+        "id": "4R_link3",
+        "name": "Link 3",
+        "index": 3,
+        "color": "#06b6d4"
+      },
+      {
+        "id": "4R_link4",
+        "name": "Link 4",
+        "index": 4,
+        "color": "#8b5cf6"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_SCARA",
+    "name": "Skeleton SCARA",
+    "manufacturer": "Generic",
+    "model": "4-DOF SCARA",
+    "dof": 4,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "SCARA_j1",
+        "name": "Joint 1 (R)",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.3,
+        "a": 0.2,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "SCARA_j2",
+        "name": "Joint 2 (R)",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.1,
+        "a": 0.15,
+        "alpha": 3.141592653589793,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "SCARA_j3",
+        "name": "Joint 3 (P)",
+        "index": 2,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.1
+      },
+      {
+        "id": "SCARA_j4",
+        "name": "Joint 4 (R)",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "SCARA_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "SCARA_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "SCARA_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      },
+      {
+        "id": "SCARA_link3",
+        "name": "Link 3",
+        "index": 3,
+        "color": "#06b6d4"
+      },
+      {
+        "id": "SCARA_link4",
+        "name": "Link 4",
+        "index": 4,
+        "color": "#8b5cf6"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_5R",
+    "name": "Skeleton 5R",
+    "manufacturer": "Generic",
+    "model": "5-DOF 5R",
+    "dof": 5,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "5R_j1",
+        "name": "Joint 1 (R)",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.4,
+        "a": 0.18,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "5R_j2",
+        "name": "Joint 2 (R)",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.135,
+        "a": 0.6,
+        "alpha": 3.141592653589793,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "5R_j3",
+        "name": "Joint 3 (R)",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.135,
+        "a": 0.12,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "5R_j4",
+        "name": "Joint 4 (R)",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.62,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "5R_j5",
+        "name": "Joint 5 (R)",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "5R_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "5R_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "5R_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      },
+      {
+        "id": "5R_link3",
+        "name": "Link 3",
+        "index": 3,
+        "color": "#06b6d4"
+      },
+      {
+        "id": "5R_link4",
+        "name": "Link 4",
+        "index": 4,
+        "color": "#8b5cf6"
+      },
+      {
+        "id": "5R_link5",
+        "name": "Link 5",
+        "index": 5,
+        "color": "#10b981"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_PPPRR",
+    "name": "Skeleton PPPRR",
+    "manufacturer": "Generic",
+    "model": "5-DOF PPPRR",
+    "dof": 5,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "PPPRR_j1",
+        "name": "Joint 1 (P)",
+        "index": 0,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.1
+      },
+      {
+        "id": "PPPRR_j2",
+        "name": "Joint 2 (P)",
+        "index": 1,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.1
+      },
+      {
+        "id": "PPPRR_j3",
+        "name": "Joint 3 (P)",
+        "index": 2,
+        "type": "prismatic",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": 0.0,
+        "max": 0.5,
+        "home": 0.1
+      },
+      {
+        "id": "PPPRR_j4",
+        "name": "Joint 4 (R)",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.3,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "PPPRR_j5",
+        "name": "Joint 5 (R)",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.254,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.5235987755982988
+      }
+    ],
+    "links": [
+      {
+        "id": "PPPRR_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "PPPRR_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "PPPRR_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      },
+      {
+        "id": "PPPRR_link3",
+        "name": "Link 3",
+        "index": 3,
+        "color": "#06b6d4"
+      },
+      {
+        "id": "PPPRR_link4",
+        "name": "Link 4",
+        "index": 4,
+        "color": "#8b5cf6"
+      },
+      {
+        "id": "PPPRR_link5",
+        "name": "Link 5",
+        "index": 5,
+        "color": "#10b981"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_6R",
+    "name": "Skeleton 6R",
+    "manufacturer": "Generic",
+    "model": "6-DOF 6R",
+    "dof": 6,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "6R_j1",
+        "name": "Joint 1 (R)",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.4,
+        "a": 0.18,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "6R_j2",
+        "name": "Joint 2 (R)",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.135,
+        "a": 0.6,
+        "alpha": 3.141592653589793,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "6R_j3",
+        "name": "Joint 3 (R)",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.135,
+        "a": 0.12,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "6R_j4",
+        "name": "Joint 4 (R)",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.62,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "6R_j5",
+        "name": "Joint 5 (R)",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "6R_j6",
+        "name": "Joint 6 (R)",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "6R_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "6R_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "6R_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      },
+      {
+        "id": "6R_link3",
+        "name": "Link 3",
+        "index": 3,
+        "color": "#06b6d4"
+      },
+      {
+        "id": "6R_link4",
+        "name": "Link 4",
+        "index": 4,
+        "color": "#8b5cf6"
+      },
+      {
+        "id": "6R_link5",
+        "name": "Link 5",
+        "index": 5,
+        "color": "#10b981"
+      },
+      {
+        "id": "6R_link6",
+        "name": "Link 6",
+        "index": 6,
+        "color": "#ec4899"
+      }
+    ]
+  },
+  {
+    "id": "skeleton_SRS",
+    "name": "Skeleton SRS",
+    "manufacturer": "Generic",
+    "model": "7-DOF SRS",
+    "dof": 7,
+    "dhConvention": "standard",
+    "joints": [
+      {
+        "id": "SRS_j1",
+        "name": "Joint 1 (R)",
+        "index": 0,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.4,
+        "a": 0.0,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "SRS_j2",
+        "name": "Joint 2 (R)",
+        "index": 1,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "SRS_j3",
+        "name": "Joint 3 (R)",
+        "index": 2,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.3,
+        "a": 0.0,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "SRS_j4",
+        "name": "Joint 4 (R)",
+        "index": 3,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.1,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "SRS_j5",
+        "name": "Joint 5 (R)",
+        "index": 4,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.35000000000000003,
+        "a": 0.0,
+        "alpha": -1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "SRS_j6",
+        "name": "Joint 6 (R)",
+        "index": 5,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.0,
+        "a": 0.0,
+        "alpha": 1.5707963267948966,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      },
+      {
+        "id": "SRS_j7",
+        "name": "Joint 7 (R)",
+        "index": 6,
+        "type": "revolute",
+        "theta": 0.0,
+        "d": 0.15,
+        "a": 0.0,
+        "alpha": 0.0,
+        "offset": 0.0,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "home": 0.0
+      }
+    ],
+    "links": [
+      {
+        "id": "SRS_link0",
+        "name": "Base",
+        "index": 0,
+        "color": "#64748b"
+      },
+      {
+        "id": "SRS_link1",
+        "name": "Link 1",
+        "index": 1,
+        "color": "#3b82f6"
+      },
+      {
+        "id": "SRS_link2",
+        "name": "Link 2",
+        "index": 2,
+        "color": "#f97316"
+      },
+      {
+        "id": "SRS_link3",
+        "name": "Link 3",
+        "index": 3,
+        "color": "#06b6d4"
+      },
+      {
+        "id": "SRS_link4",
+        "name": "Link 4",
+        "index": 4,
+        "color": "#8b5cf6"
+      },
+      {
+        "id": "SRS_link5",
+        "name": "Link 5",
+        "index": 5,
+        "color": "#10b981"
+      },
+      {
+        "id": "SRS_link6",
+        "name": "Link 6",
+        "index": 6,
+        "color": "#ec4899"
+      },
+      {
+        "id": "SRS_link7",
+        "name": "Link 7",
+        "index": 7,
+        "color": "#eab308"
+      }
+    ]
+  }
+]

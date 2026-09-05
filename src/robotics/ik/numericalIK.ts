@@ -4,6 +4,7 @@ import { computeFK } from '../kinematics/forwardKinematics';
 import { computeJacobian } from '../kinematics/jacobian';
 import { POSITION_TOLERANCE, ORIENTATION_TOLERANCE } from '../math/constants';
 import type { IKOptions, IKSingleSolution } from './types';
+import { finalizeIKSolution } from './ikValidation';
 
 /**
  * Solve Ax = b for an NxN matrix (e.g. 3x3 for position only).
@@ -85,9 +86,6 @@ export function solveNumericalIK(
   let iter = 0;
   let posError = Infinity;
   let oriError = Infinity;
-  let finalManipulability = 0;
-  let finalConditionNumber = Infinity;
-
   let bestQ = [...q];
   let minCombinedError = Infinity;
   let stagnantCount = 0;
@@ -128,8 +126,6 @@ export function solveNumericalIK(
 
     // 4. Compute Jacobian
     const jacResult = computeJacobian(robot, q);
-    finalManipulability = jacResult.manipulability;
-    finalConditionNumber = jacResult.conditionNumber;
 
     // Build task-space error vector
     let e: number[];
@@ -146,8 +142,8 @@ export function solveNumericalIK(
     // Adaptive damping: lambda increases near singularities and decays for fine terminal convergence
     let lambda = initialDamping;
     const thresh = 0.02;
-    if (finalManipulability < thresh) {
-      const ratio = 1 - finalManipulability / thresh;
+    if (jacResult.manipulability < thresh) {
+      const ratio = 1 - jacResult.manipulability / thresh;
       lambda = initialDamping + 0.1 * ratio * ratio;
     } else if (posError < 0.005) {
       // Terminal Gauss-Newton transition for high precision sub-millimeter convergence
@@ -272,47 +268,17 @@ export function solveNumericalIK(
     }
   }
 
-  // Final FK Verification
-  const finalFK = computeFK(robot, evalQ);
-  const finalPos = finalFK.endEffectorTransform.getPosition();
-  const finalRot = finalFK.endEffectorTransform.getRotation();
-
-  posError = finalPos.distanceTo(targetPos);
-  oriError = finalRot.rotationError(targetRot).norm();
-
-  const converged = posError <= posTol && (!use6DOF || oriError <= oriTol);
-
-  // Check joint limits
-  let withinLimits = true;
-  for (let j = 0; j < robot.dof; j++) {
-    const joint = robot.joints[j];
-    if (evalQ[j] < joint.min - 1e-4 || evalQ[j] > joint.max + 1e-4) {
-      withinLimits = false;
-      break;
+  return finalizeIKSolution(
+    robot,
+    evalQ,
+    target,
+    'numerical-dls',
+    iter,
+    {
+      positionTolerance: posTol,
+      orientationTolerance: oriTol,
+      currentJoints: options.currentJoints,
+      isOrientationFree: !use6DOF,
     }
-  }
-
-  let cost = posError * 100 + (use6DOF ? oriError * 10 : 0);
-  if (options.currentJoints && options.currentJoints.length === robot.dof) {
-    let motionDist = 0;
-    for (let j = 0; j < robot.dof; j++) {
-      motionDist += Math.pow(evalQ[j] - options.currentJoints[j], 2);
-    }
-    cost += Math.sqrt(motionDist);
-  }
-  if (!withinLimits) cost += 1000;
-  if (!converged) cost += 10000;
-
-  return {
-    q: evalQ,
-    converged,
-    iterations: iter,
-    positionError: posError,
-    orientationError: oriError,
-    withinLimits,
-    manipulability: finalManipulability,
-    conditionNumber: finalConditionNumber,
-    cost,
-    solverType: 'numerical-dls',
-  };
+  );
 }

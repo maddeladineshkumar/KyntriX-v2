@@ -56,21 +56,23 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({ isPaused = false }) => {
     }
   }, [isPaused]);
 
-  const {
-    robot,
-    q,
-    fkResult,
-    jacobian,
-    ikResult,
-    targetPose,
-    viewOptions,
-    workspacePoints,
-    toggleViewOption,
-    setCameraView,
-  } = useRobotStore();
+  const robot = useRobotStore((s) => s.robot);
+  const q = useRobotStore((s) => s.q);
+  const fkResult = useRobotStore((s) => s.fkResult);
+  const jacobian = useRobotStore((s) => s.jacobian);
+  const ikResult = useRobotStore((s) => s.ikResult);
+  const targetPose = useRobotStore((s) => s.targetPose);
+  const viewOptions = useRobotStore((s) => s.viewOptions);
+  const workspacePoints = useRobotStore((s) => s.workspacePoints);
+  const toggleViewOption = useRobotStore((s) => s.toggleViewOption);
+  const setCameraView = useRobotStore((s) => s.setCameraView);
+  const loadError = useRobotStore((s) => s.loadError);
+  const clearLoadError = useRobotStore((s) => s.clearLoadError);
+  const selectRobot = useRobotStore((s) => s.selectRobot);
 
   const [loadingStep, setLoadingStep] = useState<number | null>(null);
   const [fps, setFps] = useState<number>(60);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Poll FPS from RobotScene every 500ms
   useEffect(() => {
@@ -117,33 +119,41 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({ isPaused = false }) => {
     let active = true;
 
     const load = async () => {
-      const targetRobot = useRobotStore.getState().robot;
-      if (!targetRobot) return;
+      try {
+        const targetRobot = useRobotStore.getState().robot;
+        if (!targetRobot) return;
 
-      setLoadingStep(0); // Loading robot...
-      await new Promise((r) => setTimeout(r, 60));
-      if (!active) return;
+        setLoadingStep(0); // Loading robot...
+        await new Promise((r) => setTimeout(r, 60));
+        if (!active) return;
 
-      setLoadingStep(1); // Loading geometry...
-      await sceneRef.current?.loadRobot(targetRobot);
-      if (!active) return;
+        setLoadingStep(1); // Loading geometry...
+        await sceneRef.current?.loadRobot(targetRobot);
+        if (!active) return;
 
-      setLoadingStep(2); // Building kinematic chain...
-      const currentFK = useRobotStore.getState().fkResult;
-      if (currentFK) {
-        sceneRef.current?.updatePose(currentFK, targetRobot);
+        setLoadingStep(2); // Building kinematic chain...
+        const currentFK = useRobotStore.getState().fkResult;
+        if (currentFK) {
+          sceneRef.current?.updatePose(currentFK, targetRobot);
+        }
+        await new Promise((r) => setTimeout(r, 60));
+        if (!active) return;
+
+        setLoadingStep(3); // Validating model...
+        await new Promise((r) => setTimeout(r, 60));
+        if (!active) return;
+
+        setLoadingStep(4); // Ready
+        setTimeout(() => {
+          if (active) setLoadingStep(null);
+        }, 350);
+      } catch (err) {
+        if (!active) return;
+        setLoadingStep(null);
+        useRobotStore.setState({
+          loadError: `Failed to load robot visual meshes: ${err instanceof Error ? err.message : String(err)}`,
+        });
       }
-      await new Promise((r) => setTimeout(r, 60));
-      if (!active) return;
-
-      setLoadingStep(3); // Validating model...
-      await new Promise((r) => setTimeout(r, 60));
-      if (!active) return;
-
-      setLoadingStep(4); // Ready
-      setTimeout(() => {
-        if (active) setLoadingStep(null);
-      }, 350);
     };
 
     load();
@@ -263,165 +273,282 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({ isPaused = false }) => {
       />
 
       {/* Floating Viewport Toolbar - Light Beige Glass Pill */}
-      <div className="absolute top-4 left-4 z-10 flex flex-wrap items-center gap-1.5 bg-white/90 backdrop-blur-xl px-3 py-1.5 rounded-2xl border-2 border-stone-300/80 shadow-md text-xs text-black">
-        {/* Camera Views Selector */}
-        <div className="flex items-center gap-1 pr-2 border-r border-stone-200">
-          <Camera className="w-3.5 h-3.5 text-black" />
-          <button
-            onClick={() => setCameraView('home')}
-            aria-label="Camera Home"
-            className={`px-2.5 py-1 rounded-xl font-black transition-all cursor-pointer ${
-              viewOptions.cameraView === 'home'
-                ? 'bg-black text-white shadow-xs'
-                : 'hover:bg-stone-100 text-black'
-            }`}
-          >
-            Home
-          </button>
-          <button
-            onClick={() => setCameraView('top')}
-            aria-label="Camera Top"
-            className={`px-2.5 py-1 rounded-xl font-black transition-all cursor-pointer ${
-              viewOptions.cameraView === 'top'
-                ? 'bg-black text-white shadow-xs'
-                : 'hover:bg-stone-100 text-black'
-            }`}
-          >
-            Top
-          </button>
-          <button
-            onClick={() => setCameraView('front')}
-            aria-label="Camera Front"
-            className={`px-2.5 py-1 rounded-xl font-black transition-all cursor-pointer ${
-              viewOptions.cameraView === 'front'
-                ? 'bg-black text-white shadow-xs'
-                : 'hover:bg-stone-100 text-black'
-            }`}
-          >
-            Front
-          </button>
-          <button
-            onClick={() => setCameraView('isometric')}
-            aria-label="Camera Isometric"
-            className={`px-2.5 py-1 rounded-xl font-black transition-all cursor-pointer ${
-              viewOptions.cameraView === 'isometric'
-                ? 'bg-black text-white shadow-xs'
-                : 'hover:bg-stone-100 text-black'
-            }`}
-          >
-            Iso
-          </button>
+      <div className="absolute top-4 left-4 z-10 flex flex-col gap-1 max-w-[calc(100vw-32px)]">
+        <div className="flex items-center gap-1.5 bg-white/90 backdrop-blur-xl px-3 py-1.5 rounded-2xl border-2 border-stone-300/80 shadow-md text-xs text-black">
+          {/* Camera Views Selector */}
+          <div className="flex items-center gap-1 pr-2 border-r border-stone-200">
+            <Camera className="w-3.5 h-3.5 text-black shrink-0" />
+            <button
+              onClick={() => setCameraView('home')}
+              aria-label="Camera Home"
+              className={`px-2.5 py-1 min-h-[32px] rounded-xl font-black transition-all cursor-pointer ${
+                viewOptions.cameraView === 'home'
+                  ? 'bg-black text-white shadow-xs'
+                  : 'hover:bg-stone-100 text-black'
+              }`}
+            >
+              Home
+            </button>
+            <button
+              onClick={() => setCameraView('top')}
+              aria-label="Camera Top"
+              className={`px-2.5 py-1 min-h-[32px] rounded-xl font-black transition-all cursor-pointer ${
+                viewOptions.cameraView === 'top'
+                  ? 'bg-black text-white shadow-xs'
+                  : 'hover:bg-stone-100 text-black'
+              }`}
+            >
+              Top
+            </button>
+            <button
+              onClick={() => setCameraView('front')}
+              aria-label="Camera Front"
+              className={`hidden sm:inline-block px-2.5 py-1 min-h-[32px] rounded-xl font-black transition-all cursor-pointer ${
+                viewOptions.cameraView === 'front'
+                  ? 'bg-black text-white shadow-xs'
+                  : 'hover:bg-stone-100 text-black'
+              }`}
+            >
+              Front
+            </button>
+            <button
+              onClick={() => setCameraView('isometric')}
+              aria-label="Camera Isometric"
+              className={`hidden sm:inline-block px-2.5 py-1 min-h-[32px] rounded-xl font-black transition-all cursor-pointer ${
+                viewOptions.cameraView === 'isometric'
+                  ? 'bg-black text-white shadow-xs'
+                  : 'hover:bg-stone-100 text-black'
+              }`}
+            >
+              Iso
+            </button>
 
-          {/* Extended Camera Dropdown */}
-          <select
-            value={viewOptions.cameraView}
-            onChange={(e) => setCameraView(e.target.value as CameraViewPreset)}
-            aria-label="Extended Camera Views"
-            className="bg-stone-100 border border-stone-300 text-black text-xs rounded-xl px-2 py-1 font-black focus:outline-none focus:border-black cursor-pointer"
-          >
-            {CAMERA_OPTIONS.map((opt) => (
-              <option key={opt.id} value={opt.id}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            {/* Extended Camera Dropdown - Desktop */}
+            <select
+              value={viewOptions.cameraView}
+              onChange={(e) => setCameraView(e.target.value as CameraViewPreset)}
+              aria-label="Extended Camera Views"
+              className="hidden lg:inline-block bg-stone-100 border border-stone-300 text-black text-xs rounded-xl px-2 py-1 font-black focus:outline-none focus:border-black cursor-pointer"
+            >
+              {CAMERA_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
 
-          <button
-            onClick={() => setCameraView('fit-robot')}
-            title="Fit Robot in View"
-            aria-label="Fit Robot in View"
-            className="p-1 hover:bg-stone-100 text-black rounded-lg transition-colors ml-0.5 cursor-pointer"
-          >
-            <Maximize2 className="w-3.5 h-3.5" />
-          </button>
+            <button
+              onClick={() => setCameraView('fit-robot')}
+              title="Fit Robot in View"
+              aria-label="Fit Robot in View"
+              className="p-1 min-h-[32px] min-w-[32px] flex items-center justify-center hover:bg-stone-100 text-black rounded-lg transition-colors ml-0.5 cursor-pointer"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Desktop Full Visibility Toggles */}
+          <div className="hidden md:flex items-center gap-1 pl-1">
+            <button
+              onClick={() => toggleViewOption('showFrames')}
+              title="Toggle Coordinate Frames"
+              aria-label="Toggle Coordinate Frames"
+              aria-pressed={viewOptions.showFrames}
+              className={`flex items-center gap-1 px-2.5 py-1 min-h-[32px] rounded-xl font-black transition-all cursor-pointer ${
+                viewOptions.showFrames
+                  ? 'bg-emerald-100 text-black border border-emerald-300 shadow-2xs'
+                  : 'hover:bg-stone-100 text-black'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              Frames
+            </button>
+
+            <button
+              onClick={() => toggleViewOption('showMeshes')}
+              title="Toggle 3D CAD Meshes"
+              aria-label="Toggle 3D CAD Meshes"
+              aria-pressed={viewOptions.showMeshes}
+              className={`flex items-center gap-1 px-2.5 py-1 min-h-[32px] rounded-xl font-black transition-all cursor-pointer ${
+                viewOptions.showMeshes
+                  ? 'bg-orange-100 text-black border border-orange-300 shadow-2xs'
+                  : 'hover:bg-stone-100 text-black'
+              }`}
+            >
+              {viewOptions.showMeshes ? (
+                <Eye className="w-3.5 h-3.5" />
+              ) : (
+                <EyeOff className="w-3.5 h-3.5" />
+              )}
+              Meshes
+            </button>
+
+            <button
+              onClick={() => toggleViewOption('showTrace')}
+              title="Toggle End-Effector Trace"
+              aria-label="Toggle End-Effector Trace"
+              aria-pressed={viewOptions.showTrace}
+              className={`flex items-center gap-1 px-2.5 py-1 min-h-[32px] rounded-xl font-black transition-all cursor-pointer ${
+                viewOptions.showTrace
+                  ? 'bg-amber-100 text-black border border-amber-300 shadow-2xs'
+                  : 'hover:bg-stone-100 text-black'
+              }`}
+            >
+              <Activity className="w-3.5 h-3.5" />
+              Trace
+            </button>
+
+            <button
+              onClick={() => toggleViewOption('showTargetGizmo')}
+              title="Toggle IK Target Gizmo"
+              aria-label="Toggle IK Target Gizmo"
+              aria-pressed={viewOptions.showTargetGizmo}
+              className={`flex items-center gap-1 px-2.5 py-1 min-h-[32px] rounded-xl font-black transition-all cursor-pointer ${
+                viewOptions.showTargetGizmo
+                  ? 'bg-rose-100 text-black border border-rose-300 shadow-2xs'
+                  : 'hover:bg-stone-100 text-black'
+              }`}
+            >
+              <Crosshair className="w-3.5 h-3.5" />
+              Target
+            </button>
+
+            {/* Debug HUD Toggle */}
+            <button
+              onClick={() => toggleViewOption('showDebug')}
+              title="Toggle Simulation HUD / Debug Overlay"
+              aria-label="Toggle Simulation HUD"
+              aria-pressed={viewOptions.showDebug}
+              className={`flex items-center gap-1 px-2.5 py-1 min-h-[32px] rounded-xl font-black transition-all cursor-pointer ${
+                viewOptions.showDebug
+                  ? 'bg-purple-100 text-black border border-purple-300 shadow-2xs'
+                  : 'hover:bg-stone-100 text-black'
+              }`}
+            >
+              <Terminal className="w-3.5 h-3.5" />
+              Debug
+            </button>
+
+            <button
+              onClick={handleClearTrace}
+              title="Clear Trajectory Trail"
+              aria-label="Clear Trajectory Trail"
+              className="p-1 min-h-[32px] min-w-[32px] flex items-center justify-center hover:bg-rose-100 text-black rounded-lg transition-colors ml-1 cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-rose-700" />
+            </button>
+          </div>
+
+          {/* Mobile Collapsible View ▾ Button */}
+          <div className="md:hidden flex items-center pl-1">
+            <button
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+              aria-label="Toggle View Options Menu"
+              aria-expanded={mobileMenuOpen}
+              className={`flex items-center gap-1 px-2.5 py-1 min-h-[32px] rounded-xl font-black transition-all cursor-pointer ${
+                mobileMenuOpen
+                  ? 'bg-black text-white shadow-xs'
+                  : 'bg-stone-100 hover:bg-stone-200 text-black'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>View ▾</span>
+            </button>
+          </div>
         </div>
 
-        {/* Visibility Toggles */}
-        <div className="flex items-center gap-1 pl-1">
-          <button
-            onClick={() => toggleViewOption('showFrames')}
-            title="Toggle Coordinate Frames"
-            aria-label="Toggle Coordinate Frames"
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-xl font-black transition-all cursor-pointer ${
-              viewOptions.showFrames
-                ? 'bg-emerald-100 text-black border border-emerald-300 shadow-2xs'
-                : 'hover:bg-stone-100 text-black'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            Frames
-          </button>
-
-          <button
-            onClick={() => toggleViewOption('showMeshes')}
-            title="Toggle 3D CAD Meshes"
-            aria-label="Toggle 3D CAD Meshes"
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-xl font-black transition-all cursor-pointer ${
-              viewOptions.showMeshes
-                ? 'bg-orange-100 text-black border border-orange-300 shadow-2xs'
-                : 'hover:bg-stone-100 text-black'
-            }`}
-          >
-            {viewOptions.showMeshes ? (
-              <Eye className="w-3.5 h-3.5" />
-            ) : (
-              <EyeOff className="w-3.5 h-3.5" />
-            )}
-            Meshes
-          </button>
-
-          <button
-            onClick={() => toggleViewOption('showTrace')}
-            title="Toggle End-Effector Trace"
-            aria-label="Toggle End-Effector Trace"
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-xl font-black transition-all cursor-pointer ${
-              viewOptions.showTrace
-                ? 'bg-amber-100 text-black border border-amber-300 shadow-2xs'
-                : 'hover:bg-stone-100 text-black'
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5" />
-            Trace
-          </button>
-
-          <button
-            onClick={() => toggleViewOption('showTargetGizmo')}
-            title="Toggle IK Target Gizmo"
-            aria-label="Toggle IK Target Gizmo"
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-xl font-black transition-all cursor-pointer ${
-              viewOptions.showTargetGizmo
-                ? 'bg-rose-100 text-black border border-rose-300 shadow-2xs'
-                : 'hover:bg-stone-100 text-black'
-            }`}
-          >
-            <Crosshair className="w-3.5 h-3.5" />
-            Target
-          </button>
-
-          {/* Debug HUD Toggle */}
-          <button
-            onClick={() => toggleViewOption('showDebug')}
-            title="Toggle Simulation HUD / Debug Overlay"
-            aria-label="Toggle Simulation HUD"
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-xl font-black transition-all cursor-pointer ${
-              viewOptions.showDebug
-                ? 'bg-purple-100 text-black border border-purple-300 shadow-2xs'
-                : 'hover:bg-stone-100 text-black'
-            }`}
-          >
-            <Terminal className="w-3.5 h-3.5" />
-            Debug
-          </button>
-
-          <button
-            onClick={handleClearTrace}
-            title="Clear Trajectory Trail"
-            aria-label="Clear Trajectory Trail"
-            className="p-1 hover:bg-rose-100 text-black rounded-lg transition-colors ml-1 cursor-pointer"
-          >
-            <Trash2 className="w-3.5 h-3.5 text-rose-700" />
-          </button>
-        </div>
+        {/* Mobile Dropdown Popover Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-white/95 backdrop-blur-xl border-2 border-stone-300/90 rounded-2xl p-2.5 shadow-xl space-y-2 text-xs text-black animate-in fade-in duration-100">
+            <div className="text-[11px] font-black uppercase text-stone-500 tracking-wider px-1">
+              Display & Layers
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                onClick={() => toggleViewOption('showFrames')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-black transition-all cursor-pointer ${
+                  viewOptions.showFrames
+                    ? 'bg-emerald-100 text-black border border-emerald-300'
+                    : 'bg-stone-50 hover:bg-stone-100 text-stone-800'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                Frames
+              </button>
+              <button
+                onClick={() => toggleViewOption('showMeshes')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-black transition-all cursor-pointer ${
+                  viewOptions.showMeshes
+                    ? 'bg-orange-100 text-black border border-orange-300'
+                    : 'bg-stone-50 hover:bg-stone-100 text-stone-800'
+                }`}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                Meshes
+              </button>
+              <button
+                onClick={() => toggleViewOption('showTrace')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-black transition-all cursor-pointer ${
+                  viewOptions.showTrace
+                    ? 'bg-amber-100 text-black border border-amber-300'
+                    : 'bg-stone-50 hover:bg-stone-100 text-stone-800'
+                }`}
+              >
+                <Activity className="w-3.5 h-3.5" />
+                Trace
+              </button>
+              <button
+                onClick={() => toggleViewOption('showTargetGizmo')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-black transition-all cursor-pointer ${
+                  viewOptions.showTargetGizmo
+                    ? 'bg-rose-100 text-black border border-rose-300'
+                    : 'bg-stone-50 hover:bg-stone-100 text-stone-800'
+                }`}
+              >
+                <Crosshair className="w-3.5 h-3.5" />
+                Target
+              </button>
+              <button
+                onClick={() => toggleViewOption('showDebug')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-black transition-all cursor-pointer ${
+                  viewOptions.showDebug
+                    ? 'bg-purple-100 text-black border border-purple-300'
+                    : 'bg-stone-50 hover:bg-stone-100 text-stone-800'
+                }`}
+              >
+                <Terminal className="w-3.5 h-3.5" />
+                Debug
+              </button>
+              <button
+                onClick={handleClearTrace}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-black text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Clear Trace
+              </button>
+            </div>
+            <div className="pt-1.5 border-t border-stone-200">
+              <label htmlFor="mobile-camera-select" className="text-[10px] font-black uppercase text-stone-500 tracking-wider px-1 block mb-1">
+                Camera Angle
+              </label>
+              <select
+                id="mobile-camera-select"
+                value={viewOptions.cameraView}
+                onChange={(e) => {
+                  setCameraView(e.target.value as CameraViewPreset);
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full bg-stone-100 border border-stone-300 text-black text-xs rounded-xl px-2.5 py-1.5 font-black focus:outline-none focus:border-black cursor-pointer"
+              >
+                {CAMERA_OPTIONS.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* PRD §97 Loading Experience Overlay - Light Mode Card */}
@@ -467,6 +594,41 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({ isPaused = false }) => {
                 );
               })}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Robot Loading Error Banner */}
+      {loadError && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="absolute top-16 left-1/2 -translate-x-1/2 z-30 max-w-md w-[90%] bg-rose-50 border-2 border-rose-400 rounded-2xl p-4 shadow-xl text-rose-950 flex flex-col gap-2"
+        >
+          <div className="flex items-start gap-2.5">
+            <span className="text-rose-600 font-bold text-lg leading-none mt-0.5">⚠️</span>
+            <div className="flex-1 text-xs">
+              <div className="font-black text-rose-900">Robot Model Load Error</div>
+              <p className="mt-0.5 text-rose-800 leading-relaxed">{loadError}</p>
+            </div>
+            <button
+              onClick={clearLoadError}
+              aria-label="Dismiss error"
+              className="p-1 rounded-lg hover:bg-rose-200 text-rose-800 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="flex justify-end gap-2 pt-1 border-t border-rose-200">
+            <button
+              onClick={() => {
+                clearLoadError();
+                selectRobot(robot.id);
+              }}
+              className="px-3 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs cursor-pointer shadow-xs"
+            >
+              Retry Loading
+            </button>
           </div>
         </div>
       )}

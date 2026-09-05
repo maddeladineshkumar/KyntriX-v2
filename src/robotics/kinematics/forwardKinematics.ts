@@ -1,6 +1,6 @@
 import { Matrix4, Vector3, Euler, Quaternion } from '../math';
 import type { RobotDefinition, FKResult, FrameInfo, Pose } from '../../data/schema/robotSchema';
-import { computeDHTransform } from '../dh/dhTransform';
+import { computeDHTransform, evaluateJointDH } from '../dh/dhTransform';
 
 /**
  * The ONE authoritative Forward Kinematics function for the entire application.
@@ -13,6 +13,7 @@ export function forwardKinematics(robot: RobotDefinition, q: number[]): FKResult
   const frames: FrameInfo[] = [];
   const origins: Vector3[] = [];
   const axes: Vector3[] = [];
+  const jointOrigins: Vector3[] = [];
 
   // Base frame T_0 (defaults to Identity unless robot specifies baseTransform)
   const baseT = robot.baseTransform ?? Matrix4.identity();
@@ -37,8 +38,27 @@ export function forwardKinematics(robot: RobotDefinition, q: number[]): FKResult
     const Ai = computeDHTransform(joint, jointQ, robot.dhConvention);
     A.push(Ai);
 
-    // Joint axis z_{i-1} in world coordinates (before applying A_i)
-    axes.push(currentT.getRotation().getCol(2));
+    if (robot.dhConvention === 'modified') {
+      // In Modified DH (Craig): A_i = RotX(alpha_{i-1}) * TransX(a_{i-1}) * RotZ(theta_i) * TransZ(d_i)
+      // The joint variable acts around/along the transformed Z axis after RotX(alpha_{i-1}) and TransX(a_{i-1}):
+      // T_pre = currentT * RotX(alpha_{i-1}) * TransX(a_{i-1})
+      const params = evaluateJointDH(joint, jointQ);
+      const ca = Math.cos(params.alpha);
+      const sa = Math.sin(params.alpha);
+      const Tx = new Matrix4([
+        1, 0,   0,   params.a,
+        0, ca, -sa,  0,
+        0, sa,  ca,  0,
+        0, 0,   0,   1,
+      ]);
+      const Tpre = currentT.multiply(Tx);
+      axes.push(Tpre.getRotation().getCol(2));
+      jointOrigins.push(Tpre.getPosition());
+    } else {
+      // Standard DH: joint axis is z_{i-1} passing through frame i-1 origin
+      axes.push(currentT.getRotation().getCol(2));
+      jointOrigins.push(currentT.getPosition());
+    }
 
     // Cumulative transform T_{0i} = T_{0, i-1} * A_i
     currentT = currentT.multiply(Ai);
@@ -80,6 +100,7 @@ export function forwardKinematics(robot: RobotDefinition, q: number[]): FKResult
     frames,
     origins,
     axes,
+    jointOrigins,
     endEffectorPose,
     endEffectorTransform: endEffectorT.clone(),
   };

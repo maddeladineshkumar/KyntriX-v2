@@ -28,8 +28,18 @@ const BUNDLED_ROBOTS: Record<string, RobotDefinition> = {
   skeleton_SCARA: skeletonSCARAJson as unknown as RobotDefinition,
 };
 
-// Dynamic glob for all 42 robots in the library (excluding catalog and trajectory assets)
-const robotModules = import.meta.glob(['./*.json', '!./robotsCatalog.json', '!./thanksTrajectory.json']);
+// Dynamic glob for remaining robots in the library (excluding statically bundled robots and assets)
+const robotModules = import.meta.glob([
+  './*.json',
+  '!./robotsCatalog.json',
+  '!./thanksTrajectory.json',
+  '!./Puma560.json',
+  '!./KukaKR5.json',
+  '!./ABBIRB120.json',
+  '!./Stanford.json',
+  '!./skeleton_3R.json',
+  '!./skeleton_SCARA.json',
+]);
 
 export async function loadRobotById(id: string): Promise<RobotDefinition> {
   if (BUNDLED_ROBOTS[id]) {

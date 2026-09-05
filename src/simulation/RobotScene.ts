@@ -42,6 +42,7 @@ export class RobotScene {
   private targetChangeCallback: ((target: Matrix4) => void) | null = null;
   private colMajorBuffer = new Float64Array(16);
   private isDraggingTarget = false;
+  private loadGeneration = 0;
 
   constructor() {
     // 1. Scene setup
@@ -93,8 +94,8 @@ export class RobotScene {
     const dirLight1 = new THREE.DirectionalLight(0xfffaed, 1.4);
     dirLight1.position.set(3, -4, 5);
     dirLight1.castShadow = true;
-    dirLight1.shadow.mapSize.width = 2048;
-    dirLight1.shadow.mapSize.height = 2048;
+    dirLight1.shadow.mapSize.width = 1024;
+    dirLight1.shadow.mapSize.height = 1024;
     this.scene.add(dirLight1);
 
     const dirLight2 = new THREE.DirectionalLight(0xe8dcc4, 0.5); // warm subtle fill
@@ -232,13 +233,7 @@ export class RobotScene {
     }
   }
 
-  /**
-   * Load robot and initialize link meshes with calibration transforms.
-   */
-  async loadRobot(robot: RobotDefinition): Promise<void> {
-    this.currentRobot = robot;
-
-    // Clear previous link nodes and meshes
+  private clearLinkNodesAndMeshes(): void {
     for (const node of this.linkNodes) {
       if (node) {
         this.robotGroup.remove(node);
@@ -249,23 +244,64 @@ export class RobotScene {
     for (const m of this.linkMeshes) {
       if (m) {
         m.geometry.dispose();
-        (m.material as THREE.Material).dispose();
+        if (Array.isArray(m.material)) {
+          m.material.forEach((mat) => mat.dispose());
+        } else {
+          m.material.dispose();
+        }
       }
     }
     this.linkMeshes = [];
-    this.trace.resetTrail();
+  }
 
+  private disposeStaged(meshes: (THREE.Mesh | null)[]): void {
+    for (const m of meshes) {
+      if (m) {
+        m.geometry.dispose();
+        if (Array.isArray(m.material)) {
+          m.material.forEach((mat) => mat.dispose());
+        } else {
+          m.material.dispose();
+        }
+      }
+    }
+  }
+
+  /**
+   * Load robot and initialize link meshes with calibration transforms.
+   * Hardened against race conditions when user rapidly switches models.
+   */
+  async loadRobot(robot: RobotDefinition): Promise<void> {
+    const gen = ++this.loadGeneration;
     const hasSTLs = robot.links.some((l) => !!l.meshFile);
 
-    if (hasSTLs) {
-      this.proceduralSkeleton.visible = false;
-      this.robotGroup.visible = true;
+    if (!hasSTLs) {
+      if (gen !== this.loadGeneration || this.isDisposed) return;
+      this.clearLinkNodesAndMeshes();
+      this.currentRobot = robot;
+      this.robotGroup.visible = false;
+      this.proceduralSkeleton.visible = true;
+      this.trace.resetTrail();
+      return;
+    }
 
-      // Load STL for each link
+    // Load all link meshes into a local staging array first (atomic load)
+    const stagedNodes: (THREE.Group | null)[] = [];
+    const stagedMeshes: (THREE.Mesh | null)[] = [];
+
+    try {
       for (let i = 0; i < robot.links.length; i++) {
         const link = robot.links[i];
         if (link.meshFile) {
           const geom = await meshLoader.loadSTL(link.meshFile);
+
+          // Check generation after each async load step
+          if (gen !== this.loadGeneration || this.isDisposed) {
+            if (geom) geom.dispose();
+            this.disposeStaged(stagedMeshes);
+            return;
+          }
+
           if (geom) {
             const hexColor = parseInt((link.color || '#71717a').replace('#', ''), 16);
             const material = new THREE.MeshStandardMaterial({
@@ -291,20 +327,44 @@ export class RobotScene {
             linkNode.matrixAutoUpdate = false;
             linkNode.add(mesh);
 
-            this.robotGroup.add(linkNode);
-            this.linkNodes.push(linkNode);
-            this.linkMeshes.push(mesh);
+            stagedNodes.push(linkNode);
+            stagedMeshes.push(mesh);
             continue;
+          } else {
+            throw new Error(`Failed to load STL mesh asset: "${link.meshFile}" for link "${link.name}"`);
           }
         }
-        this.linkNodes.push(null);
-        this.linkMeshes.push(null);
+        stagedNodes.push(null);
+        stagedMeshes.push(null);
       }
-    } else {
-      // Skeleton robot without STLs
-      this.robotGroup.visible = false;
-      this.proceduralSkeleton.visible = true;
+    } catch (err) {
+      this.disposeStaged(stagedMeshes);
+      if (gen === this.loadGeneration) {
+        throw err;
+      }
+      return;
     }
+
+    // Final generation check before committing to scene
+    if (gen !== this.loadGeneration || this.isDisposed) {
+      this.disposeStaged(stagedMeshes);
+      return;
+    }
+
+    // Atomically swap old meshes with new meshes
+    this.clearLinkNodesAndMeshes();
+    this.currentRobot = robot;
+    this.proceduralSkeleton.visible = false;
+    this.robotGroup.visible = true;
+
+    for (const node of stagedNodes) {
+      if (node) {
+        this.robotGroup.add(node);
+      }
+    }
+    this.linkNodes = stagedNodes;
+    this.linkMeshes = stagedMeshes;
+    this.trace.resetTrail();
   }
 
   /**
@@ -486,6 +546,7 @@ export class RobotScene {
 
   dispose(): void {
     this.isDisposed = true;
+    this.loadGeneration++;
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
     }
@@ -498,20 +559,7 @@ export class RobotScene {
     this.targetGizmo.dispose();
     this.proceduralSkeleton.dispose();
 
-    for (const node of this.linkNodes) {
-      if (node) {
-        this.robotGroup.remove(node);
-      }
-    }
-    this.linkNodes = [];
-
-    for (const m of this.linkMeshes) {
-      if (m) {
-        m.geometry.dispose();
-        (m.material as THREE.Material).dispose();
-      }
-    }
-    this.linkMeshes = [];
+    this.clearLinkNodesAndMeshes();
 
     this.renderer.dispose();
     if (this.container && this.renderer.domElement.parentElement === this.container) {

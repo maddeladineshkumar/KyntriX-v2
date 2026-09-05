@@ -111,12 +111,12 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Robotic Manipulator Configuration Setup"
+      aria-labelledby="catalog-modal-title"
       onKeyDown={handleKeyDownTrap}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 select-none animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-in fade-in duration-200"
     >
       <div className="flex flex-col w-full max-w-5xl max-h-[90vh] bg-[#fbf9f5]/95 backdrop-blur-2xl border-2 border-stone-300/80 rounded-3xl shadow-2xl overflow-hidden">
         {/* Header */}
@@ -126,7 +126,7 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
               <img src="/logo.png" alt="KYNTRIX Logo" className="w-full h-full object-contain" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-black tracking-tight">
+              <h2 id="catalog-modal-title" className="text-lg font-black text-black tracking-tight">
                 Robotic Manipulator Configuration Setup
               </h2>
               <p className="text-xs text-stone-700 font-medium">
@@ -154,6 +154,7 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
             {/* Industrial Grade Tab */}
             <button
               onClick={() => setSelectedCategory('industrial')}
+              aria-pressed={selectedCategory === 'industrial'}
               className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
                 selectedCategory === 'industrial'
                   ? 'bg-white border-orange-500 shadow-md ring-2 ring-orange-200/60'
@@ -174,6 +175,7 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
             {/* Academic Skeletons Tab */}
             <button
               onClick={() => setSelectedCategory('skeleton')}
+              aria-pressed={selectedCategory === 'skeleton'}
               className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
                 selectedCategory === 'skeleton'
                   ? 'bg-white border-emerald-500 shadow-md ring-2 ring-emerald-200/60'
@@ -238,6 +240,7 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
               <span className="text-black font-black text-xs mr-1">DOF:</span>
               <button
                 onClick={() => setSelectedDof('all')}
+                aria-pressed={selectedDof === 'all'}
                 className={`px-3 py-1.5 rounded-xl font-black text-xs transition-all cursor-pointer ${
                   selectedDof === 'all'
                     ? 'bg-black text-white shadow-sm'
@@ -250,6 +253,7 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
                 <button
                   key={dof}
                   onClick={() => setSelectedDof(dof)}
+                  aria-pressed={selectedDof === dof}
                   className={`px-3 py-1.5 rounded-xl font-black text-xs transition-all cursor-pointer ${
                     selectedDof === dof
                       ? 'bg-black text-white shadow-sm'
@@ -285,10 +289,13 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
             const isSkeleton = r.id.startsWith('skeleton_');
 
             return (
-              <div
+              <button
+                type="button"
                 key={r.id}
                 onClick={() => handleSelect(r.id)}
-                className={`flex flex-col justify-between p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 ${
+                aria-pressed={isSelected}
+                aria-label={`Select robot ${r.name}, ${r.dof} degrees of freedom, manufacturer ${r.manufacturer}`}
+                className={`text-left w-full flex flex-col justify-between p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-stone-900 ${
                   isSelected
                     ? 'bg-white border-stone-900 shadow-xl ring-4 ring-amber-400/40'
                     : 'bg-white/90 border-stone-200/90 hover:border-stone-400 hover:shadow-lg hover:bg-white'
@@ -338,7 +345,7 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
                     </span>
                   )}
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>

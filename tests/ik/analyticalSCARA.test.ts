@@ -3,7 +3,7 @@ import { solveSCARA, isSCARARobot } from '../../src/robotics/ik/analyticalSCARA'
 import { solveIK } from '../../src/robotics/ik/ikPipeline';
 import { computeFK } from '../../src/robotics/kinematics/forwardKinematics';
 import type { RobotDefinition } from '../../src/data/schema/robotSchema';
-import { Matrix4 } from '../../src/robotics/math/Matrix4';
+import { Matrix4, Vector3 } from '../../src/robotics/math';
 import scaraJson from '../../src/data/robots/skeleton_SCARA.json';
 
 const scara = scaraJson as unknown as RobotDefinition;
@@ -53,5 +53,32 @@ describe('Analytical SCARA Inverse Kinematics', () => {
     const unreachableTarget = Matrix4.translation(5.0, 5.0, 0.5);
     const solutions = solveSCARA(scara, unreachableTarget);
     expect(solutions.length).toBe(0);
+  });
+
+  it('solves analytical SCARA IK accurately with rotated baseTransform and tool offset', () => {
+    const scaraWithOffsets: RobotDefinition = {
+      ...scara,
+      baseTransform: Matrix4.fromRotationTranslation(
+        Matrix4.rotZ(Math.PI / 3).getRotation(),
+        new Vector3(0.5, -0.3, 0.2)
+      ),
+      endEffectorOffset: Matrix4.trans(0.02, 0.01, 0.05),
+    };
+
+    const q_true = [0.3, -0.5, 0.18, 0.4];
+    const fk_true = computeFK(scaraWithOffsets, q_true);
+    const target = fk_true.endEffectorTransform;
+
+    const solutions = solveSCARA(scaraWithOffsets, target);
+    expect(solutions.length).toBeGreaterThan(0);
+
+    for (const sol of solutions) {
+      expect(sol.converged).toBe(true);
+      expect(sol.positionError).toBeLessThan(1e-3);
+
+      const fk_sol = computeFK(scaraWithOffsets, sol.q);
+      const posDist = fk_sol.endEffectorTransform.getPosition().distanceTo(target.getPosition());
+      expect(posDist).toBeLessThan(1e-3);
+    }
   });
 });

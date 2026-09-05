@@ -3,6 +3,7 @@ import { Matrix4 } from '../math/Matrix4';
 import { computeFK } from '../kinematics/forwardKinematics';
 import { POSITION_TOLERANCE, ORIENTATION_TOLERANCE } from '../math/constants';
 import type { IKSingleSolution } from './types';
+import { finalizeIKSolution } from './ikValidation';
 
 /**
  * Checks if a 6-DOF robot possesses a spherical wrist.
@@ -94,14 +95,19 @@ export function solve6RSpherical(
 ): IKSingleSolution[] {
   if (!hasSphericalWrist(robot)) return [];
 
-  const targetPos = target.getPosition();
-  const targetRot = target.getRotation();
-
-  // Decouple tool/end-effector offset if present: T_chain = T_target * (T_offset)^-1
+  // Decouple tool/end-effector offset and base transform if present: T_chain = T_base^-1 * T_target * (T_offset)^-1
   let chainTarget = target;
   if (robot.endEffectorOffset) {
-    chainTarget = target.multiply(robot.endEffectorOffset.rigidInverse());
+    chainTarget = chainTarget.multiply(robot.endEffectorOffset.rigidInverse());
   }
+  if (robot.baseTransform) {
+    chainTarget = robot.baseTransform.rigidInverse().multiply(chainTarget);
+  }
+
+  // Canonical chain robot stripped of external coordinate frame offsets for internal solves
+  const chainRobot: RobotDefinition = (robot.baseTransform || robot.endEffectorOffset)
+    ? { ...robot, baseTransform: undefined, endEffectorOffset: undefined }
+    : robot;
 
   const chainTargetPos = chainTarget.getPosition();
   const chainTargetRot = chainTarget.getRotation();
@@ -139,7 +145,7 @@ export function solve6RSpherical(
     let converged = false;
 
     for (let iter = 0; iter < 20; iter++) {
-      const fk = computeFK(robot, [qArm[0], qArm[1], qArm[2], 0, 0, 0]);
+      const fk = computeFK(chainRobot, [qArm[0], qArm[1], qArm[2], 0, 0, 0]);
       // Frame 4 origin is the wrist center
       const currentPw = fk.origins[4];
       const dp = pw.subtract(currentPw);
@@ -155,7 +161,7 @@ export function solve6RSpherical(
       for (let j = 0; j < 3; j++) {
         const qP = [...qArm];
         qP[j] += delta;
-        const fkP = computeFK(robot, [qP[0], qP[1], qP[2], 0, 0, 0]);
+        const fkP = computeFK(chainRobot, [qP[0], qP[1], qP[2], 0, 0, 0]);
         const pP = fkP.origins[4];
         const deriv = pP.subtract(currentPw).scale(1 / delta);
         Jp[0].push(deriv.x);
@@ -197,7 +203,7 @@ export function solve6RSpherical(
 
   // For each arm position, solve wrist orientation (theta4, theta5, theta6)
   for (const [t1, t2, t3] of solvedArmBranches) {
-    const fk3 = computeFK(robot, [t1, t2, t3, 0, 0, 0]);
+    const fk3 = computeFK(chainRobot, [t1, t2, t3, 0, 0, 0]);
     const R03 = fk3.T[2].getRotation();
     const R36 = R03.transpose().multiply(chainTargetRot);
 
@@ -233,8 +239,8 @@ export function solve6RSpherical(
 
       // Refine wrist orientation
       for (let iter = 0; iter < 15; iter++) {
-        const fkCur = computeFK(robot, q);
-        const rotErr = fkCur.endEffectorTransform.getRotation().rotationError(targetRot);
+        const fkCur = computeFK(chainRobot, q);
+        const rotErr = fkCur.endEffectorTransform.getRotation().rotationError(chainTargetRot);
         if (rotErr.norm() < 1e-5) break;
 
         const delta = 1e-6;
@@ -242,7 +248,7 @@ export function solve6RSpherical(
         for (let j = 3; j < 6; j++) {
           const qP = [...q];
           qP[j] += delta;
-          const fkP = computeFK(robot, qP);
+          const fkP = computeFK(chainRobot, qP);
           const eP = fkCur.endEffectorTransform
             .getRotation()
             .rotationError(fkP.endEffectorTransform.getRotation());
@@ -291,39 +297,22 @@ export function solve6RSpherical(
         normalizedQ.push(angle);
       }
 
-      // MANDATORY FORWARD KINEMATICS VALIDATION
-      const fkFinal = computeFK(robot, normalizedQ);
-      const posError = fkFinal.endEffectorTransform.getPosition().distanceTo(targetPos);
-      const rotError = targetRot
-        .rotationError(fkFinal.endEffectorTransform.getRotation())
-        .norm();
-
-      const converged =
-        posError <= POSITION_TOLERANCE * 10 && rotError <= ORIENTATION_TOLERANCE * 10;
-
-      if (converged) {
-        let cost = posError * 20 + rotError * 5;
-        if (currentJoints && currentJoints.length >= 6) {
-          let distSq = 0;
-          for (let i = 0; i < 6; i++) {
-            distSq += Math.pow(normalizedQ[i] - currentJoints[i], 2);
-          }
-          cost += Math.sqrt(distSq);
+      // Universal Authoritative Validation & Dexterity Computation
+      const solution = finalizeIKSolution(
+        robot,
+        normalizedQ,
+        target,
+        'analytical-6r',
+        1,
+        {
+          positionTolerance: POSITION_TOLERANCE * 10,
+          orientationTolerance: ORIENTATION_TOLERANCE * 10,
+          currentJoints,
         }
-        if (!withinLimits) cost += 1000;
+      );
 
-        solutions.push({
-          q: normalizedQ,
-          converged,
-          iterations: 1,
-          positionError: posError,
-          orientationError: rotError,
-          withinLimits,
-          manipulability: 1.0,
-          conditionNumber: 1.0,
-          cost,
-          solverType: 'analytical-6r',
-        });
+      if (solution.converged) {
+        solutions.push(solution);
       }
     }
   }

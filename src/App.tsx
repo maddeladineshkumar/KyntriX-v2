@@ -1,15 +1,43 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense, lazy } from 'react';
 import { useRobotStore } from './state/robotStore';
 import { Viewport3D } from './features/viewport/Viewport3D';
 import { JointControlPanel } from './features/control/JointControlPanel';
-import { DHTableStudio } from './features/dh/DHTableStudio';
-import { TransformationStudio } from './features/transform/TransformationStudio';
 import { IKStudio } from './features/ik/IKStudio';
-import { TrajectoryStudio } from './features/trajectory/TrajectoryStudio';
-import { AnalysisStudio } from './features/analysis/AnalysisStudio';
-import { CustomRobotCreator } from './features/custom/CustomRobotCreator';
-import { RobotCatalogModal } from './features/catalog/RobotCatalogModal';
-import { WorkspaceStudio } from './features/workspace/WorkspaceStudio';
+
+// Lazy-load heavy studio modules to optimize initial bundle size (Task 10)
+const DHTableStudio = lazy(() =>
+  import('./features/dh/DHTableStudio').then((m) => ({ default: m.DHTableStudio }))
+);
+const TransformationStudio = lazy(() =>
+  import('./features/transform/TransformationStudio').then((m) => ({ default: m.TransformationStudio }))
+);
+const TrajectoryStudio = lazy(() =>
+  import('./features/trajectory/TrajectoryStudio').then((m) => ({ default: m.TrajectoryStudio }))
+);
+const AnalysisStudio = lazy(() =>
+  import('./features/analysis/AnalysisStudio').then((m) => ({ default: m.AnalysisStudio }))
+);
+const CustomRobotCreator = lazy(() =>
+  import('./features/custom/CustomRobotCreator').then((m) => ({ default: m.CustomRobotCreator }))
+);
+const RobotCatalogModal = lazy(() =>
+  import('./features/catalog/RobotCatalogModal').then((m) => ({ default: m.RobotCatalogModal }))
+);
+const WorkspaceStudio = lazy(() =>
+  import('./features/workspace/WorkspaceStudio').then((m) => ({ default: m.WorkspaceStudio }))
+);
+
+const StudioLoadingFallback: React.FC<{ label?: string }> = ({ label = 'Loading studio module...' }) => (
+  <div
+    role="status"
+    aria-live="polite"
+    className="flex flex-col items-center justify-center h-full min-h-[300px] w-full p-8 gap-3 select-none"
+  >
+    <div className="w-8 h-8 border-4 border-stone-300 border-t-amber-500 rounded-full animate-spin" />
+    <span className="text-xs font-bold text-stone-600">{label}</span>
+  </div>
+);
+
 import {
   Sliders,
   Crosshair,
@@ -26,6 +54,8 @@ import {
   RotateCcw,
   Box,
   Download,
+  HelpCircle,
+  BookOpen,
 } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -64,19 +94,20 @@ const KinematicFeasibilityBadge: React.FC = () => {
 };
 
 export function App() {
-  const {
-    robot,
-    activeTab,
-    setActiveTab,
-    activeTrajectory,
-    playback,
-    pauseTrajectory,
-    seekTrajectory,
-    resetToHome,
-  } = useRobotStore();
+  const robot = useRobotStore((s) => s.robot);
+  const activeTab = useRobotStore((s) => s.activeTab);
+  const setActiveTab = useRobotStore((s) => s.setActiveTab);
+  const activeTrajectory = useRobotStore((s) => s.activeTrajectory);
+  const isPlaying = useRobotStore((s) => s.playback.isPlaying);
+  const isEStopped = useRobotStore((s) => s.isEStopped);
+  const emergencyStop = useRobotStore((s) => s.emergencyStop);
+  const resetEStop = useRobotStore((s) => s.resetEStop);
+  const resetToHome = useRobotStore((s) => s.resetToHome);
+  const storeAnnouncement = useRobotStore((s) => s.statusAnnouncement);
 
-  // Onboarding wizard opens on launch as requested
-  const [catalogOpen, setCatalogOpen] = useState(true);
+  const [catalogOpen, setCatalogOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [statusAnnouncement, setStatusAnnouncement] = useState<string>('');
   const [topTab, setTopTab] = useState<'simulate' | 'trajectory'>('simulate');
   const [activeModal, setActiveModal] = useState<StudioModal>(null);
   const [showJointDrawer, setShowJointDrawer] = useState(false);
@@ -86,7 +117,7 @@ export function App() {
   const lastTriggerRef = useRef<HTMLElement | null>(null);
   const prevDialogOpenRef = useRef(false);
 
-  const isAnyDialogOpen = !!activeModal || showJointDrawer || showIKDrawer || catalogOpen;
+  const isAnyDialogOpen = !!activeModal || showJointDrawer || showIKDrawer || catalogOpen || helpOpen;
 
   // Accessibility (PRD §55): Return focus to trigger button when modal/drawer closes
   useEffect(() => {
@@ -103,6 +134,42 @@ export function App() {
     }
     prevDialogOpenRef.current = isAnyDialogOpen;
   }, [isAnyDialogOpen]);
+
+  // Keyboard shortcuts: H (Home), Space (Play/Pause), ? (Help)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isTyping =
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable ||
+          target.tagName === 'SELECT');
+      if (isTyping) return;
+
+      if (e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
+        resetToHome();
+        setStatusAnnouncement('Robot reset to home configuration.');
+      } else if (e.key === ' ' && activeTrajectory) {
+        e.preventDefault();
+        const store = useRobotStore.getState();
+        if (store.isEStopped) return;
+        if (store.playback.isPlaying) {
+          store.pauseTrajectory();
+          setStatusAnnouncement('Trajectory paused.');
+        } else {
+          store.playTrajectory();
+          setStatusAnnouncement('Trajectory playing.');
+        }
+      } else if (e.key === '?') {
+        e.preventDefault();
+        setHelpOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [resetToHome, activeTrajectory]);
 
   // Accessibility: Move focus inside dialog when opened
   useEffect(() => {
@@ -247,42 +314,69 @@ export function App() {
   };
 
   return (
-    <div className="flex flex-col w-screen h-screen bg-[#f7f4ed] text-stone-900 overflow-hidden font-sans select-none antialiased">
-      {/* 1. Ultra-Clean Top Bar - Exactly and ONLY TWO Primary Buttons as instructed */}
-      <header className="relative flex flex-col items-center justify-center px-6 py-2 bg-[#f7f4ed]/95 backdrop-blur-2xl border-b border-stone-300/80 z-30 shrink-0 shadow-xs">
+    <div className="flex flex-col w-screen h-screen bg-[#f7f4ed] text-stone-900 overflow-hidden font-sans antialiased">
+      {/* Screen reader heading & live region announcements */}
+      <h1 className="sr-only">KyntriX Robotics Simulation Laboratory</h1>
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {storeAnnouncement || statusAnnouncement || (isEStopped
+          ? 'Emergency stop active. All robot motion is halted.'
+          : `Active model: ${robot.name}, ${robot.dof} degrees of freedom.`)}
+      </div>
+
+      {/* 1. Ultra-Clean Top Bar */}
+      <header className="relative flex flex-col items-center justify-center px-4 sm:px-6 py-2 bg-[#f7f4ed]/95 backdrop-blur-2xl border-b border-stone-300/80 z-30 shrink-0 shadow-xs">
         {/* Permanent KyntriX Wordmark - Top Left */}
-        <div className="absolute left-3.5 sm:left-6 top-1.5 sm:top-2 flex items-center z-40 select-none pointer-events-auto">
+        <div className="absolute left-3 sm:left-6 top-1.5 sm:top-2 flex items-center z-40 pointer-events-auto">
           <picture>
             <source srcSet="/wordmark.webp" type="image/webp" />
             <img
               src="/wordmark.png"
               alt="KyntriX"
-              className="h-8 sm:h-9 md:h-10 lg:h-11 w-auto object-contain cursor-default"
+              className="h-7 sm:h-9 md:h-10 lg:h-11 w-auto object-contain cursor-default"
               draggable={false}
             />
           </picture>
         </div>
 
-        {/* Native PWA Install Prompt Button */}
-        {installPrompt && (
+        {/* Right-Side Actions: Install & Help/Guide */}
+        <div className="absolute right-3 sm:right-6 top-1.5 sm:top-2 flex items-center gap-2 z-40">
+          {installPrompt && (
+            <button
+              type="button"
+              onClick={handleInstallApp}
+              aria-label="Install KyntriX application"
+              title="Install KyntriX as desktop/mobile app"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 min-h-[36px] bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Install</span>
+            </button>
+          )}
+
           <button
-            onClick={handleInstallApp}
-            aria-label="Install KyntriX application"
-            title="Install KyntriX as desktop/mobile app"
-            className="absolute right-4 top-2.5 flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+            type="button"
+            onClick={() => setHelpOpen(true)}
+            aria-label="Open robotics theory reference and keyboard shortcuts"
+            title="Robotics Reference & Shortcuts (Shortcut: ?)"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 min-h-[36px] bg-white/90 hover:bg-white text-stone-800 text-xs font-black rounded-xl border border-stone-300 shadow-xs transition-all cursor-pointer active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
           >
-            <Download className="w-3.5 h-3.5" />
-            <span>Install App</span>
+            <HelpCircle className="w-3.5 h-3.5 text-stone-700" />
+            <span className="hidden sm:inline">Guide</span>
           </button>
-        )}
+        </div>
 
         {/* Top-Level Mode Selector */}
-        <div className="flex items-center gap-3 p-1.5 bg-white/90 backdrop-blur-xl rounded-2xl border-2 border-stone-200/90 shadow-md">
+        <nav
+          aria-label="Simulation Mode Selector"
+          className="flex items-center gap-2 sm:gap-3 p-1 sm:p-1.5 bg-white/90 backdrop-blur-xl rounded-2xl border-2 border-stone-200/90 shadow-md"
+        >
           {/* Button 1: Simulate Kinematics */}
           <button
+            type="button"
             onClick={() => handleSelectTopTab('simulate')}
             aria-label="Simulate Kinematics Mode"
-            className={`flex items-center gap-3 px-8 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+            aria-pressed={topTab === 'simulate'}
+            className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-8 py-2 sm:py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 ${
               topTab === 'simulate'
                 ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-lg shadow-orange-500/25 scale-[1.02]'
                 : 'text-stone-700 hover:text-black hover:bg-stone-100/90'
@@ -294,9 +388,11 @@ export function App() {
 
           {/* Button 2: Trajectory Analysis */}
           <button
+            type="button"
             onClick={() => handleSelectTopTab('trajectory')}
             aria-label="Trajectory Analysis Mode"
-            className={`flex items-center gap-3 px-8 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+            aria-pressed={topTab === 'trajectory'}
+            className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-8 py-2 sm:py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 ${
               topTab === 'trajectory'
                 ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white shadow-lg shadow-emerald-600/25 scale-[1.02]'
                 : 'text-stone-700 hover:text-black hover:bg-stone-100/90'
@@ -305,10 +401,13 @@ export function App() {
             <Activity className={`w-4 h-4 ${topTab === 'trajectory' ? 'text-white' : 'text-stone-700'}`} />
             <span>Trajectory Analysis</span>
           </button>
-        </div>
+        </nav>
 
-        {/* Revealing Feature Toolbar - Application buttons that pop-up their respective studio windows */}
-        <div className="flex items-center gap-2 mt-2 pt-1.5 border-t border-stone-200/70 overflow-x-auto max-w-full">
+        {/* Revealing Feature Toolbar */}
+        <nav
+          aria-label="Feature Studio Tools"
+          className="flex items-center gap-2 mt-2 pt-1.5 border-t border-stone-200/70 overflow-x-auto max-w-full pb-0.5"
+        >
           {topTab === 'simulate' && (
             <>
               {/* FK Joint Jogger Toggle */}
@@ -443,22 +542,22 @@ export function App() {
               </button>
             </>
           )}
-        </div>
+        </nav>
       </header>
 
-      {/* 2. Main Expansive 3D Simulation Canvas - Full Width Workspace */}
-      <div className="flex-1 w-full h-full relative overflow-hidden bg-[#f7f4ed]">
+      {/* 2. Main Expansive 3D Simulation Canvas - Semantic Landmark */}
+      <main className="flex-1 w-full h-full relative overflow-hidden bg-[#f7f4ed]">
         <Viewport3D isPaused={!!activeModal} />
 
-        {/* Floating Tactile Joint Jogger Drawer (Slides in on demand, never squishing the scene) */}
+        {/* Floating Tactile Joint Jogger Drawer (Responsive across mobile, tablet & desktop) */}
         {showJointDrawer && (
           <div
             role="dialog"
             aria-label="Joint Actuation Panel"
             onKeyDown={handleFocusTrap}
-            className="absolute top-4 right-4 bottom-24 z-20 w-88 lg:w-96 bg-white/95 backdrop-blur-2xl border-2 border-stone-300/90 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right-4 duration-200"
+            className="absolute top-3 right-3 bottom-20 sm:bottom-24 z-20 w-[calc(100vw-24px)] sm:w-88 lg:w-96 max-w-full bg-white/98 backdrop-blur-2xl border-2 border-stone-300/90 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right-4 duration-200"
           >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200 bg-stone-50/80">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200 bg-stone-50/80 shrink-0">
               <div className="flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-black" />
                 <span className="text-xs font-black text-black uppercase tracking-wide">Joint Actuation</span>
@@ -468,19 +567,21 @@ export function App() {
               </div>
               <div className="flex items-center gap-1.5">
                 <button
+                  type="button"
                   onClick={() => {
                     setShowJointDrawer(false);
                     setShowIKDrawer(true);
                     setActiveTab('ik');
                   }}
                   title="Switch to IK Target Solver"
-                  className="px-2 py-1 text-[11px] font-black text-stone-700 hover:text-black hover:bg-stone-200 rounded-lg transition-colors border border-stone-300 cursor-pointer"
+                  className="px-2.5 py-1 min-h-[36px] text-[11px] font-black text-stone-700 hover:text-black hover:bg-stone-200 rounded-lg transition-colors border border-stone-300 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
                 >
                   IK Solver ➔
                 </button>
                 <button
+                  type="button"
                   onClick={() => setShowJointDrawer(false)}
-                  className="p-1 rounded-xl text-stone-500 hover:text-black hover:bg-stone-200/80 transition-colors cursor-pointer"
+                  className="p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-xl text-stone-500 hover:text-black hover:bg-stone-200/80 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
                   aria-label="Close Joint Actuation Drawer"
                 >
                   <X className="w-4 h-4" />
@@ -493,13 +594,13 @@ export function App() {
           </div>
         )}
 
-        {/* Floating Tactile IK Target Solver Drawer (Positioned exclusively on the right side) */}
+        {/* Floating Tactile IK Target Solver Drawer (Responsive right drawer) */}
         {showIKDrawer && (
           <div
             role="dialog"
             aria-label="Inverse Kinematics Target Solver"
             onKeyDown={handleFocusTrap}
-            className="absolute top-4 right-4 bottom-24 z-20 w-96 md:w-[450px] lg:w-[490px] max-w-[calc(100vw-32px)] bg-white/98 backdrop-blur-2xl border-2 border-stone-300/90 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right-4 duration-200"
+            className="absolute top-3 right-3 bottom-20 sm:bottom-24 z-20 w-[calc(100vw-24px)] sm:w-96 md:w-[450px] lg:w-[490px] max-w-full bg-white/98 backdrop-blur-2xl border-2 border-stone-300/90 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right-4 duration-200"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200 bg-white shrink-0">
               <div className="flex items-center gap-2.5">
@@ -517,22 +618,24 @@ export function App() {
               </div>
               <div className="flex items-center gap-1.5">
                 <button
+                  type="button"
                   onClick={() => {
                     setShowIKDrawer(false);
                     setShowJointDrawer(true);
                     setActiveTab('fk');
                   }}
                   title="Switch to Joint Controls"
-                  className="px-2 py-1 text-[11px] font-black text-stone-700 hover:text-black hover:bg-stone-200 rounded-lg transition-colors border border-stone-300 cursor-pointer"
+                  className="px-2.5 py-1 min-h-[36px] text-[11px] font-black text-stone-700 hover:text-black hover:bg-stone-200 rounded-lg transition-colors border border-stone-300 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
                 >
                   Joints ➔
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     setShowIKDrawer(false);
                     setActiveTab('fk');
                   }}
-                  className="p-1 rounded-xl text-stone-500 hover:text-black hover:bg-stone-200/80 transition-colors cursor-pointer"
+                  className="p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-xl text-stone-500 hover:text-black hover:bg-stone-200/80 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
                   aria-label="Close Inverse Kinematics Drawer"
                 >
                   <X className="w-4 h-4" />
@@ -545,42 +648,44 @@ export function App() {
           </div>
         )}
 
-        {/* Sleek Floating Glassmorphic Dock in 3D Viewport */}
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5 px-4 py-2 bg-white/95 backdrop-blur-2xl border-2 border-stone-300/80 rounded-2xl shadow-xl whitespace-nowrap">
+        {/* Sleek Floating Glassmorphic Dock in 3D Viewport - Responsive across 320px to 1920px */}
+        <div className="absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 z-20 flex flex-wrap items-center justify-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-white/95 backdrop-blur-2xl border-2 border-stone-300/80 rounded-2xl shadow-xl max-w-[calc(100vw-16px)] overflow-x-auto">
           {/* Robot Model Selector Pill */}
           <button
+            type="button"
             onClick={() => setCatalogOpen(true)}
             title="Click to change robot model or view catalog"
-            aria-label={`Current robot model: ${robot.name}. Click to change model.`}
-            className="flex items-center gap-2.5 px-3.5 py-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl transition-all group cursor-pointer shrink-0"
+            aria-label={`Current robot model: ${robot.name} (${robot.dof} DOF). Click to change model.`}
+            className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl transition-all cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
           >
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-200 animate-pulse shrink-0" />
-            <div className="flex items-center gap-1.5 whitespace-nowrap">
+            <div className="flex items-center gap-1.5">
               <Bot className="w-3.5 h-3.5 text-black shrink-0" />
               <span className="text-xs font-black text-black">{robot.name}</span>
               <span className="text-[10px] text-stone-600 font-bold">({robot.dof} DOF)</span>
             </div>
             <span className="text-[10px] font-black text-black bg-white px-2 py-0.5 rounded border border-stone-300 ml-1 shrink-0">
-              Change Model ▾
+              Change ▾
             </span>
           </button>
 
           {/* Emergency Stop Button */}
           <button
-            onClick={() => {
-              pauseTrajectory();
-              seekTrajectory(0);
-            }}
-            title="Emergency Stop: Halt simulation immediately"
-            aria-label="Emergency Stop Simulation"
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-black text-xs transition-all cursor-pointer shrink-0 ${
-              activeTrajectory && playback.isPlaying
+            type="button"
+            onClick={isEStopped ? resetEStop : emergencyStop}
+            title={isEStopped ? 'Emergency Stop active: Click to Reset/Resume' : 'Emergency Stop: Halt simulation immediately'}
+            aria-label={isEStopped ? 'Emergency Stop is active. Click to reset.' : 'Emergency Stop Simulation'}
+            aria-pressed={isEStopped}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 min-h-[44px] rounded-xl font-black text-xs transition-all cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 ${
+              isEStopped
+                ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-500/40 animate-pulse ring-2 ring-rose-400'
+                : activeTrajectory && isPlaying
                 ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-500/30 animate-pulse'
                 : 'bg-rose-100 hover:bg-rose-200 text-rose-950 border border-rose-300'
             }`}
           >
-            <Square className={`w-3.5 h-3.5 ${activeTrajectory && playback.isPlaying ? 'fill-white' : 'fill-rose-950'}`} />
-            <span>■ STOP</span>
+            <Square className={`w-3.5 h-3.5 ${isEStopped || (activeTrajectory && isPlaying) ? 'fill-white' : 'fill-rose-950'}`} />
+            <span>{isEStopped ? '■ E-STOPPED (Reset)' : '■ STOP'}</span>
           </button>
 
           {/* Singularity / Feasibility Telemetry Badge */}
@@ -588,10 +693,11 @@ export function App() {
 
           {/* Reset to Home Button */}
           <button
+            type="button"
             onClick={resetToHome}
-            title="Reset Robot Pose to Calibrated Home Pose"
+            title="Reset Robot Pose to Calibrated Home Pose (Shortcut: H)"
             aria-label="Reset to Home Pose"
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl font-black text-xs bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-800 transition-all cursor-pointer shrink-0 active:scale-95"
+            className="flex items-center gap-1 px-3 py-1.5 min-h-[44px] rounded-xl font-black text-xs bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-800 transition-all cursor-pointer shrink-0 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
           >
             <RotateCcw className="w-3.5 h-3.5 text-black" />
             <span>Home</span>
@@ -599,21 +705,23 @@ export function App() {
 
           {/* Quick Joint Controls Drawer Toggle */}
           <button
+            type="button"
             onClick={() => setShowJointDrawer((prev) => !prev)}
             title="Toggle Joint Controls Panel"
             aria-label="Toggle Joint Controls Drawer"
-            className={`p-2 rounded-xl border transition-all cursor-pointer shrink-0 ${
+            aria-expanded={showJointDrawer}
+            className={`p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border transition-all cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 ${
               showJointDrawer
                 ? 'bg-black text-white border-black'
                 : 'bg-stone-100 text-black border-stone-300 hover:bg-stone-200'
             }`}
           >
-            <Sliders className="w-3.5 h-3.5" />
+            <Sliders className="w-4 h-4" />
           </button>
         </div>
-      </div>
+      </main>
 
-      {/* 3. Revealing Application Pop-up Studios (Spacious, Zero-Overflow, 10/10 Desktop Class) */}
+      {/* 3. Revealing Application Pop-up Studios (Spacious, Zero-Overflow) */}
       {activeModal && (
         <div
           role="dialog"
@@ -632,7 +740,7 @@ export function App() {
               : 'Reachable Workspace Point Cloud Studio'
           }
           onKeyDown={handleFocusTrap}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 lg:p-8 animate-in fade-in duration-150 select-none"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 lg:p-8 animate-in fade-in duration-150"
           onClick={(e) => {
             if (e.target === e.currentTarget) closeModal();
           }}
@@ -674,8 +782,9 @@ export function App() {
                   ESC to close
                 </span>
                 <button
+                  type="button"
                   onClick={closeModal}
-                  className="p-2 rounded-2xl hover:bg-stone-100 text-stone-600 hover:text-black border border-stone-200 transition-colors cursor-pointer"
+                  className="p-2 rounded-2xl hover:bg-stone-100 text-stone-600 hover:text-black border border-stone-200 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
                   aria-label="Close studio pop-up"
                 >
                   <X className="w-5 h-5" />
@@ -683,21 +792,118 @@ export function App() {
               </div>
             </div>
 
-            {/* Pop-up Window Body (Spacious, Scrollable, Full Width) */}
+            {/* Pop-up Window Body (Spacious, Scrollable, Full Width with Suspense) */}
             <div className="flex-1 overflow-y-auto p-2 bg-[#fbf9f5]">
-              {activeModal === 'dh' && <DHTableStudio />}
-              {activeModal === 'transform' && <TransformationStudio />}
-              {activeModal === 'custom' && <CustomRobotCreator />}
-              {activeModal === 'trajectory' && <TrajectoryStudio />}
-              {activeModal === 'analysis' && <AnalysisStudio />}
-              {activeModal === 'workspace' && <WorkspaceStudio />}
+              <Suspense fallback={<StudioLoadingFallback label={`Loading ${activeModal} studio...`} />}>
+                {activeModal === 'dh' && <DHTableStudio />}
+                {activeModal === 'transform' && <TransformationStudio />}
+                {activeModal === 'custom' && <CustomRobotCreator />}
+                {activeModal === 'trajectory' && <TrajectoryStudio />}
+                {activeModal === 'analysis' && <AnalysisStudio />}
+                {activeModal === 'workspace' && <WorkspaceStudio />}
+              </Suspense>
             </div>
           </div>
         </div>
       )}
 
-      {/* 4. Model Setup Wizard Modal (opens on launch or when switching model) */}
-      <RobotCatalogModal isOpen={catalogOpen} onClose={() => setCatalogOpen(false)} />
+      {/* 4. Model Setup Wizard Modal */}
+      <Suspense fallback={null}>
+        <RobotCatalogModal isOpen={catalogOpen} onClose={() => setCatalogOpen(false)} />
+      </Suspense>
+
+      {/* 5. Help & Robotics Reference Modal */}
+      {helpOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="help-modal-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setHelpOpen(false);
+          }}
+          onKeyDown={handleFocusTrap}
+        >
+          <div className="flex flex-col w-full max-w-2xl max-h-[85vh] bg-[#fbf9f5] border-2 border-stone-300 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 bg-white shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-amber-100 text-amber-900 border border-amber-300">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 id="help-modal-title" className="text-sm font-black text-black uppercase tracking-wider">
+                    Robotics Engineering Reference & Guide
+                  </h2>
+                  <p className="text-xs text-stone-600">Kinematics concepts & keyboard shortcuts</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHelpOpen(false)}
+                aria-label="Close reference guide"
+                className="p-2 rounded-xl text-stone-500 hover:text-black hover:bg-stone-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 text-xs leading-relaxed text-stone-800">
+              <section className="space-y-1.5">
+                <h3 className="font-black text-black text-sm">Denavit-Hartenberg (DH) Conventions</h3>
+                <p>
+                  <strong>Standard DH:</strong> Frame i is attached to link i. Joint axis i aligns with Z<sub>i-1</sub>, common normal a<sub>i</sub> along X<sub>i</sub>, and twist α<sub>i</sub> is about X<sub>i</sub>.
+                </p>
+                <p>
+                  <strong>Craig Modified DH:</strong> Frame i is attached to joint i. Joint axis i aligns with Z<sub>i</sub>, common normal a<sub>i-1</sub> along X<sub>i-1</sub>, and twist α<sub>i-1</sub> is about X<sub>i-1</sub>. Order of operations: Rot<sub>X</sub>(α<sub>i-1</sub>) · Trans<sub>X</sub>(a<sub>i-1</sub>) · Rot<sub>Z</sub>(θ<sub>i</sub>) · Trans<sub>Z</sub>(d<sub>i</sub>).
+                </p>
+              </section>
+
+              <section className="space-y-1.5">
+                <h3 className="font-black text-black text-sm">Kinematics & Solvers</h3>
+                <p>
+                  <strong>Forward Kinematics (FK):</strong> Authoritatively computes the 4×4 homogeneous transformation matrix T<sub>0n</sub> from robot base to tool tip.
+                </p>
+                <p>
+                  <strong>Inverse Kinematics (IK):</strong> Solves for joint angles given a 6D target pose. Analytical 6R solver applies to arms with spherical wrists (Pieper's criterion). Analytical 3R and SCARA solvers solve planar/SCARA chains. Damped Least Squares (DLS) numerical solver handles general architectures and near-singularities.
+                </p>
+              </section>
+
+              <section className="space-y-1.5">
+                <h3 className="font-black text-black text-sm">Jacobian & Dexterity Metrics</h3>
+                <p>
+                  <strong>Geometric Jacobian J(q):</strong> Maps joint velocities q̇ to Cartesian end-effector velocities [v<sup>T</sup>, ω<sup>T</sup>]<sup>T</sup>.
+                </p>
+                <p>
+                  <strong>Yoshikawa Manipulability w:</strong> w = √(det(J · J<sup>T</sup>)). Near singular configurations where the arm loses degrees of freedom, w → 0.
+                </p>
+                <p>
+                  <strong>Condition Number κ:</strong> κ = σ<sub>max</sub> / σ<sub>min</sub> ≥ 1. Measures directional velocity isotropy; κ → ∞ at kinematic singularities.
+                </p>
+              </section>
+
+              <section className="space-y-1.5">
+                <h3 className="font-black text-black text-sm">Degrees of Freedom (DOF) & Workspace</h3>
+                <p>
+                  <strong>Degrees of Freedom (DOF):</strong> The number of independent joint variables (revolute angles or prismatic offsets) required to completely specify the position and orientation of every link in the manipulator. A 6-DOF arm provides independent control over 3D Cartesian position (X, Y, Z) and orientation (Roll, Pitch, Yaw).
+                </p>
+                <p>
+                  <strong>Reachable Workspace:</strong> The full volume in 3D space that can be reached by the robot's end-effector tip across all allowable joint limit combinations. The dexterous workspace is the subset where arbitrary orientations are also achievable.
+                </p>
+              </section>
+
+              <section className="space-y-1.5">
+                <h3 className="font-black text-black text-sm">Keyboard Shortcuts</h3>
+                <div className="grid grid-cols-2 gap-2 bg-white p-3 rounded-xl border border-stone-200 font-mono text-[11px]">
+                  <div><kbd className="px-1.5 py-0.5 bg-stone-100 border rounded">Esc</kbd> Close modal / drawer</div>
+                  <div><kbd className="px-1.5 py-0.5 bg-stone-100 border rounded">H</kbd> Reset robot to Home</div>
+                  <div><kbd className="px-1.5 py-0.5 bg-stone-100 border rounded">Space</kbd> Play / Pause trajectory</div>
+                  <div><kbd className="px-1.5 py-0.5 bg-stone-100 border rounded">?</kbd> Open this guide</div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

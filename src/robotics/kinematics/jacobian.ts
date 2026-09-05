@@ -21,8 +21,10 @@ export function computeGeometricJacobian(
 
   for (let i = 0; i < n; i++) {
     const joint = robot.joints[i];
-    // Origin and axis of Frame i (the frame immediately preceding link i)
-    const pi = fk.origins[i];
+    // Origin and axis of joint i in world coordinates
+    const pi = fk.jointOrigins
+      ? fk.jointOrigins[i]
+      : (robot.dhConvention === 'modified' ? fk.origins[i + 1] : fk.origins[i]);
     const zi = fk.axes[i];
 
     if (joint.type === 'revolute') {

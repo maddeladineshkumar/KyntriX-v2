@@ -1,8 +1,8 @@
 import type { RobotDefinition } from '../../data/schema/robotSchema';
 import { Matrix4 } from '../math/Matrix4';
-import { computeFK } from '../kinematics/forwardKinematics';
 import { POSITION_TOLERANCE, ORIENTATION_TOLERANCE } from '../math/constants';
 import type { IKSingleSolution } from './types';
+import { finalizeIKSolution } from './ikValidation';
 
 /**
  * Solves Inverse Kinematics for a 3R Planar Robot.
@@ -96,37 +96,20 @@ export function solve3RPlanar(
       q.push(angle);
     }
 
-    // MANDATORY FK VALIDATION
-    const fk = computeFK(robot, q);
-    const fkPos = fk.endEffectorTransform.getPosition();
-    const posError = fkPos.distanceTo(p);
-
-    const rotError = target.getRotation().rotationError(fk.endEffectorTransform.getRotation()).norm();
-
-    const converged = posError <= POSITION_TOLERANCE * 5 && rotError <= ORIENTATION_TOLERANCE * 5;
-
-    let cost = posError * 10 + rotError;
-    if (currentJoints && currentJoints.length >= 3) {
-      let motionDist = 0;
-      for (let i = 0; i < 3; i++) {
-        motionDist += Math.pow(q[i] - currentJoints[i], 2);
-      }
-      cost += Math.sqrt(motionDist);
-    }
-    if (!withinLimits) cost += 1000;
-
-    solutions.push({
+    // Universal Authoritative Validation & Dexterity Computation
+    const solution = finalizeIKSolution(
+      robot,
       q,
-      converged,
-      iterations: 1,
-      positionError: posError,
-      orientationError: rotError,
-      withinLimits,
-      manipulability: 1.0,
-      conditionNumber: 1.0,
-      cost,
-      solverType: 'analytical-3r',
-    });
+      target,
+      'analytical-3r',
+      1,
+      {
+        positionTolerance: POSITION_TOLERANCE * 5,
+        orientationTolerance: ORIENTATION_TOLERANCE * 5,
+        currentJoints,
+      }
+    );
+    solutions.push(solution);
   }
 
   return solutions;

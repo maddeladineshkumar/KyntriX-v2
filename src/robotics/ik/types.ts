@@ -20,6 +20,8 @@ export interface IKSingleSolution {
   withinLimits: boolean;
   manipulability: number;
   conditionNumber: number;
+  rank?: number;
+  isSingular?: boolean;
   cost: number; // weighted sum of error, motion distance, limit proximity
   solverType: 'analytical-3r' | 'analytical-6r' | 'analytical-scara' | 'numerical-dls';
 }

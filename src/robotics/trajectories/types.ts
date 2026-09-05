@@ -1,4 +1,4 @@
-﻿import { Matrix4 } from '../math/Matrix4';
+import { Matrix4 } from '../math/Matrix4';
 import { Vector3 } from '../math/Vector3';
 import { Euler } from '../math/Euler';
 
@@ -14,6 +14,9 @@ export interface TrajectoryState {
   euler: Euler;
   manipulability: number;
   conditionNumber: number;
+  ikSuccess?: boolean;
+  positionError?: number;
+  orientationError?: number;
 }
 
 export interface TrajectoryDataset {
@@ -27,6 +30,10 @@ export interface TrajectoryDataset {
   manipulabilities: number[];
   conditionNumbers: number[];
   states: TrajectoryState[];
+  isValid?: boolean;
+  hasIKFailure?: boolean;
+  failedSampleIndices?: number[];
+  failureReason?: string;
 }
 
 export interface JointTrajectoryParams {

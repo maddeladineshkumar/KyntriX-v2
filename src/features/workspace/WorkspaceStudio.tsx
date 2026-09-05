@@ -8,10 +8,10 @@ import {
   type WorkspaceWorkerResponse,
   type WorkspaceWorkerProgress,
 } from '../../workers/workspaceWorker';
-import { Play, Trash2, Loader2, AlertCircle, CheckCircle2, Sliders } from 'lucide-react';
+import { Play, Trash2, Loader2, AlertCircle, CheckCircle2, Sliders, X } from 'lucide-react';
 
 export const WorkspaceStudio: React.FC = () => {
-  const { robot, setWorkspacePoints, clearWorkspacePoints, workspacePoints } = useRobotStore();
+  const { robot, setWorkspacePoints, clearWorkspacePoints, workspacePoints, setAnnouncement } = useRobotStore();
   const [resolution, setResolution] = useState<number>(15);
   const [isSampling, setIsSampling] = useState<boolean>(false);
   const [progressPercent, setProgressPercent] = useState<number>(0);
@@ -38,9 +38,20 @@ export const WorkspaceStudio: React.FC = () => {
     };
   }, []);
 
+  const handleCancelSampling = () => {
+    if (workerRef.current) {
+      workerRef.current.terminate();
+      workerRef.current = null;
+    }
+    setIsSampling(false);
+    setProgressPercent(0);
+    setAnnouncement('Workspace sampling cancelled.');
+  };
+
   const handleStartSampling = () => {
     setIsSampling(true);
     setProgressPercent(0);
+    setAnnouncement(`Starting workspace sampling for ${robot.name}...`);
     const reqId = ++reqIdRef.current;
 
     // Use Web Worker if available, fallback to synchronous
@@ -67,6 +78,7 @@ export const WorkspaceStudio: React.FC = () => {
             setWorkspacePoints(e.data.result.points);
             setIsSampling(false);
             setProgressPercent(100);
+            setAnnouncement(`Workspace sampling complete: ${e.data.result.points.length} reachable points sampled.`);
           }
         };
 
@@ -97,6 +109,7 @@ export const WorkspaceStudio: React.FC = () => {
       setWorkspacePoints(res.points);
       setIsSampling(false);
       setProgressPercent(100);
+      setAnnouncement(`Workspace sampling complete: ${res.points.length} reachable points sampled.`);
     }, 10);
   };
 
@@ -215,15 +228,26 @@ export const WorkspaceStudio: React.FC = () => {
             )}
           </button>
 
-          <button
-            onClick={handleClear}
-            disabled={isSampling || !workspacePoints}
-            aria-label="Clear Workspace Point Cloud"
-            className="flex items-center gap-1.5 px-4 py-3 bg-white hover:bg-rose-50 border-2 border-stone-300 hover:border-rose-300 rounded-xl text-xs font-black text-black transition-all cursor-pointer shadow-xs active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
-          >
-            <Trash2 className="w-4 h-4 text-rose-700" />
-            <span>Clear Workspace</span>
-          </button>
+          {isSampling ? (
+            <button
+              onClick={handleCancelSampling}
+              aria-label="Cancel Workspace Sampling"
+              className="flex items-center gap-1.5 px-4 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm active:scale-95"
+            >
+              <X className="w-4 h-4" />
+              <span>Cancel Sampling</span>
+            </button>
+          ) : (
+            <button
+              onClick={handleClear}
+              disabled={!workspacePoints}
+              aria-label="Clear Workspace Point Cloud"
+              className="flex items-center gap-1.5 px-4 py-3 bg-white hover:bg-rose-50 border-2 border-stone-300 hover:border-rose-300 rounded-xl text-xs font-black text-black transition-all cursor-pointer shadow-xs active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
+            >
+              <Trash2 className="w-4 h-4 text-rose-700" />
+              <span>Clear Workspace</span>
+            </button>
+          )}
         </div>
       </div>
 

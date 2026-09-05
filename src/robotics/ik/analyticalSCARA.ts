@@ -3,6 +3,7 @@ import { Matrix4 } from '../math/Matrix4';
 import { computeFK } from '../kinematics/forwardKinematics';
 import { POSITION_TOLERANCE, ORIENTATION_TOLERANCE } from '../math/constants';
 import type { IKSingleSolution } from './types';
+import { finalizeIKSolution } from './ikValidation';
 
 /**
  * Check if a robot qualifies as a SCARA manipulator (RRPR with parallel Z axes).
@@ -96,6 +97,11 @@ export function solveSCARA(
 
   const solutions: IKSingleSolution[] = [];
 
+  // Canonical chain robot stripped of external coordinate frame offsets for internal solves
+  const chainRobot: RobotDefinition = (robot.baseTransform || robot.endEffectorOffset)
+    ? { ...robot, baseTransform: undefined, endEffectorOffset: undefined }
+    : robot;
+
   for (const rawQ of branches) {
     const q: number[] = [];
     let withinLimits = true;
@@ -135,21 +141,21 @@ export function solveSCARA(
       q.push(val);
     }
 
-    // Refine with up to 5 fast 1D/2D steps to hit sub-micron machine precision
+    // Refine with up to 5 fast 1D/2D steps in chain base frame
     for (let iter = 0; iter < 5; iter++) {
-      const fkCur = computeFK(robot, q);
+      const fkCur = computeFK(chainRobot, q);
       const curPos = fkCur.endEffectorTransform.getPosition();
-      const errPos = target.getPosition().subtract(curPos);
+      const errPos = chainTarget.getPosition().subtract(curPos);
       if (errPos.norm() < 1e-6) break;
 
-      // Adjust Z directly via prismatic joint
+      // Adjust Z directly via prismatic joint in local frame
       q[2] += (zSign > 0 ? 1 : -1) * errPos.z;
 
       // Minor adjustment to joint 1 and 2
       const delta = 1e-6;
-      const fkX = computeFK(robot, [q[0] + delta, q[1], q[2], q[3]]);
+      const fkX = computeFK(chainRobot, [q[0] + delta, q[1], q[2], q[3]]);
       const dX = fkX.endEffectorTransform.getPosition().subtract(curPos).scale(1 / delta);
-      const fkY = computeFK(robot, [q[0], q[1] + delta, q[2], q[3]]);
+      const fkY = computeFK(chainRobot, [q[0], q[1] + delta, q[2], q[3]]);
       const dY = fkY.endEffectorTransform.getPosition().subtract(curPos).scale(1 / delta);
 
       const det = dX.x * dY.y - dX.y * dY.x;
@@ -161,38 +167,23 @@ export function solveSCARA(
       }
     }
 
-    // MANDATORY FORWARD KINEMATICS VALIDATION
-    const fkFinal = computeFK(robot, q);
-    const finalPos = fkFinal.endEffectorTransform.getPosition();
-    const finalRot = fkFinal.endEffectorTransform.getRotation();
-
-    const posError = finalPos.distanceTo(target.getPosition());
-    const rotError = target.getRotation().rotationError(finalRot).norm();
-
-    const converged = posError <= POSITION_TOLERANCE * 5 && rotError <= ORIENTATION_TOLERANCE * 5;
-
-    let cost = posError * 20 + rotError * 5;
-    if (currentJoints && currentJoints.length >= 4) {
-      let distSq = 0;
-      for (let i = 0; i < 4; i++) {
-        distSq += Math.pow(q[i] - currentJoints[i], 2);
-      }
-      cost += Math.sqrt(distSq);
-    }
-    if (!withinLimits) cost += 1000;
-
-    solutions.push({
+    // Universal Authoritative Validation & Dexterity Computation
+    const solution = finalizeIKSolution(
+      robot,
       q,
-      converged,
-      iterations: 1,
-      positionError: posError,
-      orientationError: rotError,
-      withinLimits,
-      manipulability: 1.0,
-      conditionNumber: 1.0,
-      cost,
-      solverType: 'analytical-scara',
-    });
+      target,
+      'analytical-scara',
+      1,
+      {
+        positionTolerance: POSITION_TOLERANCE * 5,
+        orientationTolerance: ORIENTATION_TOLERANCE * 5,
+        currentJoints,
+      }
+    );
+
+    if (solution.converged) {
+      solutions.push(solution);
+    }
   }
 
   return solutions;

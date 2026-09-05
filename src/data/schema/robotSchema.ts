@@ -86,6 +86,7 @@ export interface FKResult {
   frames: FrameInfo[]; // Frames 0 to n
   origins: Vector3[];
   axes: Vector3[]; // Joint rotation/translation axes in world coordinates
+  jointOrigins?: Vector3[]; // Points on joint rotation/translation axes in world coordinates
   endEffectorPose: Pose;
   endEffectorTransform: Matrix4;
 }

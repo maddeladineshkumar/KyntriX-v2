@@ -122,15 +122,15 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-stone-200/80 bg-white/80 backdrop-blur-md">
           <div className="flex items-center gap-3.5">
-            <div className="p-3 bg-amber-100 text-stone-900 rounded-2xl border border-amber-300 shadow-sm">
-              <Bot className="w-7 h-7" />
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 shadow-sm flex items-center justify-center p-1.5 shrink-0">
+              <img src="/logo.png" alt="KYNTRIX Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <h2 className="text-lg font-black text-black tracking-tight">
                 Robotic Manipulator Configuration Setup
               </h2>
               <p className="text-xs text-stone-700 font-medium">
-                Select your industrial CAD robotic arm or theoretical academic skeleton to initialize live simulation
+                Select your industrial CAD robotic arm or theoretical academic skeleton to initialize live simulation in KYNTRIX
               </p>
             </div>
           </div>

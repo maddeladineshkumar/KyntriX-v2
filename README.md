@@ -1,6 +1,6 @@
-# RoboAnalyzer Web — Next-Generation Robotics Simulation Platform
+# KYNTRIX — Next-Generation Robotics Simulation Platform
 
-**RoboAnalyzer Web** is an interactive, browser-based 3D robotics simulation platform designed for learning, analyzing, and designing serial robotic manipulators. It provides physics-grounded kinematic analysis, dynamic trajectory planning, and 3D CAD visualization matching industrial robotic standards.
+**KYNTRIX** is an interactive, browser-based 3D robotics simulation platform designed for learning, analyzing, and designing serial robotic manipulators. It provides physics-grounded kinematic analysis, dynamic trajectory planning, and 3D CAD visualization matching industrial robotic standards.
 
 ---
 

@@ -250,12 +250,25 @@ export function App() {
     <div className="flex flex-col w-screen h-screen bg-[#f7f4ed] text-stone-900 overflow-hidden font-sans select-none antialiased">
       {/* 1. Ultra-Clean Top Bar - Exactly and ONLY TWO Primary Buttons as instructed */}
       <header className="relative flex flex-col items-center justify-center px-6 py-2 bg-[#f7f4ed]/95 backdrop-blur-2xl border-b border-stone-300/80 z-30 shrink-0 shadow-xs">
+        {/* Permanent KYNTRIX Wordmark - Top Left */}
+        <div className="absolute left-3.5 sm:left-6 top-2 sm:top-3 flex items-center z-40 select-none pointer-events-auto">
+          <picture>
+            <source srcSet="/wordmark.webp" type="image/webp" />
+            <img
+              src="/wordmark.png"
+              alt="KYNTRIX"
+              className="h-6 sm:h-7 md:h-8 w-auto object-contain cursor-default"
+              draggable={false}
+            />
+          </picture>
+        </div>
+
         {/* Native PWA Install Prompt Button */}
         {installPrompt && (
           <button
             onClick={handleInstallApp}
-            aria-label="Install RoboAnalyzer application"
-            title="Install RoboAnalyzer as desktop/mobile app"
+            aria-label="Install KYNTRIX application"
+            title="Install KYNTRIX as desktop/mobile app"
             className="absolute right-4 top-2.5 flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
           >
             <Download className="w-3.5 h-3.5" />

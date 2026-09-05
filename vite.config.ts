@@ -12,10 +12,10 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons/*.png', 'models/**/*.stl', 'models/**/*.json'],
+      includeAssets: ['favicon.ico', 'favicon.svg', 'favicon-*.png', 'apple-touch-icon.png', 'logo.*', 'wordmark.*', 'icons/*.png', 'models/**/*.stl', 'models/**/*.json'],
       manifest: {
-        name: 'RoboAnalyzer Web',
-        short_name: 'RoboAnalyzer',
+        name: 'KYNTRIX',
+        short_name: 'KYNTRIX',
         description: 'Professional web-native robotics kinematics and simulation laboratory',
         theme_color: '#f7f4ed',
         background_color: '#f7f4ed',

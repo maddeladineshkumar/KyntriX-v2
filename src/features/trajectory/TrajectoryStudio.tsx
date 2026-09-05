@@ -94,7 +94,7 @@ export const TrajectoryStudio: React.FC = () => {
           ) : (
             <>
               <Sparkles className="w-4 h-4 fill-black text-black" />
-              <span>LOAD KYNTRIX "THANKS" TRAJECTORY</span>
+              <span>LOAD KyntriX "THANKS" TRAJECTORY</span>
             </>
           )}
         </button>

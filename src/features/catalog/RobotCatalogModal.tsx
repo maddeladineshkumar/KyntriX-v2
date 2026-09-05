@@ -130,7 +130,7 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
                 Robotic Manipulator Configuration Setup
               </h2>
               <p className="text-xs text-stone-700 font-medium">
-                Select your industrial CAD robotic arm or theoretical academic skeleton to initialize live simulation in KYNTRIX
+                Select your industrial CAD robotic arm or theoretical academic skeleton to initialize live simulation in KyntriX
               </p>
             </div>
           </div>

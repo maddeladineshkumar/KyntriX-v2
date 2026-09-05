@@ -1,6 +1,6 @@
-# KYNTRIX — Next-Generation Robotics Simulation Platform
+# KyntriX — Next-Generation Robotics Simulation Platform
 
-**KYNTRIX** is an interactive, browser-based 3D robotics simulation platform designed for learning, analyzing, and designing serial robotic manipulators. It provides physics-grounded kinematic analysis, dynamic trajectory planning, and 3D CAD visualization matching industrial robotic standards.
+**KyntriX** is an interactive, browser-based 3D robotics simulation platform designed for learning, analyzing, and designing serial robotic manipulators. It provides physics-grounded kinematic analysis, dynamic trajectory planning, and 3D CAD visualization matching industrial robotic standards.
 
 ---
 

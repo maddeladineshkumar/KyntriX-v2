@@ -189,7 +189,7 @@ export const AnalysisStudio: React.FC = () => {
           <div>
             <h2 className="text-sm font-black text-black uppercase tracking-wider">Kinematic Analysis & Plotting</h2>
             <p className="text-xs text-black font-medium">
-              KYNTRIX dynamic analysis: multi-variable dynamic time-series charts
+              KyntriX dynamic analysis: multi-variable dynamic time-series charts
             </p>
           </div>
         </div>

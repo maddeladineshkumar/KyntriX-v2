@@ -14,8 +14,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'favicon.svg', 'favicon-*.png', 'apple-touch-icon.png', 'logo.*', 'wordmark.*', 'icons/*.png', 'models/**/*.stl', 'models/**/*.json'],
       manifest: {
-        name: 'KYNTRIX',
-        short_name: 'KYNTRIX',
+        name: 'KyntriX',
+        short_name: 'KyntriX',
         description: 'Professional web-native robotics kinematics and simulation laboratory',
         theme_color: '#f7f4ed',
         background_color: '#f7f4ed',

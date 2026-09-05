@@ -39,6 +39,7 @@ export class FrameTriad extends THREE.Group {
   private arrowZ: THREE.ArrowHelper;
   private originDot: THREE.Mesh;
   private label: THREE.Sprite;
+  private colMajorBuffer = new Float64Array(16);
 
   constructor(frameIndex: number, axisLength = 0.12) {
     super();
@@ -77,6 +78,13 @@ export class FrameTriad extends THREE.Group {
   updateTransform(matrixElements: Float64Array): void {
     // Convert column-major Float64Array to THREE.Matrix4
     this.matrix.fromArray(matrixElements);
+    this.matrixWorldNeedsUpdate = true;
+  }
+
+  updateFromMatrix4(matrix: import('../robotics/math/Matrix4').Matrix4): void {
+    matrix.toColumnMajor(this.colMajorBuffer);
+    this.matrix.fromArray(this.colMajorBuffer);
+    this.matrixWorldNeedsUpdate = true;
   }
 
   dispose(): void {
@@ -113,8 +121,8 @@ export class CoordinateFramesManager extends THREE.Group {
     for (let i = 0; i < frames.length; i++) {
       const frame = frames[i];
       const triad = this.triads[i];
-      // Pass column-major elements for Three.js
-      triad.updateTransform(frame.matrix.toColumnMajor());
+      // Zero-allocation transform update
+      triad.updateFromMatrix4(frame.matrix);
       triad.visible = true;
     }
   }

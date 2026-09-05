@@ -37,9 +37,24 @@ const LOADING_STEPS = [
   'Ready',
 ];
 
-export const Viewport3D: React.FC = () => {
+interface Viewport3DProps {
+  isPaused?: boolean;
+}
+
+export const Viewport3D: React.FC<Viewport3DProps> = ({ isPaused = false }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<RobotScene | null>(null);
+
+  // Pause/resume render loop when obscured by modal studios
+  useEffect(() => {
+    if (sceneRef.current) {
+      if (isPaused) {
+        sceneRef.current.pause();
+      } else {
+        sceneRef.current.resume();
+      }
+    }
+  }, [isPaused]);
 
   const {
     robot,

@@ -108,20 +108,27 @@ export function solveSCARA(
         val = val - joint.theta - joint.offset;
         val = Math.atan2(Math.sin(val), Math.cos(val));
 
-        if (val < joint.min || val > joint.max) {
-          if (val + 2 * Math.PI >= joint.min && val + 2 * Math.PI <= joint.max) {
+        const tol = 1e-5;
+        if (val < joint.min - tol || val > joint.max + tol) {
+          if (val + 2 * Math.PI >= joint.min - tol && val + 2 * Math.PI <= joint.max + tol) {
             val += 2 * Math.PI;
-          } else if (val - 2 * Math.PI >= joint.min && val - 2 * Math.PI <= joint.max) {
+          } else if (val - 2 * Math.PI >= joint.min - tol && val - 2 * Math.PI <= joint.max + tol) {
             val -= 2 * Math.PI;
           } else {
             withinLimits = false;
           }
         }
+        if (withinLimits) {
+          val = Math.max(joint.min, Math.min(joint.max, val));
+        }
       } else {
         // Prismatic joint
         val = val - joint.d - joint.offset;
-        if (val < joint.min || val > joint.max) {
+        const tol = 1e-5;
+        if (val < joint.min - tol || val > joint.max + tol) {
           withinLimits = false;
+        } else {
+          val = Math.max(joint.min, Math.min(joint.max, val));
         }
       }
 

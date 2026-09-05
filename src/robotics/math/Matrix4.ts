@@ -278,14 +278,14 @@ export class Matrix4 {
   /**
    * Return Column-Major array for Three.js (Matrix4.fromArray)
    */
-  toColumnMajor(): Float64Array {
+  toColumnMajor(target?: Float64Array): Float64Array {
     const m = this.elements;
-    return new Float64Array([
-      m[0], m[4], m[8],  m[12],
-      m[1], m[5], m[9],  m[13],
-      m[2], m[6], m[10], m[14],
-      m[3], m[7], m[11], m[15],
-    ]);
+    const out = target || new Float64Array(16);
+    out[0] = m[0];  out[1] = m[4];  out[2] = m[8];   out[3] = m[12];
+    out[4] = m[1];  out[5] = m[5];  out[6] = m[9];   out[7] = m[13];
+    out[8] = m[2];  out[9] = m[6];  out[10] = m[10]; out[11] = m[14];
+    out[12] = m[3]; out[13] = m[7]; out[14] = m[11]; out[15] = m[15];
+    return out;
   }
 
   static fromColumnMajor(colMajor: ArrayLike<number>): Matrix4 {

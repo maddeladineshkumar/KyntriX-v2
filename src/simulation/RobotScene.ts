@@ -40,6 +40,7 @@ export class RobotScene {
   private isDisposed = false;
   private animationFrameId: number | null = null;
   private targetChangeCallback: ((target: Matrix4) => void) | null = null;
+  private colMajorBuffer = new Float64Array(16);
 
   constructor() {
     // 1. Scene setup
@@ -53,10 +54,15 @@ export class RobotScene {
     this.camera.position.set(1.5, -2.0, 1.2);
 
     // Renderer
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false,
+      preserveDrawingBuffer: true,
+      powerPreference: 'high-performance',
+    });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
     // Controls
     this.orbitControls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -126,6 +132,7 @@ export class RobotScene {
   private frameTimes: number[] = [];
   private lastFrameTimestamp: number = performance.now();
   private currentFPS: number = 60;
+  private isPaused: boolean = false;
   private workspacePointCloud: THREE.Points | null = null;
 
   attach(container: HTMLElement): void {
@@ -141,8 +148,24 @@ export class RobotScene {
     this.renderer.setSize(width, height);
   }
 
+  pause(): void {
+    if (this.isPaused) return;
+    this.isPaused = true;
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
+  }
+
+  resume(): void {
+    if (!this.isPaused || this.isDisposed) return;
+    this.isPaused = false;
+    this.lastFrameTimestamp = performance.now();
+    this.renderLoop();
+  }
+
   private renderLoop(): void {
-    if (this.isDisposed) return;
+    if (this.isDisposed || this.isPaused) return;
     this.animationFrameId = requestAnimationFrame(this.renderLoop);
 
     const now = performance.now();
@@ -303,12 +326,14 @@ export class RobotScene {
         if (i === 0) {
           // Base link
           const baseT = this.currentRobot.baseTransform ?? Matrix4.identity();
-          node.matrix.fromArray(baseT.toColumnMajor());
+          baseT.toColumnMajor(this.colMajorBuffer);
+          node.matrix.fromArray(this.colMajorBuffer);
         } else {
           // Link i corresponds to transform T_{0, i-1}
           const tIdx = i - 1;
           if (tIdx < fk.T.length) {
-            node.matrix.fromArray(fk.T[tIdx].toColumnMajor());
+            fk.T[tIdx].toColumnMajor(this.colMajorBuffer);
+            node.matrix.fromArray(this.colMajorBuffer);
           }
         }
       }

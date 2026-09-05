@@ -32,37 +32,69 @@ function areSolutionsEqual(q1: number[], q2: number[], tol = 1e-2): boolean {
 function generateBranchSeeds(robot: RobotDefinition, baseGuess: number[]): number[][] {
   const seeds: number[][] = [baseGuess];
   if (robot.dof >= 3) {
-    // Shoulder alternate (theta1 + pi)
+    const j0 = robot.joints[0];
+    const j2 = robot.joints[2];
+
+    const alt0 =
+      j0.type === 'revolute'
+        ? Math.atan2(Math.sin(baseGuess[0] + Math.PI), Math.cos(baseGuess[0] + Math.PI))
+        : j0.min + (j0.max - j0.min) * 0.75;
+
+    const alt2 =
+      j2.type === 'revolute'
+        ? -baseGuess[2]
+        : j2.min + (j2.max - j2.min) * 0.25;
+
+    // Shoulder alternate
     const s1 = [...baseGuess];
-    s1[0] = Math.atan2(Math.sin(s1[0] + Math.PI), Math.cos(s1[0] + Math.PI));
+    s1[0] = alt0;
     seeds.push(s1);
 
-    // Elbow alternate (-theta3)
+    // Elbow alternate
     const s2 = [...baseGuess];
-    s2[2] = -s2[2];
+    s2[2] = alt2;
     seeds.push(s2);
 
     // Shoulder + Elbow alternate
     const s3 = [...baseGuess];
-    s3[0] = s1[0];
-    s3[2] = -s3[2];
+    s3[0] = alt0;
+    s3[2] = alt2;
     seeds.push(s3);
   }
 
   if (robot.dof >= 6) {
-    // Wrist flip: theta4 += pi, theta5 = -theta5, theta6 += pi
+    const j3 = robot.joints[3];
+    const j4 = robot.joints[4];
+    const j5 = robot.joints[5];
+
+    // Wrist flip: only apply angular flip if joints are revolute
     const baseCount = seeds.length;
     for (let i = 0; i < baseCount; i++) {
       const flipped = [...seeds[i]];
-      flipped[3] = Math.atan2(Math.sin(flipped[3] + Math.PI), Math.cos(flipped[3] + Math.PI));
-      flipped[4] = -flipped[4];
-      flipped[5] = Math.atan2(Math.sin(flipped[5] + Math.PI), Math.cos(flipped[5] + Math.PI));
+      if (j3.type === 'revolute') {
+        flipped[3] = Math.atan2(Math.sin(flipped[3] + Math.PI), Math.cos(flipped[3] + Math.PI));
+      }
+      if (j4.type === 'revolute') {
+        flipped[4] = -flipped[4];
+      }
+      if (j5.type === 'revolute') {
+        flipped[5] = Math.atan2(Math.sin(flipped[5] + Math.PI), Math.cos(flipped[5] + Math.PI));
+      }
       seeds.push(flipped);
+    }
+  }
+
+  // Clamp all seed values to valid joint limits
+  for (const seed of seeds) {
+    for (let j = 0; j < robot.dof; j++) {
+      const joint = robot.joints[j];
+      seed[j] = Math.max(joint.min, Math.min(joint.max, seed[j]));
     }
   }
 
   return seeds;
 }
+
 
 /**
  * Authoritative Inverse Kinematics Pipeline
@@ -154,7 +186,7 @@ export function solveIK(
 
         const branchSol = solveNumericalIK(robot, target, {
           ...options,
-          maxIterations: Math.min(options.maxIterations ?? 80, 40),
+          maxIterations: options.maxIterations ?? 60,
           initialGuess: seed,
         });
 

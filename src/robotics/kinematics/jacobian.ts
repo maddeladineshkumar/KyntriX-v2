@@ -123,7 +123,7 @@ function computeSymmetricEigenvalues(A_orig: number[][], size: number): number[]
       }
     }
 
-    if (maxOff < 1e-12) break;
+    if (maxOff < 1e-9) break;
 
     // Compute Jacobi rotation angle
     const diff = A[q][q] - A[p][p];

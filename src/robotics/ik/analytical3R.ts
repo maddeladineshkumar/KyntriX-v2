@@ -79,15 +79,19 @@ export function solve3RPlanar(
       angle = Math.atan2(Math.sin(angle), Math.cos(angle));
 
       // Check limits
-      if (angle < joint.min || angle > joint.max) {
+      const tol = 1e-5;
+      if (angle < joint.min - tol || angle > joint.max + tol) {
         // Try unwrapping by +/- 2pi
-        if (angle + 2 * Math.PI >= joint.min && angle + 2 * Math.PI <= joint.max) {
+        if (angle + 2 * Math.PI >= joint.min - tol && angle + 2 * Math.PI <= joint.max + tol) {
           angle += 2 * Math.PI;
-        } else if (angle - 2 * Math.PI >= joint.min && angle - 2 * Math.PI <= joint.max) {
+        } else if (angle - 2 * Math.PI >= joint.min - tol && angle - 2 * Math.PI <= joint.max + tol) {
           angle -= 2 * Math.PI;
         } else {
           withinLimits = false;
         }
+      }
+      if (withinLimits) {
+        angle = Math.max(joint.min, Math.min(joint.max, angle));
       }
       q.push(angle);
     }

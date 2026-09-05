@@ -170,4 +170,28 @@ describe('JointControlPanel Accessibility & Store Reactivity Suite', () => {
     root.unmount();
     container.remove();
   });
+
+  it('renders simulation sliders with full ARIA attributes in DHTableStudio', async () => {
+    const { DHTableStudio } = await import('../../src/features/dh/DHTableStudio');
+    const root = createRoot(container);
+    root.render(React.createElement(DHTableStudio));
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const simSliders = container.querySelectorAll<HTMLInputElement>('input[type="range"][aria-label^="Simulation Joint"]');
+    const store = useRobotStore.getState();
+    expect(simSliders.length).toBe(store.robot.dof);
+
+    simSliders.forEach((slider, idx) => {
+      const joint = store.robot.joints[idx];
+      const isRev = joint.type === 'revolute';
+      expect(slider.getAttribute('aria-label')).toContain(isRev ? 'angle' : 'displacement');
+      expect(slider.getAttribute('aria-valuemin')).toBeDefined();
+      expect(slider.getAttribute('aria-valuemax')).toBeDefined();
+      expect(slider.getAttribute('aria-valuenow')).toBeDefined();
+    });
+
+    root.unmount();
+    container.remove();
+  });
 });

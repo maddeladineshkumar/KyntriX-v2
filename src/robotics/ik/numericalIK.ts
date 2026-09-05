@@ -110,14 +110,14 @@ export function solveNumericalIK(
 
     // Track best solution & stagnation
     const combinedError = posError + (use6DOF ? oriError * 0.1 : 0);
-    if (combinedError < minCombinedError - 1e-5) {
+    if (combinedError < minCombinedError - 1e-9) {
       minCombinedError = combinedError;
       bestQ = [...q];
       stagnantCount = 0;
     } else {
       stagnantCount++;
-      if (stagnantCount >= 10 && iter >= 15) {
-        break; // Early termination on stagnation
+      if (stagnantCount >= 22 && iter >= 35) {
+        break; // Early termination on true stagnation
       }
     }
 
@@ -143,12 +143,15 @@ export function solveNumericalIK(
       J = jacResult.J.slice(0, 3);
     }
 
-    // Adaptive damping: lambda increases near singularities
+    // Adaptive damping: lambda increases near singularities and decays for fine terminal convergence
     let lambda = initialDamping;
     const thresh = 0.02;
     if (finalManipulability < thresh) {
       const ratio = 1 - finalManipulability / thresh;
       lambda = initialDamping + 0.1 * ratio * ratio;
+    } else if (posError < 0.005) {
+      // Terminal Gauss-Newton transition for high precision sub-millimeter convergence
+      lambda = Math.max(1e-4, lambda * (posError / 0.005));
     }
 
     // 5. Form A = J^T * J + lambda^2 * I  (size: dof x dof)
@@ -180,7 +183,8 @@ export function solveNumericalIK(
     const deltaQ = solveNxN(A, g);
 
     // 8. Exact Null-space projection for joint limit avoidance (secondary task)
-    if (options.enableNullSpace && robot.dof > mRows) {
+    const activeNullSpace = options.enableNullSpace ?? (robot.dof > mRows);
+    if (activeNullSpace && robot.dof > mRows) {
       // Gradient of quadratic joint limit distance penalty function
       const gradH: number[] = new Array(robot.dof);
       for (let j = 0; j < robot.dof; j++) {

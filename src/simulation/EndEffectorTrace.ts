@@ -31,10 +31,27 @@ export class EndEffectorTrace extends THREE.Group {
   }
 
   addPoint(p: Vector3): void {
+    if (!p || !Number.isFinite(p.x) || !Number.isFinite(p.y) || !Number.isFinite(p.z)) return;
+    if (this.pointCount > 0) {
+      const lastIdx = (this.pointCount - 1) * 3;
+      const dx = p.x - this.positions[lastIdx];
+      const dy = p.y - this.positions[lastIdx + 1];
+      const dz = p.z - this.positions[lastIdx + 2];
+      const distSq = dx * dx + dy * dy + dz * dz;
+      // Skip redundant GPU updates if end-effector has moved less than 0.25mm
+      if (distSq < 6.25e-8) return;
+    }
+
     if (this.pointCount >= this.maxPoints) {
-      // Shift left by 1
-      this.positions.copyWithin(0, 3);
-      this.pointCount = this.maxPoints - 1;
+      // Decimate buffer in-place: keep every 2nd point to free half the buffer without expensive copyWithin per frame
+      let newCount = 0;
+      for (let i = 0; i < this.maxPoints; i += 2) {
+        this.positions[newCount * 3] = this.positions[i * 3];
+        this.positions[newCount * 3 + 1] = this.positions[i * 3 + 1];
+        this.positions[newCount * 3 + 2] = this.positions[i * 3 + 2];
+        newCount++;
+      }
+      this.pointCount = newCount;
     }
 
     const idx = this.pointCount * 3;

@@ -9,7 +9,7 @@
 ### 1. 3D WebGL Visualization Engine
 - **Three.js Simulation Scene**: High-performance WebGL renderer operating in an authoritative **Z-up right-handed coordinate system** (matching standard robotics conventions).
 - **22 Real Industrial Robots**: High-fidelity binary STL meshes with calibrated link offsets and pivot alignment matrices (ABB IRB 120, ABB IRB 1410, ABB IRB 2400, ABB IRB 4400, ABB IRB 6620, ABB IRB 6650, KUKA KR5, KUKA KR5 Sixx, KUKA KR62, KUKA KR210, Fanuc M-10iA, Fanuc M-410iB, Fanuc R-1000i, Fanuc R-2000i, Fanuc S-430, Puma 560, Epson C3, MTAB Aristo/Mini, Stanford Arm, SmallArm).
-- **22 Skeleton Primitives**: Abstract 1-DOF to 6-DOF kinematic chains for educational analysis (1R, 1P, 2R, 2P, 3R, 3P, SCARA, SRS, etc.).
+- **20 Skeleton Primitives**: Abstract 1-DOF to 7-DOF kinematic chains for educational analysis (1R, 1P, 2R, 2P, 3R, 3P, SCARA, 6R, SRS, etc., bringing the library total to 42 robots).
 - **Camera Presets**: Instant camera snapping to Home, Top, Front, Back, Left, Right, Bottom, Isometric, and Auto-Fit Robot.
 - **Coordinate Frames & Link Tracing**: Real-time coordinate triads (X=Red, Y=Green, Z=Blue) at each joint frame and live dynamic end-effector path tracing.
 - **Interactive IK Target Gizmo**: Direct 3D Cartesian dragging for intuitive inverse kinematics target manipulation.

@@ -35,12 +35,39 @@ interface BeforeInstallPromptEvent extends Event {
 
 type StudioModal = 'dh' | 'transform' | 'custom' | 'trajectory' | 'analysis' | 'workspace' | null;
 
+const KinematicFeasibilityBadge: React.FC = () => {
+  const jacobian = useRobotStore((s) => s.jacobian);
+  const isSingular = jacobian.isSingular;
+  const manipulability = jacobian.manipulability;
+
+  return (
+    <div
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-black shrink-0 ${
+        isSingular
+          ? 'bg-amber-100 text-amber-950 border-amber-300'
+          : 'bg-emerald-100 text-emerald-950 border-emerald-300'
+      }`}
+    >
+      {isSingular ? (
+        <>
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+          <span>Singularity</span>
+        </>
+      ) : (
+        <>
+          <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0" />
+          <span>Feasible (w={manipulability.toFixed(3)})</span>
+        </>
+      )}
+    </div>
+  );
+};
+
 export function App() {
   const {
     robot,
     activeTab,
     setActiveTab,
-    jacobian,
     activeTrajectory,
     playback,
     pauseTrajectory,
@@ -55,9 +82,6 @@ export function App() {
   const [showJointDrawer, setShowJointDrawer] = useState(false);
   const [showIKDrawer, setShowIKDrawer] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-
-  const isSingular = jacobian.isSingular;
-  const manipulability = jacobian.manipulability;
 
   const lastTriggerRef = useRef<HTMLElement | null>(null);
   const prevDialogOpenRef = useRef(false);
@@ -306,7 +330,7 @@ export function App() {
                 <span>IK Target Solver {showIKDrawer ? '●' : '▾'}</span>
               </button>
 
-              {/* DH Parameters Table Pop-up */}
+              {/* DH Parameters & Simulation Studio Pop-up */}
               <button
                 onClick={() => handleToggleModal('dh')}
                 className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-black text-xs border transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
@@ -316,7 +340,7 @@ export function App() {
                 }`}
               >
                 <Table className="w-3.5 h-3.5" />
-                <span>DH Table Studio</span>
+                <span>DH Simulation Studio</span>
               </button>
 
               {/* Matrices A & T Pop-up */}
@@ -408,7 +432,7 @@ export function App() {
 
       {/* 2. Main Expansive 3D Simulation Canvas - Full Width Workspace */}
       <div className="flex-1 w-full h-full relative overflow-hidden bg-[#f7f4ed]">
-        <Viewport3D />
+        <Viewport3D isPaused={!!activeModal} />
 
         {/* Floating Tactile Joint Jogger Drawer (Slides in on demand, never squishing the scene) */}
         {showJointDrawer && (
@@ -544,25 +568,7 @@ export function App() {
           </button>
 
           {/* Singularity / Feasibility Telemetry Badge */}
-          <div
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-black shrink-0 ${
-              isSingular
-                ? 'bg-amber-100 text-amber-950 border-amber-300'
-                : 'bg-emerald-100 text-emerald-950 border-emerald-300'
-            }`}
-          >
-            {isSingular ? (
-              <>
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                <span>Singularity</span>
-              </>
-            ) : (
-              <>
-                <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0" />
-                <span>Feasible (w={manipulability.toFixed(3)})</span>
-              </>
-            )}
-          </div>
+          <KinematicFeasibilityBadge />
 
           {/* Reset to Home Button */}
           <button
@@ -615,7 +621,7 @@ export function App() {
             if (e.target === e.currentTarget) closeModal();
           }}
         >
-          <div className="flex flex-col w-full max-w-4xl lg:max-w-5xl h-[88vh] bg-[#fbf9f5] border-2 border-stone-300/90 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+          <div className={`flex flex-col w-full ${activeModal === 'dh' ? 'max-w-6xl xl:max-w-7xl' : 'max-w-4xl lg:max-w-5xl'} h-[88vh] bg-[#fbf9f5] border-2 border-stone-300/90 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150`}>
             {/* Pop-up Window Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 bg-white/90 backdrop-blur-md shrink-0">
               <div className="flex items-center gap-3">
@@ -629,7 +635,7 @@ export function App() {
                 </div>
                 <div>
                   <h2 className="text-sm font-black text-black uppercase tracking-wider">
-                    {activeModal === 'dh' && 'Denavit-Hartenberg (DH) Parameters Table'}
+                    {activeModal === 'dh' && 'Denavit-Hartenberg (DH) Simulation Studio'}
                     {activeModal === 'transform' && 'Homogeneous Transformation Matrix Studio'}
                     {activeModal === 'custom' && 'Custom Robot Architecture Synthesizer'}
                     {activeModal === 'trajectory' && 'Trajectory Planning & Simulation Studio'}
@@ -637,7 +643,7 @@ export function App() {
                     {activeModal === 'workspace' && 'Reachable Workspace Point Cloud Studio'}
                   </h2>
                   <p className="text-xs text-stone-600 font-medium">
-                    {activeModal === 'dh' && `Authoritative kinematic table and parameter definitions for ${robot.name}`}
+                    {activeModal === 'dh' && `Kinematic table, real-time joint simulation, 3D chain visualization, matrices, Jacobian & IK for ${robot.name}`}
                     {activeModal === 'transform' && 'Relative (A_i) and cumulative (T_0i) 4x4 coordinate transformations'}
                     {activeModal === 'custom' && 'Synthesize arbitrary serial kinematic arms with instant 3D compilation'}
                     {activeModal === 'trajectory' && 'Joint-space and Cartesian straight line trajectory interpolation'}

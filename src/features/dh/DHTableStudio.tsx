@@ -3,6 +3,7 @@ import { useRobotStore } from '../../state/robotStore';
 import type { JointDefinition, JointType, LinkDefinition, RobotDefinition } from '../../data/schema/robotSchema';
 import { Info, Copy, Check, FileSpreadsheet, Code, Plus, Trash2, ArrowUpDown } from 'lucide-react';
 import { RAD_TO_DEG, DEG_TO_RAD } from '../../robotics/math/constants';
+import { evaluateJointDH } from '../../robotics/dh/dhTransform';
 
 type EditableField = 'theta' | 'd' | 'a' | 'alpha' | 'offset' | 'min' | 'max';
 
@@ -29,10 +30,11 @@ export const DHTableStudio: React.FC = () => {
     const rows = robot.joints.map((j, idx) => {
       const isRevolute = j.type === 'revolute';
       const curQ = q[idx] ?? 0;
-      const th = isRevolute ? (useSI ? curQ : curQ * RAD_TO_DEG) : (useSI ? j.theta : j.theta * RAD_TO_DEG);
-      const d = !isRevolute ? (useSI ? curQ : curQ * 1000) : (useSI ? j.d : j.d * 1000);
-      const a = useSI ? j.a : j.a * 1000;
-      const al = useSI ? j.alpha : j.alpha * RAD_TO_DEG;
+      const active = evaluateJointDH(j, curQ);
+      const th = useSI ? active.theta : active.theta * RAD_TO_DEG;
+      const d = useSI ? active.d : active.d * 1000;
+      const a = useSI ? active.a : active.a * 1000;
+      const al = useSI ? active.alpha : active.alpha * RAD_TO_DEG;
       const off = isRevolute ? (useSI ? j.offset : j.offset * RAD_TO_DEG) : (useSI ? j.offset : j.offset * 1000);
       const min = useSI ? j.min : isRevolute ? j.min * RAD_TO_DEG : j.min * 1000;
       const max = useSI ? j.max : isRevolute ? j.max * RAD_TO_DEG : j.max * 1000;
@@ -54,12 +56,12 @@ export const DHTableStudio: React.FC = () => {
 
   const handleCopyLaTeX = () => {
     const rows = robot.joints.map((j, idx) => {
-      const isRevolute = j.type === 'revolute';
       const curQ = q[idx] ?? 0;
-      const th = isRevolute ? (useSI ? curQ : curQ * RAD_TO_DEG) : (useSI ? j.theta : j.theta * RAD_TO_DEG);
-      const d = !isRevolute ? (useSI ? curQ : curQ * 1000) : (useSI ? j.d : j.d * 1000);
-      const a = useSI ? j.a : j.a * 1000;
-      const al = useSI ? j.alpha : j.alpha * RAD_TO_DEG;
+      const active = evaluateJointDH(j, curQ);
+      const th = useSI ? active.theta : active.theta * RAD_TO_DEG;
+      const d = useSI ? active.d : active.d * 1000;
+      const a = useSI ? active.a : active.a * 1000;
+      const al = useSI ? active.alpha : active.alpha * RAD_TO_DEG;
       return `${idx + 1} & ${th.toFixed(2)} & ${d.toFixed(2)} & ${a.toFixed(2)} & ${al.toFixed(2)} \\\\`;
     });
     const latex = `\\begin{table}[h]\n\\centering\n\\begin{tabular}{c c c c c}\n\\hline\nJoint & $\\theta_i$ & $d_i$ & $a_i$ & $\\alpha_i$ \\\\\n\\hline\n${rows.join('\n')}\n\\hline\n\\end{tabular}\n\\caption{DH Parameters for ${robot.name}}\n\\end{table}`;

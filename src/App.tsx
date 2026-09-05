@@ -186,19 +186,22 @@ export function App() {
       if (activeTab === 'catalog') {
         setCatalogOpen(true);
         setActiveModal(null);
-      } else if (activeTab === 'fk') {
-        setActiveModal(null);
-      } else if (activeTab === 'ik') {
-        setShowIKDrawer(true);
-        setShowJointDrawer(false);
-        setActiveModal(null);
-      } else if (activeTab === 'trajectory' || activeTab === 'analysis') {
-        setTopTab('trajectory');
-        setActiveModal(activeTab);
-      } else if (['dh', 'transform', 'custom', 'workspace'].includes(activeTab)) {
-        setTopTab('simulate');
-        setShowIKDrawer(false);
-        setActiveModal(activeTab as StudioModal);
+      } else {
+        setCatalogOpen(false);
+        if (activeTab === 'fk') {
+          setActiveModal(null);
+        } else if (activeTab === 'ik') {
+          setShowIKDrawer(true);
+          setShowJointDrawer(false);
+          setActiveModal(null);
+        } else if (activeTab === 'trajectory' || activeTab === 'analysis') {
+          setTopTab('trajectory');
+          setActiveModal(activeTab);
+        } else if (['dh', 'transform', 'custom', 'workspace'].includes(activeTab)) {
+          setTopTab('simulate');
+          setShowIKDrawer(false);
+          setActiveModal(activeTab as StudioModal);
+        }
       }
     }, 0);
     return () => clearTimeout(timer);

@@ -82,8 +82,8 @@ export interface RobotState {
   setJoints: (q: number[]) => void;
   setJointValue: (index: number, val: number) => void;
   resetToHome: () => void;
-  setTargetPose: (pose: Matrix4) => void;
-  triggerSolveIK: (autoAnimate?: boolean) => void;
+  setTargetPose: (pose: Matrix4, autoSolve?: boolean) => void;
+  triggerSolveIK: (autoAnimate?: boolean, applySolution?: boolean) => void;
   applyIKSolution: (sol: IKSingleSolution, animate?: boolean) => void;
 
   // Trajectory Actions
@@ -102,6 +102,7 @@ export interface RobotState {
   // View Actions
   setActiveTab: (tab: StudioTab) => void;
   toggleViewOption: (key: keyof ViewOptions) => void;
+  setViewOption: (key: keyof ViewOptions, value: boolean) => void;
   setFrameScale: (scale: number) => void;
   setCameraView: (view: CameraViewPreset) => void;
   setStepMode: (enabled: boolean) => void;
@@ -112,7 +113,7 @@ let ikWorkerInstance: Worker | null = null;
 let ikRequestId = 0;
 let ikTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
 let targetSolveDebounceTimer: ReturnType<typeof setTimeout> | null = null;
-let activeIKCallback: ((res: SerializedIKResult, reqId: number) => void) | null = null;
+const pendingIKCallbacks = new Map<number, (res: SerializedIKResult) => void>();
 
 function getIKWorker(): Worker | null {
   if (typeof Worker === 'undefined') return null;
@@ -122,8 +123,12 @@ function getIKWorker(): Worker | null {
         type: 'module',
       });
       ikWorkerInstance.onmessage = (e: MessageEvent<IKWorkerResponse>) => {
-        if (activeIKCallback && e.data) {
-          activeIKCallback(e.data.result, e.data.id);
+        if (e.data) {
+          const cb = pendingIKCallbacks.get(e.data.id);
+          if (cb) {
+            pendingIKCallbacks.delete(e.data.id);
+            cb(e.data.result);
+          }
         }
       };
       ikWorkerInstance.onerror = (err) => {
@@ -250,19 +255,25 @@ export const useRobotStore = create<RobotState>((set, get) => ({
     setJoints(homeQ);
   },
 
-  setTargetPose: (pose: Matrix4) => {
+  setTargetPose: (pose: Matrix4, autoSolve: boolean = true) => {
     set({ targetPose: pose });
-    if (get().activeTab === 'ik') {
+    if (get().activeTab === 'ik' && autoSolve) {
       if (targetSolveDebounceTimer) clearTimeout(targetSolveDebounceTimer);
       targetSolveDebounceTimer = setTimeout(() => {
-        get().triggerSolveIK(false);
+        get().triggerSolveIK(false, false);
       }, 120);
     }
   },
 
-  triggerSolveIK: (autoAnimate: boolean = false) => {
+  triggerSolveIK: (autoAnimate: boolean = false, applySolution: boolean = true) => {
     const { robot, targetPose, q } = get();
     set({ ikSolving: true });
+
+    // Cancel any pending background debounce timer to prevent overriding explicit solve requests
+    if (targetSolveDebounceTimer) {
+      clearTimeout(targetSolveDebounceTimer);
+      targetSolveDebounceTimer = null;
+    }
 
     if (ikTimeoutTimer) {
       clearTimeout(ikTimeoutTimer);
@@ -275,19 +286,21 @@ export const useRobotStore = create<RobotState>((set, get) => ({
     ikTimeoutTimer = setTimeout(() => {
       if (ikRequestId === currentReqId) {
         console.warn('IK calculation timed out after 1500ms.');
+        pendingIKCallbacks.delete(currentReqId);
         set({ ikSolving: false });
       }
     }, 1500);
 
     const worker = getIKWorker();
     if (worker) {
-      activeIKCallback = (res, reqId) => {
-        if (reqId !== currentReqId) return;
+      // Clear previous callbacks so outdated results are dropped
+      pendingIKCallbacks.clear();
+
+      pendingIKCallbacks.set(currentReqId, (res) => {
         if (ikTimeoutTimer) {
           clearTimeout(ikTimeoutTimer);
           ikTimeoutTimer = null;
         }
-        activeIKCallback = null;
         const pipelineResult: IKPipelineResult = {
           target: new Matrix4(res.targetElements),
           solutions: res.solutions,
@@ -299,10 +312,10 @@ export const useRobotStore = create<RobotState>((set, get) => ({
         };
         set({ ikResult: pipelineResult, ikSolving: false });
 
-        if (autoAnimate && pipelineResult.bestSolution && pipelineResult.converged) {
-          get().applyIKSolution(pipelineResult.bestSolution, true);
+        if (applySolution && pipelineResult.bestSolution && pipelineResult.converged) {
+          get().applyIKSolution(pipelineResult.bestSolution, autoAnimate);
         }
-      };
+      });
 
       const req: IKWorkerRequest = {
         id: currentReqId,
@@ -328,8 +341,8 @@ export const useRobotStore = create<RobotState>((set, get) => ({
           ikTimeoutTimer = null;
         }
         set({ ikResult: result, ikSolving: false });
-        if (autoAnimate && result.bestSolution && result.converged) {
-          get().applyIKSolution(result.bestSolution, true);
+        if (applySolution && result.bestSolution && result.converged) {
+          get().applyIKSolution(result.bestSolution, autoAnimate);
         }
       } catch (err) {
         console.error('IK solve error:', err);
@@ -343,18 +356,26 @@ export const useRobotStore = create<RobotState>((set, get) => ({
   },
 
   applyIKSolution: (sol: IKSingleSolution, animate: boolean = true) => {
+    if (!sol || !Array.isArray(sol.q) || sol.q.length === 0) return;
+    const { robot, q } = get();
+    for (let i = 0; i < robot.dof; i++) {
+      if (!Number.isFinite(sol.q[i])) {
+        console.warn('IK solution contains non-finite joint value at index', i, sol.q);
+        return;
+      }
+    }
+
     if (animate) {
-      const { robot, q } = get();
       let maxDiff = 0;
       for (let i = 0; i < robot.dof; i++) {
         maxDiff = Math.max(maxDiff, Math.abs(sol.q[i] - (q[i] ?? 0)));
       }
-      if (maxDiff < 1e-3) {
+      if (maxDiff < 1e-4) {
         get().setJoints(sol.q);
         return;
       }
-      // Dynamic duration based on displacement (between 0.8s and 1.8s)
-      const duration = Math.min(1.8, Math.max(0.8, maxDiff * 0.5));
+      // Dynamic duration based on displacement (between 0.6s and 1.8s)
+      const duration = Math.min(1.8, Math.max(0.6, maxDiff * 0.5));
       const traj = generateJointTrajectory(robot, {
         startQ: q,
         goalQ: sol.q,
@@ -609,6 +630,16 @@ export const useRobotStore = create<RobotState>((set, get) => ({
     const updated = {
       ...viewOptions,
       [key]: !viewOptions[key],
+    };
+    set({ viewOptions: updated });
+    saveSettings({ viewOptions: updated });
+  },
+
+  setViewOption: (key: keyof ViewOptions, value: boolean) => {
+    const { viewOptions } = get();
+    const updated = {
+      ...viewOptions,
+      [key]: value,
     };
     set({ viewOptions: updated });
     saveSettings({ viewOptions: updated });

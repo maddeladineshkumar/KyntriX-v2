@@ -41,6 +41,7 @@ export class RobotScene {
   private animationFrameId: number | null = null;
   private targetChangeCallback: ((target: Matrix4) => void) | null = null;
   private colMajorBuffer = new Float64Array(16);
+  private isDraggingTarget = false;
 
   constructor() {
     // 1. Scene setup
@@ -76,6 +77,7 @@ export class RobotScene {
     this.transformControls.space = 'world';
     this.transformControls.addEventListener('dragging-changed', (event) => {
       this.orbitControls.enabled = !event.value;
+      this.isDraggingTarget = !!event.value;
     });
     this.transformControls.addEventListener('objectChange', () => {
       if (this.targetChangeCallback) {
@@ -459,7 +461,19 @@ export class RobotScene {
   }
 
   setTargetPose(pose: Matrix4): void {
+    if (this.isDraggingTarget) return;
     this.targetGizmo.setPose(pose);
+  }
+
+  setTargetVisibility(visible: boolean): void {
+    this.targetGizmo.visible = visible;
+    this.transformControls.enabled = visible;
+    try {
+      const helper = this.transformControls.getHelper();
+      if (helper) {
+        helper.visible = visible;
+      }
+    } catch {}
   }
 
   setTargetTransformMode(mode: 'translate' | 'rotate'): void {

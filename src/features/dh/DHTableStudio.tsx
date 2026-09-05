@@ -22,7 +22,13 @@ import {
   Download,
   Upload,
   BookOpen,
+  Sparkles,
+  Target,
+  Zap,
 } from 'lucide-react';
+import { Matrix4 } from '../../robotics/math/Matrix4';
+import { Vector3 } from '../../robotics/math/Vector3';
+import { Euler } from '../../robotics/math/Euler';
 import { RAD_TO_DEG, DEG_TO_RAD } from '../../robotics/math/constants';
 import {
   computeDHAnalysis,
@@ -52,10 +58,13 @@ export const DHTableStudio: React.FC = () => {
     setJointValue,
     setJoints,
     resetToHome,
+    setTargetPose,
+    applyIKSolution,
   } = useRobotStore();
 
   const [useSI, setUseSI] = useState(false); // Default to RoboAnalyzer deg/mm display
   const [activeSubTab, setActiveSubTab] = useState<StudioSubTab>('table');
+  const [ikAutoAnimate, setIkAutoAnimate] = useState<boolean>(true);
   const [copiedType, setCopiedType] = useState<'csv' | 'latex' | 'json' | 'md' | 'matrix' | null>(null);
 
   // Draft inputs and error tracking for DH parameter table: key is `${jointIndex}_${field}`
@@ -228,6 +237,8 @@ export const DHTableStudio: React.FC = () => {
   }, [robot.dof]);
 
   const [ikSolution, setIkSolution] = useState<IKSingleSolution | null>(null);
+  const [ikBranches, setIkBranches] = useState<IKSingleSolution[]>([]);
+  const [ikNudgeStepMm, setIkNudgeStepMm] = useState<number>(10);
   const [ikResultStats, setIkResultStats] = useState<{
     converged: boolean;
     posErrorMm: number;
@@ -784,7 +795,7 @@ export const DHTableStudio: React.FC = () => {
   };
 
   // 10. Direct Inverse Kinematics Solving for this DH chain
-  // Values currently displayed in IK target inputs
+  // Values currently displayed in IK target inputs (synchronized with global store targetPose)
   const currentIKTargetMeters = useMemo(() => {
     if (customIKTarget) {
       return {
@@ -794,6 +805,19 @@ export const DHTableStudio: React.FC = () => {
         roll: customIKTarget.roll,
         pitch: customIKTarget.pitch,
         yaw: customIKTarget.yaw,
+      };
+    }
+    const storeTarget = useRobotStore.getState().targetPose;
+    if (storeTarget) {
+      const pos = storeTarget.getPosition();
+      const euler = storeTarget.getEuler('XYZ');
+      return {
+        x: pos.x,
+        y: pos.y,
+        z: pos.z,
+        roll: euler.x,
+        pitch: euler.y,
+        yaw: euler.z,
       };
     }
     const eePos = analysis.endEffector.position;
@@ -808,9 +832,68 @@ export const DHTableStudio: React.FC = () => {
     };
   }, [customIKTarget, analysis.endEffector]);
 
+  const syncTargetToStore = (target: { x: number; y: number; z: number; roll: number; pitch: number; yaw: number }) => {
+    const euler = new Euler(target.roll, target.pitch, target.yaw, 'XYZ');
+    const rot3 = euler.toRotationMatrix();
+    const targetMat = Matrix4.fromRotationTranslation(
+      rot3,
+      new Vector3(target.x, target.y, target.z)
+    );
+    setTargetPose(targetMat, false);
+  };
+
+  const handleNudgeIKTarget = (axis: 'x' | 'y' | 'z', sign: 1 | -1) => {
+    const deltaM = (sign * ikNudgeStepMm) / 1000;
+    const cur = currentIKTargetMeters;
+    const next = {
+      ...cur,
+      x: axis === 'x' ? cur.x + deltaM : cur.x,
+      y: axis === 'y' ? cur.y + deltaM : cur.y,
+      z: axis === 'z' ? cur.z + deltaM : cur.z,
+    };
+    setCustomIKTarget(next);
+    setIkTargetDrafts({});
+    syncTargetToStore(next);
+  };
+
+  const handleOrientationPreset = (preset: 'down' | 'forward' | 'up' | 'level') => {
+    const cur = currentIKTargetMeters;
+    let roll = 0;
+    let pitch = 0;
+    let yaw = 0;
+    if (preset === 'down') {
+      pitch = Math.PI; // 180°
+    } else if (preset === 'forward') {
+      pitch = Math.PI / 2; // 90°
+    }
+    const next = { ...cur, roll, pitch, yaw };
+    setCustomIKTarget(next);
+    setIkTargetDrafts({});
+    syncTargetToStore(next);
+  };
+
+  const handleTargetPreset = (preset: 'offsetZ' | 'offsetX' | 'offsetY' | 'workPose') => {
+    const cur = currentIKTargetMeters;
+    let next = { ...cur };
+    if (preset === 'offsetZ') {
+      next.z += 0.1;
+    } else if (preset === 'offsetX') {
+      next.x += 0.1;
+    } else if (preset === 'offsetY') {
+      next.y += 0.1;
+    } else if (preset === 'workPose') {
+      const signX = Math.sign(cur.x) || 1;
+      next = { x: signX * 0.40, y: 0.20, z: 0.35, roll: 0, pitch: Math.PI / 2, yaw: 0 };
+    }
+    setCustomIKTarget(next);
+    setIkTargetDrafts({});
+    syncTargetToStore(next);
+  };
+
   const handleSolveIK = () => {
     setIkSolving(true);
     setIkSolution(null);
+    setIkBranches([]);
     setIkResultStats(null);
 
     const targetPosM = {
@@ -825,10 +908,14 @@ export const DHTableStudio: React.FC = () => {
       order: 'XYZ' as const,
     };
 
+    // Keep global store targetPose synchronized without queueing competing background solve
+    syncTargetToStore(currentIKTargetMeters);
+
     setTimeout(() => {
       const ikRes = solveDHInverseKinematics(robot, targetPosM, targetRotRad, q);
       setIkSolving(false);
       setIkSolution(ikRes.bestSolution);
+      setIkBranches(ikRes.solutions);
 
       const isPositionOnly = robot.dof <= 3;
       const effectiveConverged = ikRes.bestSolution
@@ -842,22 +929,62 @@ export const DHTableStudio: React.FC = () => {
         timeMs: ikRes.computationTimeMs,
         branches: ikRes.allTestedBranches,
       });
+
+      if (effectiveConverged && ikRes.bestSolution) {
+        setIsSweeping(false);
+        setTraceResetKey((k) => k + 1);
+        applyIKSolution(ikRes.bestSolution, ikAutoAnimate);
+      }
     }, 20);
   };
 
-  const handleApplyIKSolution = () => {
-    if (ikSolution) {
+  const handleApplyIKSolution = (
+    solOrAnimate?: IKSingleSolution | boolean | null,
+    maybeAnimate: boolean = true
+  ) => {
+    let targetSol: IKSingleSolution | null = null;
+    let animate = true;
+
+    if (typeof solOrAnimate === 'boolean') {
+      animate = solOrAnimate;
+      targetSol = ikSolution;
+    } else {
+      targetSol = solOrAnimate ?? ikSolution;
+      animate = maybeAnimate;
+    }
+
+    if (targetSol && Array.isArray(targetSol.q)) {
       setIsSweeping(false);
       setTraceResetKey((k) => k + 1);
-      setJoints(ikSolution.q);
+      applyIKSolution(targetSol, animate);
     }
   };
 
+  const isCurrentPoseSolved = useMemo(() => {
+    if (!ikSolution || !Array.isArray(ikSolution.q) || ikSolution.q.length < robot.dof) return false;
+    for (let i = 0; i < robot.dof; i++) {
+      if (Math.abs(ikSolution.q[i] - (q[i] ?? 0)) > 1e-4) return false;
+    }
+    return true;
+  }, [ikSolution, q, robot.dof]);
+
   const handleResetIKTargetToCurrentEE = () => {
-    setCustomIKTarget(null);
+    const eePos = analysis.endEffector.position;
+    const eeEuler = analysis.endEffector.eulerXYZ;
+    const next = {
+      x: eePos.x,
+      y: eePos.y,
+      z: eePos.z,
+      roll: eeEuler.rad[0],
+      pitch: eeEuler.rad[1],
+      yaw: eeEuler.rad[2],
+    };
+    setCustomIKTarget(next);
     setIkTargetDrafts({});
     setIkSolution(null);
+    setIkBranches([]);
     setIkResultStats(null);
+    syncTargetToStore(next);
   };
 
   // Matrix Copy for Transformations tab
@@ -2278,12 +2405,16 @@ export const DHTableStudio: React.FC = () => {
               <span className="text-xs font-black uppercase tracking-wider text-black">
                 Desired Cartesian Target Pose
               </span>
-              <button
-                onClick={handleResetIKTargetToCurrentEE}
-                className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 rounded-lg text-xs font-black transition-all cursor-pointer"
-              >
-                Target = Current EE
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  id="dh-ik-reset-ee-btn"
+                  onClick={handleResetIKTargetToCurrentEE}
+                  className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 rounded-lg text-xs font-black transition-all cursor-pointer shadow-2xs"
+                >
+                  Target = Current EE
+                </button>
+              </div>
             </div>
 
             {/* Dynamic Kinematics Mode Badge & Research Grounding Banner */}
@@ -2301,6 +2432,56 @@ export const DHTableStudio: React.FC = () => {
               </p>
             </div>
 
+            {/* Quick Reach Presets */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black text-stone-700 uppercase tracking-wide">Quick Reach Presets:</span>
+                <span className="text-[10px] text-stone-500 font-medium">Auto-displaces target</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <button
+                  type="button"
+                  id="dh-ik-preset-offset-z"
+                  onClick={() => handleTargetPreset('offsetZ')}
+                  className="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300 text-[10px] font-black transition-all active:scale-95 cursor-pointer shadow-2xs"
+                >
+                  +100mm Z
+                </button>
+                <button
+                  type="button"
+                  id="dh-ik-preset-offset-x"
+                  onClick={() => handleTargetPreset('offsetX')}
+                  className="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300 text-[10px] font-black transition-all active:scale-95 cursor-pointer shadow-2xs"
+                >
+                  +100mm X
+                </button>
+                <button
+                  type="button"
+                  id="dh-ik-preset-offset-y"
+                  onClick={() => handleTargetPreset('offsetY')}
+                  className="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300 text-[10px] font-black transition-all active:scale-95 cursor-pointer shadow-2xs"
+                >
+                  +100mm Y
+                </button>
+                <button
+                  type="button"
+                  id="dh-ik-preset-work-pose"
+                  onClick={() => handleTargetPreset('workPose')}
+                  className="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 text-[10px] font-black transition-all active:scale-95 cursor-pointer shadow-2xs"
+                >
+                  Work Pose
+                </button>
+                <button
+                  type="button"
+                  id="dh-ik-preset-reset-ee"
+                  onClick={handleResetIKTargetToCurrentEE}
+                  className="px-2.5 py-1 rounded-lg bg-white hover:bg-stone-100 text-stone-700 border border-stone-300 text-[10px] font-black transition-all active:scale-95 cursor-pointer shadow-2xs"
+                >
+                  Reset = EE
+                </button>
+              </div>
+            </div>
+
             {/* Position Inputs */}
             <div className="space-y-1.5">
               <span className="text-xs font-bold text-stone-700">Target Position ({useSI ? 'meters' : 'millimeters'}):</span>
@@ -2309,6 +2490,8 @@ export const DHTableStudio: React.FC = () => {
                   <span className="text-[10px] text-stone-500 font-sans">X:</span>
                   <input
                     type="text"
+                    id="dh-ik-target-x"
+                    aria-label="Target X Position"
                     inputMode="decimal"
                     value={
                       ikTargetDrafts.x !== undefined
@@ -2322,10 +2505,12 @@ export const DHTableStudio: React.FC = () => {
                       setIkTargetDrafts((prev) => ({ ...prev, x: raw }));
                       const num = parseFloat(raw);
                       if (Number.isFinite(num)) {
-                        setCustomIKTarget({
+                        const next = {
                           ...currentIKTargetMeters,
                           x: useSI ? num : num / 1000,
-                        });
+                        };
+                        setCustomIKTarget(next);
+                        syncTargetToStore(next);
                       }
                     }}
                     onBlur={() => {
@@ -2336,7 +2521,7 @@ export const DHTableStudio: React.FC = () => {
                       });
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') e.currentTarget.blur();
+                      if (e.key === 'Enter') handleSolveIK();
                     }}
                     className="w-full px-2 py-1 text-right text-xs font-bold border border-stone-300 rounded-lg bg-stone-50 focus:bg-white"
                   />
@@ -2345,6 +2530,8 @@ export const DHTableStudio: React.FC = () => {
                   <span className="text-[10px] text-stone-500 font-sans">Y:</span>
                   <input
                     type="text"
+                    id="dh-ik-target-y"
+                    aria-label="Target Y Position"
                     inputMode="decimal"
                     value={
                       ikTargetDrafts.y !== undefined
@@ -2358,10 +2545,12 @@ export const DHTableStudio: React.FC = () => {
                       setIkTargetDrafts((prev) => ({ ...prev, y: raw }));
                       const num = parseFloat(raw);
                       if (Number.isFinite(num)) {
-                        setCustomIKTarget({
+                        const next = {
                           ...currentIKTargetMeters,
                           y: useSI ? num : num / 1000,
-                        });
+                        };
+                        setCustomIKTarget(next);
+                        syncTargetToStore(next);
                       }
                     }}
                     onBlur={() => {
@@ -2372,7 +2561,7 @@ export const DHTableStudio: React.FC = () => {
                       });
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') e.currentTarget.blur();
+                      if (e.key === 'Enter') handleSolveIK();
                     }}
                     className="w-full px-2 py-1 text-right text-xs font-bold border border-stone-300 rounded-lg bg-stone-50 focus:bg-white"
                   />
@@ -2381,6 +2570,8 @@ export const DHTableStudio: React.FC = () => {
                   <span className="text-[10px] text-stone-500 font-sans">Z:</span>
                   <input
                     type="text"
+                    id="dh-ik-target-z"
+                    aria-label="Target Z Position"
                     inputMode="decimal"
                     value={
                       ikTargetDrafts.z !== undefined
@@ -2394,10 +2585,12 @@ export const DHTableStudio: React.FC = () => {
                       setIkTargetDrafts((prev) => ({ ...prev, z: raw }));
                       const num = parseFloat(raw);
                       if (Number.isFinite(num)) {
-                        setCustomIKTarget({
+                        const next = {
                           ...currentIKTargetMeters,
                           z: useSI ? num : num / 1000,
-                        });
+                        };
+                        setCustomIKTarget(next);
+                        syncTargetToStore(next);
                       }
                     }}
                     onBlur={() => {
@@ -2408,10 +2601,90 @@ export const DHTableStudio: React.FC = () => {
                       });
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') e.currentTarget.blur();
+                      if (e.key === 'Enter') handleSolveIK();
                     }}
                     className="w-full px-2 py-1 text-right text-xs font-bold border border-stone-300 rounded-lg bg-stone-50 focus:bg-white"
                   />
+                </div>
+              </div>
+            </div>
+
+            {/* Tactile Nudge Pad */}
+            <div className="p-3 bg-stone-50/90 rounded-xl border border-stone-200 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black text-black uppercase tracking-wide">Target Nudge Pad:</span>
+                <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-stone-300 text-[11px]">
+                  {[1, 10, 50].map((step) => (
+                    <button
+                      key={step}
+                      type="button"
+                      onClick={() => setIkNudgeStepMm(step)}
+                      className={`px-2 py-0.5 rounded font-black transition-all cursor-pointer ${
+                        ikNudgeStepMm === step ? 'bg-amber-400 text-black shadow-2xs' : 'text-stone-600 hover:text-black'
+                      }`}
+                    >
+                      {step}mm
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-xs font-black">
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    id="dh-ik-nudge-neg-x"
+                    onClick={() => handleNudgeIKTarget('x', -1)}
+                    className="flex-1 py-1.5 bg-rose-100 hover:bg-rose-200 active:scale-95 rounded-lg border border-rose-300 text-black transition-all cursor-pointer text-center"
+                  >
+                    -X
+                  </button>
+                  <button
+                    type="button"
+                    id="dh-ik-nudge-pos-x"
+                    onClick={() => handleNudgeIKTarget('x', 1)}
+                    className="flex-1 py-1.5 bg-rose-100 hover:bg-rose-200 active:scale-95 rounded-lg border border-rose-300 text-black transition-all cursor-pointer text-center"
+                  >
+                    +X
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    id="dh-ik-nudge-neg-y"
+                    onClick={() => handleNudgeIKTarget('y', -1)}
+                    className="flex-1 py-1.5 bg-emerald-100 hover:bg-emerald-200 active:scale-95 rounded-lg border border-emerald-300 text-black transition-all cursor-pointer text-center"
+                  >
+                    -Y
+                  </button>
+                  <button
+                    type="button"
+                    id="dh-ik-nudge-pos-y"
+                    onClick={() => handleNudgeIKTarget('y', 1)}
+                    className="flex-1 py-1.5 bg-emerald-100 hover:bg-emerald-200 active:scale-95 rounded-lg border border-emerald-300 text-black transition-all cursor-pointer text-center"
+                  >
+                    +Y
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    id="dh-ik-nudge-neg-z"
+                    onClick={() => handleNudgeIKTarget('z', -1)}
+                    className="flex-1 py-1.5 bg-amber-100 hover:bg-amber-200 active:scale-95 rounded-lg border border-amber-300 text-black transition-all cursor-pointer text-center"
+                  >
+                    -Z
+                  </button>
+                  <button
+                    type="button"
+                    id="dh-ik-nudge-pos-z"
+                    onClick={() => handleNudgeIKTarget('z', 1)}
+                    className="flex-1 py-1.5 bg-amber-100 hover:bg-amber-200 active:scale-95 rounded-lg border border-amber-300 text-black transition-all cursor-pointer text-center"
+                  >
+                    +Z
+                  </button>
                 </div>
               </div>
             </div>
@@ -2446,6 +2719,8 @@ export const DHTableStudio: React.FC = () => {
                   </span>
                   <input
                     type="text"
+                    id="dh-ik-target-roll"
+                    aria-label="Target Roll Angle"
                     disabled={!ikSolverMode.canControlRoll}
                     inputMode="decimal"
                     value={
@@ -2460,10 +2735,12 @@ export const DHTableStudio: React.FC = () => {
                       setIkTargetDrafts((prev) => ({ ...prev, roll: raw }));
                       const num = parseFloat(raw);
                       if (Number.isFinite(num)) {
-                        setCustomIKTarget({
+                        const next = {
                           ...currentIKTargetMeters,
                           roll: useSI ? num : num * DEG_TO_RAD,
-                        });
+                        };
+                        setCustomIKTarget(next);
+                        syncTargetToStore(next);
                       }
                     }}
                     onBlur={() => {
@@ -2474,7 +2751,7 @@ export const DHTableStudio: React.FC = () => {
                       });
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') e.currentTarget.blur();
+                      if (e.key === 'Enter') handleSolveIK();
                     }}
                     className="w-full px-2 py-1 text-right text-xs font-bold border border-stone-300 rounded-lg bg-stone-50 focus:bg-white disabled:bg-stone-100 disabled:cursor-not-allowed"
                   />
@@ -2486,6 +2763,8 @@ export const DHTableStudio: React.FC = () => {
                   </span>
                   <input
                     type="text"
+                    id="dh-ik-target-pitch"
+                    aria-label="Target Pitch Angle"
                     disabled={!ikSolverMode.canControlPitch}
                     inputMode="decimal"
                     value={
@@ -2500,10 +2779,12 @@ export const DHTableStudio: React.FC = () => {
                       setIkTargetDrafts((prev) => ({ ...prev, pitch: raw }));
                       const num = parseFloat(raw);
                       if (Number.isFinite(num)) {
-                        setCustomIKTarget({
+                        const next = {
                           ...currentIKTargetMeters,
                           pitch: useSI ? num : num * DEG_TO_RAD,
-                        });
+                        };
+                        setCustomIKTarget(next);
+                        syncTargetToStore(next);
                       }
                     }}
                     onBlur={() => {
@@ -2514,7 +2795,7 @@ export const DHTableStudio: React.FC = () => {
                       });
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') e.currentTarget.blur();
+                      if (e.key === 'Enter') handleSolveIK();
                     }}
                     className="w-full px-2 py-1 text-right text-xs font-bold border border-stone-300 rounded-lg bg-stone-50 focus:bg-white disabled:bg-stone-100 disabled:cursor-not-allowed"
                   />
@@ -2526,6 +2807,8 @@ export const DHTableStudio: React.FC = () => {
                   </span>
                   <input
                     type="text"
+                    id="dh-ik-target-yaw"
+                    aria-label="Target Yaw Angle"
                     disabled={!ikSolverMode.canControlYaw}
                     inputMode="decimal"
                     value={
@@ -2540,10 +2823,12 @@ export const DHTableStudio: React.FC = () => {
                       setIkTargetDrafts((prev) => ({ ...prev, yaw: raw }));
                       const num = parseFloat(raw);
                       if (Number.isFinite(num)) {
-                        setCustomIKTarget({
+                        const next = {
                           ...currentIKTargetMeters,
                           yaw: useSI ? num : num * DEG_TO_RAD,
-                        });
+                        };
+                        setCustomIKTarget(next);
+                        syncTargetToStore(next);
                       }
                     }}
                     onBlur={() => {
@@ -2554,7 +2839,7 @@ export const DHTableStudio: React.FC = () => {
                       });
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') e.currentTarget.blur();
+                      if (e.key === 'Enter') handleSolveIK();
                     }}
                     className="w-full px-2 py-1 text-right text-xs font-bold border border-stone-300 rounded-lg bg-stone-50 focus:bg-white disabled:bg-stone-100 disabled:cursor-not-allowed"
                   />
@@ -2562,14 +2847,81 @@ export const DHTableStudio: React.FC = () => {
               </div>
             </div>
 
+            {/* Quick Tool Orientation Presets */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              <span className="text-[10px] text-stone-500 font-bold uppercase tracking-wide mr-1">Orientation:</span>
+              <button
+                type="button"
+                id="dh-ik-orient-down"
+                onClick={() => handleOrientationPreset('down')}
+                className="px-2 py-1 rounded-lg bg-white hover:bg-stone-100 text-black border border-stone-300 text-[10px] font-black transition-all active:scale-95 cursor-pointer shadow-2xs"
+              >
+                Tool Down
+              </button>
+              <button
+                type="button"
+                id="dh-ik-orient-forward"
+                onClick={() => handleOrientationPreset('forward')}
+                className="px-2 py-1 rounded-lg bg-white hover:bg-stone-100 text-black border border-stone-300 text-[10px] font-black transition-all active:scale-95 cursor-pointer shadow-2xs"
+              >
+                Forward
+              </button>
+              <button
+                type="button"
+                id="dh-ik-orient-up"
+                onClick={() => handleOrientationPreset('up')}
+                className="px-2 py-1 rounded-lg bg-white hover:bg-stone-100 text-black border border-stone-300 text-[10px] font-black transition-all active:scale-95 cursor-pointer shadow-2xs"
+              >
+                Tool Up
+              </button>
+              <button
+                type="button"
+                id="dh-ik-orient-zero"
+                onClick={() => handleOrientationPreset('level')}
+                className="px-2 py-1 rounded-lg bg-white hover:bg-stone-100 text-black border border-stone-300 text-[10px] font-black transition-all active:scale-95 cursor-pointer shadow-2xs flex items-center gap-1"
+              >
+                <RotateCcw className="w-2.5 h-2.5" />
+                <span>Zero</span>
+              </button>
+            </div>
+
+            {/* Auto-Animate Toggle & Solve Action Button */}
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  id="dh-ik-auto-animate"
+                  checked={ikAutoAnimate}
+                  onChange={(e) => setIkAutoAnimate(e.target.checked)}
+                  className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 cursor-pointer accent-amber-500"
+                />
+                <span className="text-xs font-black text-stone-800 flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Auto-Animate to Solved Pose</span>
+                </span>
+              </label>
+              <span className="text-[10px] text-stone-500 font-medium">Quintic profile</span>
+            </div>
+
             {/* Solve IK Action Button */}
             <button
+              type="button"
+              id="dh-ik-solve-btn"
               onClick={handleSolveIK}
               disabled={ikSolving}
-              className="w-full py-2.5 px-4 bg-amber-400 hover:bg-amber-500 text-black font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2 mt-3"
+              className="w-full py-2.5 px-4 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-400 hover:from-amber-500 hover:to-orange-500 active:scale-95 disabled:opacity-50 text-black font-black text-xs uppercase tracking-wider rounded-xl border-2 border-stone-900 shadow-md transition-all cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
             >
-              <Crosshair className="w-4 h-4" />
-              <span>{ikSolving ? 'Solving Inverse Kinematics...' : 'Solve Inverse Kinematics for DH Chain'}</span>
+              {ikSolving ? (
+                <>
+                  <Crosshair className="w-4 h-4 animate-spin" />
+                  <span>Solving Kinematics...</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4 fill-black text-black" />
+                  <span>{ikAutoAnimate ? 'SOLVE & ANIMATE KINEMATICS' : 'SOLVE INVERSE KINEMATICS'}</span>
+                </>
+              )}
             </button>
           </div>
 
@@ -2617,11 +2969,28 @@ export const DHTableStudio: React.FC = () => {
                   </div>
                 )}
 
-                {/* Solved Joint Angles */}
+                {ikResultStats.converged && isCurrentPoseSolved && (
+                  <div className="p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-950 text-[11px] font-sans flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold">Robot is already converged at this target pose.</span>
+                      <p className="text-[10px] text-stone-600 mt-0.5">
+                        Use Quick Reach Presets (+100mm Z, +100mm X, Work Pose) or Nudge Pad to position target elsewhere, or pick an alternative branch below.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Solved Joint Angles for Best Solution */}
                 {ikSolution && (
                   <div className="space-y-1.5">
-                    <span className="text-[11px] font-sans font-black text-stone-700">Solved Joint Angles:</span>
-                    <div className="space-y-1 max-h-48 overflow-y-auto">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-sans font-black text-stone-700">Best Match Joint Angles:</span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.2 bg-amber-100 text-amber-900 border border-amber-300 rounded font-black">
+                        {ikSolution.solverType ?? 'IK Solver'}
+                      </span>
+                    </div>
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
                       {ikSolution.q.map((solQ, idx) => {
                         const joint = robot.joints[idx];
                         const isRev = joint?.type === 'revolute';
@@ -2640,21 +3009,154 @@ export const DHTableStudio: React.FC = () => {
                       })}
                     </div>
 
-                    <button
-                      onClick={handleApplyIKSolution}
-                      className="w-full py-2 px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 mt-2"
-                    >
-                      <Check className="w-4 h-4" />
-                      <span>Apply Solved Angles to Simulation</span>
-                    </button>
+                    <div className="flex items-center gap-2 mt-2">
+                      <button
+                        type="button"
+                        id="dh-ik-apply-animate-btn"
+                        onClick={() => handleApplyIKSolution(ikSolution, true)}
+                        className="flex-1 py-2 px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-white" />
+                        <span>Animate to Simulation</span>
+                      </button>
+                      <button
+                        type="button"
+                        id="dh-ik-apply-snap-btn"
+                        onClick={() => handleApplyIKSolution(ikSolution, false)}
+                        title="Instant Jump without trajectory animation"
+                        className="py-2 px-3 bg-stone-100 hover:bg-stone-200 text-stone-800 font-black text-xs rounded-xl border border-stone-300 shadow-2xs transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                      >
+                        <Zap className="w-3.5 h-3.5" />
+                        <span>Snap</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Candidate Solution Branches */}
+                {ikBranches.length > 1 && (
+                  <div className="space-y-2 pt-2 border-t border-stone-200">
+                    <span className="text-[11px] font-sans font-black text-stone-700 uppercase tracking-wide">
+                      All Discovered Branches ({ikBranches.length}):
+                    </span>
+                    <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                      {ikBranches.map((branch, bIdx) => {
+                        const isBest = branch === ikSolution || bIdx === 0;
+                        const isCurrent = branch.q.every((val, idx) => Math.abs(val - (q[idx] ?? 0)) < 0.02);
+                        return (
+                          <div
+                            key={bIdx}
+                            className={`p-2.5 rounded-xl border-2 transition-all ${
+                              isBest ? 'bg-amber-50/70 border-amber-400' : 'bg-stone-50 border-stone-200'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1.5">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-sans font-black text-xs text-black">Branch #{bIdx + 1}</span>
+                                {isBest && (
+                                  <span className="px-1.5 py-0.2 text-[9px] font-black rounded bg-amber-400 text-black border border-stone-900 shadow-2xs">
+                                    BEST MATCH
+                                  </span>
+                                )}
+                                {isCurrent && (
+                                  <span className="px-1.5 py-0.2 text-[9px] font-black rounded bg-emerald-100 text-emerald-950 border border-emerald-300">
+                                    ACTIVE POSE
+                                  </span>
+                                )}
+                              </div>
+                              <span
+                                className={`text-[9px] font-mono font-black px-1.5 py-0.2 rounded border ${
+                                  branch.withinLimits
+                                    ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
+                                    : 'bg-rose-50 text-rose-900 border-rose-300'
+                                }`}
+                              >
+                                {branch.withinLimits ? 'Limits OK' : 'Exceeds Limit'}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-1 text-[10px] font-mono bg-white/80 p-1.5 rounded-lg border border-stone-200 mb-2">
+                              <div>Pos Err: {(branch.positionError * 1000).toFixed(3)} mm</div>
+                              <div>Ori Err: {(branch.orientationError * RAD_TO_DEG).toFixed(2)}°</div>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleApplyIKSolution(branch, true)}
+                                className="flex-1 py-1.5 px-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs rounded-lg shadow-2xs transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                              >
+                                <Play className="w-3 h-3 fill-white" />
+                                <span>Animate</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleApplyIKSolution(branch, false)}
+                                title="Instant Jump without trajectory animation"
+                                className="py-1.5 px-2.5 bg-stone-100 hover:bg-stone-200 text-stone-800 font-black text-xs rounded-lg border border-stone-300 shadow-2xs transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                              >
+                                <Zap className="w-3 h-3" />
+                                <span>Snap</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
             ) : (
               <div className="p-8 text-center text-stone-400 font-sans text-xs">
-                Configure your desired target position and orientation, then click &quot;Solve Inverse Kinematics for DH Chain&quot;.
+                Configure your desired target position and orientation, then click &quot;SOLVE & ANIMATE KINEMATICS&quot;.
               </div>
             )}
+          </div>
+
+          {/* Embedded 3D Kinematic Chain Simulation with IK Target */}
+          <div className="lg:col-span-2 p-4 bg-white border-2 border-stone-200 rounded-2xl shadow-xs space-y-3">
+            <div className="flex items-center justify-between border-b border-stone-200 pb-2">
+              <div className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-rose-600" />
+                <span className="text-xs font-black uppercase tracking-wider text-black">
+                  3D Kinematic Chain Motion & Target Marker
+                </span>
+              </div>
+              <div className="flex items-center gap-2 font-mono text-[11px] text-stone-600">
+                <span>Target: [{currentIKTargetMeters.x.toFixed(3)}, {currentIKTargetMeters.y.toFixed(3)}, {currentIKTargetMeters.z.toFixed(3)}] m</span>
+              </div>
+            </div>
+            <DHSimulation3DView
+              robot={robot}
+              fk={analysis.fk}
+              q={q}
+              targetPoint={targetPointFor3D}
+              height="380px"
+              useSI={useSI}
+              onJointChange={(jointIdx, val) => {
+                setIsSweeping(false);
+                setJointValue(jointIdx, val);
+              }}
+              onResetHome={handleResetHomePose}
+              onZeroAll={handleZeroAllJoints}
+              isSweeping={isSweeping}
+              onToggleSweep={handleToggleSweep}
+              activeJogStepDeg={jogStepDeg}
+              activeJogStepMm={jogStepMm}
+              onJogStepDegChange={setJogStepDeg}
+              onJogStepMmChange={setJogStepMm}
+              sweepSpeed={sweepSpeed}
+              onSweepSpeedChange={setSweepSpeed}
+              sweepMode={sweepMode}
+              onSweepModeChange={setSweepMode}
+              sweepAmplitude={sweepAmplitude}
+              onSweepAmplitudeChange={setSweepAmplitude}
+              activeSweepJointIdx={activeSweepJointIdx}
+              focusJointIdx={focusJointIdx}
+              onFocusJointIdxChange={setFocusJointIdx}
+              traceResetKey={traceResetKey}
+              onClearTrace={handleClearTrace}
+            />
           </div>
         </div>
       )}

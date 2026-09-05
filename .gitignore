@@ -33,6 +33,8 @@ RoboAnalyzer_7_5_20190623/
 *.njsproj
 *.sln
 *.sw?
+test_screenshots/
+
 
 # Agent & workspace cache
 .gemini

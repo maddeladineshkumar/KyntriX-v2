@@ -178,11 +178,13 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({ isPaused = false }) => {
       }
       sceneRef.current.setMeshVisibility(viewOptions.showMeshes);
       sceneRef.current.setTraceVisibility(viewOptions.showTrace);
+      sceneRef.current.setTargetVisibility(viewOptions.showTargetGizmo);
     }
   }, [
     viewOptions.showFrames,
     viewOptions.showMeshes,
     viewOptions.showTrace,
+    viewOptions.showTargetGizmo,
     viewOptions.stepMode,
     viewOptions.stepFrameIndex,
   ]);
@@ -207,16 +209,27 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({ isPaused = false }) => {
   useEffect(() => {
     let animId: number;
     let lastTime = performance.now();
+    let wasPlaying = false;
 
     const loop = (now: number) => {
-      const dt = (now - lastTime) / 1000;
+      const store = useRobotStore.getState();
+      const isPlaying = store.playback.isPlaying && !!store.activeTrajectory;
+
+      // When playback transitions from false to true, reset lastTime to avoid huge dt
+      if (isPlaying && !wasPlaying) {
+        lastTime = now;
+      }
+      wasPlaying = isPlaying;
+
+      const rawDt = (now - lastTime) / 1000;
+      // Clamp dt to 50ms maximum to prevent skipping trajectory on lag spikes or tab focus changes
+      const dt = Math.min(0.05, Math.max(0, rawDt));
       lastTime = now;
 
-      const store = useRobotStore.getState();
-      if (store.playback.isPlaying && store.activeTrajectory) {
-        const traj = store.activeTrajectory;
+      if (isPlaying) {
+        const traj = store.activeTrajectory!;
         let nextTime = store.playback.currentTime + dt * store.playback.speed;
-        if (nextTime > traj.duration) {
+        if (nextTime >= traj.duration) {
           if (store.playback.isLooping) {
             nextTime = 0;
           } else {

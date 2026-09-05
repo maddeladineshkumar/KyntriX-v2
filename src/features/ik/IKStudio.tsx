@@ -100,42 +100,47 @@ export const IKStudio: React.FC = () => {
     const rot = new Euler(rDeg * DEG_TO_RAD, pDeg * DEG_TO_RAD, yDeg * DEG_TO_RAD, 'XYZ').toRotationMatrix();
     const pos = new Vector3(x, y, z);
     const newTarget = Matrix4.fromRotationTranslation(rot, pos);
-    setTargetPose(newTarget);
+    setTargetPose(newTarget, false);
     if (shouldSolve) {
-      triggerSolveIK(autoAnimate);
+      triggerSolveIK(autoAnimate, true);
     }
   };
 
   const handleUpdateTarget = () => {
-    const x = parseFloat(inputX) || 0;
-    const y = parseFloat(inputY) || 0;
-    const z = parseFloat(inputZ) || 0;
-    const r = parseFloat(inputRoll) || 0;
-    const p = parseFloat(inputPitch) || 0;
-    const yaw = parseFloat(inputYaw) || 0;
-    applyPoseValues(x, y, z, r, p, yaw);
+    const curPos = targetPose.getPosition();
+    const curEuler = targetPose.getEuler('XYZ');
+    const x = Number.isFinite(parseFloat(inputX)) ? parseFloat(inputX) : curPos.x;
+    const y = Number.isFinite(parseFloat(inputY)) ? parseFloat(inputY) : curPos.y;
+    const z = Number.isFinite(parseFloat(inputZ)) ? parseFloat(inputZ) : curPos.z;
+    const r = Number.isFinite(parseFloat(inputRoll)) ? parseFloat(inputRoll) : curEuler.x * RAD_TO_DEG;
+    const p = Number.isFinite(parseFloat(inputPitch)) ? parseFloat(inputPitch) : curEuler.y * RAD_TO_DEG;
+    const yaw = Number.isFinite(parseFloat(inputYaw)) ? parseFloat(inputYaw) : curEuler.z * RAD_TO_DEG;
+    applyPoseValues(x, y, z, r, p, yaw, true);
   };
 
   const handleNudgeCartesian = (axis: 'x' | 'y' | 'z', sign: 1 | -1) => {
     const deltaMeters = (sign * nudgeStepMm) / 1000;
-    const curX = parseFloat(inputX) || currentPos.x;
-    const curY = parseFloat(inputY) || currentPos.y;
-    const curZ = parseFloat(inputZ) || currentPos.z;
-    const curR = parseFloat(inputRoll) || currentEuler.x * RAD_TO_DEG;
-    const curP = parseFloat(inputPitch) || currentEuler.y * RAD_TO_DEG;
-    const curYaw = parseFloat(inputYaw) || currentEuler.z * RAD_TO_DEG;
+    const curPos = targetPose.getPosition();
+    const curEuler = targetPose.getEuler('XYZ');
+    const curX = Number.isFinite(parseFloat(inputX)) ? parseFloat(inputX) : curPos.x;
+    const curY = Number.isFinite(parseFloat(inputY)) ? parseFloat(inputY) : curPos.y;
+    const curZ = Number.isFinite(parseFloat(inputZ)) ? parseFloat(inputZ) : curPos.z;
+    const curR = Number.isFinite(parseFloat(inputRoll)) ? parseFloat(inputRoll) : curEuler.x * RAD_TO_DEG;
+    const curP = Number.isFinite(parseFloat(inputPitch)) ? parseFloat(inputPitch) : curEuler.y * RAD_TO_DEG;
+    const curYaw = Number.isFinite(parseFloat(inputYaw)) ? parseFloat(inputYaw) : curEuler.z * RAD_TO_DEG;
 
     const nextX = axis === 'x' ? curX + deltaMeters : curX;
     const nextY = axis === 'y' ? curY + deltaMeters : curY;
     const nextZ = axis === 'z' ? curZ + deltaMeters : curZ;
 
-    applyPoseValues(nextX, nextY, nextZ, curR, curP, curYaw);
+    applyPoseValues(nextX, nextY, nextZ, curR, curP, curYaw, true);
   };
 
   const handleOrientationPreset = (preset: 'down' | 'forward' | 'up' | 'level') => {
-    const curX = parseFloat(inputX) || currentPos.x;
-    const curY = parseFloat(inputY) || currentPos.y;
-    const curZ = parseFloat(inputZ) || currentPos.z;
+    const curPos = targetPose.getPosition();
+    const curX = Number.isFinite(parseFloat(inputX)) ? parseFloat(inputX) : curPos.x;
+    const curY = Number.isFinite(parseFloat(inputY)) ? parseFloat(inputY) : curPos.y;
+    const curZ = Number.isFinite(parseFloat(inputZ)) ? parseFloat(inputZ) : curPos.z;
 
     let r = 0;
     let p = 0;
@@ -176,6 +181,34 @@ export const IKStudio: React.FC = () => {
     );
   };
 
+  const handleTargetPreset = (preset: 'offsetZ' | 'offsetX' | 'offsetY' | 'workPose') => {
+    const curPos = targetPose.getPosition();
+    const curEuler = targetPose.getEuler('XYZ');
+    let nextX = Number.isFinite(parseFloat(inputX)) ? parseFloat(inputX) : curPos.x;
+    let nextY = Number.isFinite(parseFloat(inputY)) ? parseFloat(inputY) : curPos.y;
+    let nextZ = Number.isFinite(parseFloat(inputZ)) ? parseFloat(inputZ) : curPos.z;
+    let nextR = Number.isFinite(parseFloat(inputRoll)) ? parseFloat(inputRoll) : curEuler.x * RAD_TO_DEG;
+    let nextP = Number.isFinite(parseFloat(inputPitch)) ? parseFloat(inputPitch) : curEuler.y * RAD_TO_DEG;
+    let nextYw = Number.isFinite(parseFloat(inputYaw)) ? parseFloat(inputYaw) : curEuler.z * RAD_TO_DEG;
+
+    if (preset === 'offsetZ') {
+      nextZ += 0.1;
+    } else if (preset === 'offsetX') {
+      nextX += 0.1;
+    } else if (preset === 'offsetY') {
+      nextY += 0.1;
+    } else if (preset === 'workPose') {
+      const signX = Math.sign(curPos.x) || 1;
+      nextX = signX * 0.40;
+      nextY = 0.20;
+      nextZ = 0.35;
+      nextR = 0;
+      nextP = 90;
+      nextYw = 0;
+    }
+    applyPoseValues(nextX, nextY, nextZ, nextR, nextP, nextYw, true);
+  };
+
   const handleSelectSolution = (sol: IKSingleSolution, idx: number, animate: boolean) => {
     setActiveSolIdx(idx);
     setPrePreviewQ(null);
@@ -197,8 +230,17 @@ export const IKStudio: React.FC = () => {
   };
 
   const isCurrentPose = (sol: IKSingleSolution) => {
+    if (!sol || !Array.isArray(sol.q) || sol.q.length < robot.dof) return false;
     for (let i = 0; i < robot.dof; i++) {
       if (Math.abs(sol.q[i] - (q[i] ?? 0)) > 0.02) return false;
+    }
+    return true;
+  };
+
+  const isAlreadyAtTargetPose = (sol: IKSingleSolution) => {
+    if (!sol || !Array.isArray(sol.q) || sol.q.length < robot.dof) return false;
+    for (let i = 0; i < robot.dof; i++) {
+      if (Math.abs(sol.q[i] - (q[i] ?? 0)) > 1e-4) return false;
     }
     return true;
   };
@@ -241,6 +283,8 @@ export const IKStudio: React.FC = () => {
             </div>
             <input
               type="number"
+              id="ik-target-x"
+              aria-label="Target X Position in meters"
               step="0.01"
               value={inputX}
               onChange={(e) => setInputX(e.target.value)}
@@ -257,6 +301,8 @@ export const IKStudio: React.FC = () => {
             </div>
             <input
               type="number"
+              id="ik-target-y"
+              aria-label="Target Y Position in meters"
               step="0.01"
               value={inputY}
               onChange={(e) => setInputY(e.target.value)}
@@ -273,6 +319,8 @@ export const IKStudio: React.FC = () => {
             </div>
             <input
               type="number"
+              id="ik-target-z"
+              aria-label="Target Z Position in meters"
               step="0.01"
               value={inputZ}
               onChange={(e) => setInputZ(e.target.value)}
@@ -289,6 +337,8 @@ export const IKStudio: React.FC = () => {
             </div>
             <input
               type="number"
+              id="ik-target-roll"
+              aria-label="Target Roll Angle in degrees"
               step="1"
               value={inputRoll}
               onChange={(e) => setInputRoll(e.target.value)}
@@ -305,6 +355,8 @@ export const IKStudio: React.FC = () => {
             </div>
             <input
               type="number"
+              id="ik-target-pitch"
+              aria-label="Target Pitch Angle in degrees"
               step="1"
               value={inputPitch}
               onChange={(e) => setInputPitch(e.target.value)}
@@ -321,6 +373,8 @@ export const IKStudio: React.FC = () => {
             </div>
             <input
               type="number"
+              id="ik-target-yaw"
+              aria-label="Target Yaw Angle in degrees"
               step="1"
               value={inputYaw}
               onChange={(e) => setInputYaw(e.target.value)}
@@ -330,8 +384,50 @@ export const IKStudio: React.FC = () => {
           </div>
         </div>
 
-        {/* Tactile Nudge Pad */}
-        <div className="p-3 bg-stone-50/80 rounded-xl border border-stone-200 space-y-2">
+        {/* Tactile Nudge Pad & Reach Presets */}
+        <div className="p-3 bg-stone-50/80 rounded-xl border border-stone-200 space-y-2.5">
+          {/* Quick Reach Presets */}
+          <div className="space-y-1.5 pb-2 border-b border-stone-200/80">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black text-black uppercase tracking-wide">Reach Presets:</span>
+              <span className="text-[10px] text-stone-500 font-medium">Offsets & poses</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                id="ik-preset-offset-z"
+                onClick={() => handleTargetPreset('offsetZ')}
+                className="px-2 py-1 rounded-lg bg-white hover:bg-stone-100 text-black border border-stone-300 text-[10px] font-black transition-all active:scale-95 cursor-pointer shadow-2xs"
+              >
+                +100mm Z
+              </button>
+              <button
+                type="button"
+                id="ik-preset-offset-x"
+                onClick={() => handleTargetPreset('offsetX')}
+                className="px-2 py-1 rounded-lg bg-white hover:bg-stone-100 text-black border border-stone-300 text-[10px] font-black transition-all active:scale-95 cursor-pointer shadow-2xs"
+              >
+                +100mm X
+              </button>
+              <button
+                type="button"
+                id="ik-preset-offset-y"
+                onClick={() => handleTargetPreset('offsetY')}
+                className="px-2 py-1 rounded-lg bg-white hover:bg-stone-100 text-black border border-stone-300 text-[10px] font-black transition-all active:scale-95 cursor-pointer shadow-2xs"
+              >
+                +100mm Y
+              </button>
+              <button
+                type="button"
+                id="ik-preset-work-pose"
+                onClick={() => handleTargetPreset('workPose')}
+                className="px-2 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 text-[10px] font-black transition-all active:scale-95 cursor-pointer shadow-2xs"
+              >
+                Work Pose
+              </button>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-black text-black uppercase tracking-wide">Nudge Pad:</span>
             {/* Step size selector */}
@@ -339,6 +435,7 @@ export const IKStudio: React.FC = () => {
               {[1, 10, 50].map((step) => (
                 <button
                   key={step}
+                  type="button"
                   onClick={() => setNudgeStepMm(step)}
                   className={`px-2 py-0.5 rounded font-black transition-all cursor-pointer ${
                     nudgeStepMm === step ? 'bg-amber-400 text-black shadow-2xs' : 'text-stone-600 hover:text-black'
@@ -354,12 +451,16 @@ export const IKStudio: React.FC = () => {
           <div className="grid grid-cols-3 gap-2 text-xs font-black">
             <div className="flex items-center gap-1">
               <button
+                type="button"
+                id="ik-nudge-neg-x"
                 onClick={() => handleNudgeCartesian('x', -1)}
                 className="flex-1 py-1.5 bg-rose-100 hover:bg-rose-200 active:scale-95 rounded-lg border border-rose-300 text-black transition-all cursor-pointer text-center"
               >
                 -X
               </button>
               <button
+                type="button"
+                id="ik-nudge-pos-x"
                 onClick={() => handleNudgeCartesian('x', 1)}
                 className="flex-1 py-1.5 bg-rose-100 hover:bg-rose-200 active:scale-95 rounded-lg border border-rose-300 text-black transition-all cursor-pointer text-center"
               >
@@ -369,12 +470,16 @@ export const IKStudio: React.FC = () => {
 
             <div className="flex items-center gap-1">
               <button
+                type="button"
+                id="ik-nudge-neg-y"
                 onClick={() => handleNudgeCartesian('y', -1)}
                 className="flex-1 py-1.5 bg-emerald-100 hover:bg-emerald-200 active:scale-95 rounded-lg border border-emerald-300 text-black transition-all cursor-pointer text-center"
               >
                 -Y
               </button>
               <button
+                type="button"
+                id="ik-nudge-pos-y"
                 onClick={() => handleNudgeCartesian('y', 1)}
                 className="flex-1 py-1.5 bg-emerald-100 hover:bg-emerald-200 active:scale-95 rounded-lg border border-emerald-300 text-black transition-all cursor-pointer text-center"
               >
@@ -384,12 +489,16 @@ export const IKStudio: React.FC = () => {
 
             <div className="flex items-center gap-1">
               <button
+                type="button"
+                id="ik-nudge-neg-z"
                 onClick={() => handleNudgeCartesian('z', -1)}
                 className="flex-1 py-1.5 bg-amber-100 hover:bg-amber-200 active:scale-95 rounded-lg border border-amber-300 text-black transition-all cursor-pointer text-center"
               >
                 -Z
               </button>
               <button
+                type="button"
+                id="ik-nudge-pos-z"
                 onClick={() => handleNudgeCartesian('z', 1)}
                 className="flex-1 py-1.5 bg-amber-100 hover:bg-amber-200 active:scale-95 rounded-lg border border-amber-300 text-black transition-all cursor-pointer text-center"
               >
@@ -401,24 +510,32 @@ export const IKStudio: React.FC = () => {
           {/* Quick Tool Orientation Presets */}
           <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-stone-200/80">
             <button
+              type="button"
+              id="ik-orient-down"
               onClick={() => handleOrientationPreset('down')}
               className="px-2 py-1 rounded-lg bg-white hover:bg-stone-100 text-black border border-stone-300 text-[10px] font-black transition-all active:scale-95 cursor-pointer shadow-2xs"
             >
               Tool Down
             </button>
             <button
+              type="button"
+              id="ik-orient-forward"
               onClick={() => handleOrientationPreset('forward')}
               className="px-2 py-1 rounded-lg bg-white hover:bg-stone-100 text-black border border-stone-300 text-[10px] font-black transition-all active:scale-95 cursor-pointer shadow-2xs"
             >
               Forward
             </button>
             <button
+              type="button"
+              id="ik-orient-up"
               onClick={() => handleOrientationPreset('up')}
               className="px-2 py-1 rounded-lg bg-white hover:bg-stone-100 text-black border border-stone-300 text-[10px] font-black transition-all active:scale-95 cursor-pointer shadow-2xs"
             >
               Tool Up
             </button>
             <button
+              type="button"
+              id="ik-orient-zero"
               onClick={() => handleOrientationPreset('level')}
               className="px-2 py-1 rounded-lg bg-white hover:bg-stone-100 text-black border border-stone-300 text-[10px] font-black transition-all active:scale-95 cursor-pointer shadow-2xs flex items-center gap-1"
             >
@@ -434,6 +551,7 @@ export const IKStudio: React.FC = () => {
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
+                id="ik-auto-animate"
                 checked={autoAnimate}
                 onChange={(e) => setAutoAnimate(e.target.checked)}
                 className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 cursor-pointer accent-amber-500"
@@ -447,6 +565,8 @@ export const IKStudio: React.FC = () => {
           </div>
 
           <button
+            type="button"
+            id="ik-solve-btn"
             onClick={handleUpdateTarget}
             disabled={ikSolving}
             className="flex items-center justify-center gap-2.5 w-full py-3 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-400 hover:from-amber-500 hover:to-orange-500 active:scale-98 disabled:opacity-50 text-black font-black text-xs uppercase tracking-wider rounded-xl border-2 border-stone-900 shadow-md transition-all cursor-pointer disabled:cursor-not-allowed"
@@ -459,7 +579,7 @@ export const IKStudio: React.FC = () => {
             ) : (
               <>
                 <Play className="w-4 h-4 fill-black text-black" />
-                <span>SOLVE & ANIMATE TARGET</span>
+                <span>{autoAnimate ? 'SOLVE & ANIMATE TARGET' : 'SOLVE TARGET (SNAP)'}</span>
               </>
             )}
           </button>
@@ -468,6 +588,19 @@ export const IKStudio: React.FC = () => {
 
       {/* Discovered Solutions Section */}
       <div className="space-y-2.5 flex-1 pb-4">
+        {/* Informative banner if robot is already converged at target pose */}
+        {ikResult && ikResult.converged && ikResult.bestSolution && isAlreadyAtTargetPose(ikResult.bestSolution) && (
+          <div className="p-3 bg-emerald-50 border-2 border-emerald-300 rounded-2xl text-xs text-emerald-950 font-sans shadow-xs flex items-start gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-black">Robot is already converged at this target pose.</span>
+              <p className="text-[11px] text-stone-600 mt-0.5 leading-relaxed">
+                Use Reach Presets (+100mm Z, +100mm X, Work Pose) or Nudge Pad above to displace the target, or pick an alternative candidate branch below.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h3 className="text-xs font-black text-black uppercase tracking-wider">
@@ -475,6 +608,7 @@ export const IKStudio: React.FC = () => {
             </h3>
             {ikResult && ikResult.solutions.length >= 2 && (
               <button
+                type="button"
                 onClick={() => setCompareMode(!compareMode)}
                 aria-label="Toggle compare mode between solutions"
                 className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer shadow-2xs ${

@@ -714,12 +714,16 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({ isPaused = false }) => {
         </div>
       )}
 
-      {/* Floating Info Overlay (Bottom-Left) */}
-      <div className="absolute bottom-5 left-5 z-10 bg-white/90 backdrop-blur-xl px-4 py-2.5 rounded-2xl border-2 border-stone-300/80 text-xs text-black pointer-events-none shadow-md">
+      {/* Floating Info Overlay (Bottom-Left on xl desktop, Top-Left below toolbar on mobile/tablet/desktop-site, hidden on short screens or when mobile view menu is open) */}
+      <div
+        className={`ee-pos-overlay absolute top-28 xl:top-auto xl:bottom-5 left-3 sm:left-4 xl:left-5 z-10 bg-white/90 backdrop-blur-xl px-3 sm:px-4 py-1.5 sm:py-2.5 rounded-xl sm:rounded-2xl border-2 border-stone-300/80 text-xs text-black pointer-events-none shadow-md ${
+          mobileMenuOpen ? 'hidden md:block' : ''
+        }`}
+      >
         <div className="font-black text-black">
           {robot.name} ({robot.dof}-DOF)
         </div>
-        <div className="text-[11px] text-stone-700 font-mono font-bold mt-0.5">
+        <div className="text-[10px] sm:text-[11px] text-stone-700 font-mono font-bold mt-0.5">
           EE Pos: [{eePos.x.toFixed(3)}, {eePos.y.toFixed(3)}, {eePos.z.toFixed(3)}] m
         </div>
       </div>

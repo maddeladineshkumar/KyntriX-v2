@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRobotStore } from '../../state/robotStore';
 import { ROBOTS_CATALOG } from '../../data/robots';
-import { Search, Bot, Check, X, Sparkles, Factory, Bone, Wrench, ArrowRight } from 'lucide-react';
+import { Search, Bot, Check, X, Factory, Bone, Wrench, ArrowRight } from 'lucide-react';
 
 interface RobotCatalogModalProps {
   isOpen: boolean;
@@ -32,16 +32,20 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
     };
     window.addEventListener('keydown', handleKeyDown);
 
-    const timer = setTimeout(() => {
-      const searchInput = document.querySelector<HTMLInputElement>('input[placeholder*="Search"]');
-      if (searchInput) {
-        searchInput.focus();
-      }
-    }, 40);
+    // Only autofocus search on desktop devices with fine pointer to prevent mobile keyboard pop & zoom
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      timer = setTimeout(() => {
+        const searchInput = document.querySelector<HTMLInputElement>('input[placeholder*="Search"]');
+        if (searchInput) {
+          searchInput.focus();
+        }
+      }, 50);
+    }
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      clearTimeout(timer);
+      if (timer) clearTimeout(timer);
     };
   }, [isOpen, onClose]);
 
@@ -86,6 +90,9 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
     return matchesSearch && matchesDof && matchesCategory;
   });
 
+  const industrialCount = ROBOTS_CATALOG.filter((r) => !r.id.startsWith('skeleton_')).length;
+  const skeletonCount = ROBOTS_CATALOG.filter((r) => r.id.startsWith('skeleton_')).length;
+
   const handleSelect = (id: string) => {
     selectRobot(id);
     onClose();
@@ -116,134 +123,111 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-2 sm:p-4 lg:p-6 animate-in fade-in duration-200"
     >
-      <div className="flex flex-col w-full max-w-5xl max-h-[90vh] bg-[#fbf9f5]/95 backdrop-blur-2xl border-2 border-stone-300/80 rounded-3xl shadow-2xl overflow-hidden">
+      <div className="catalog-modal-container flex flex-col w-full max-w-5xl h-[96%] h-[96dvh] max-h-[96%] max-h-[96dvh] bg-[#fbf9f5]/95 backdrop-blur-2xl border-2 border-stone-300/80 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-stone-200/80 bg-white/80 backdrop-blur-md">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 shadow-sm flex items-center justify-center p-1.5 shrink-0">
+        <div className="catalog-header flex items-center justify-between px-3.5 py-2 sm:px-6 sm:py-3 border-b border-stone-200/80 bg-white/80 backdrop-blur-md shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-50 border border-amber-200 shadow-xs flex items-center justify-center p-1 shrink-0">
               <img src="/logo.png" alt="KYNTRIX Logo" className="w-full h-full object-contain" />
             </div>
-            <div>
-              <h2 id="catalog-modal-title" className="text-lg font-black text-black tracking-tight">
+            <div className="min-w-0">
+              <h2 id="catalog-modal-title" className="text-xs sm:text-base font-black text-black tracking-tight truncate">
                 Robotic Manipulator Configuration Setup
               </h2>
-              <p className="text-xs text-stone-700 font-medium">
-                Select your industrial CAD robotic arm or theoretical academic skeleton to initialize live simulation in KyntriX
+              <p className="catalog-subtitle text-[10px] sm:text-xs text-stone-700 font-medium hidden sm:block truncate">
+                Select your industrial CAD robotic arm or theoretical academic skeleton to initialize live simulation
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2.5 rounded-2xl hover:bg-stone-100 text-stone-600 hover:text-black border border-stone-200 transition-colors cursor-pointer"
+            className="p-1.5 sm:p-2 rounded-xl sm:rounded-2xl hover:bg-stone-100 text-stone-600 hover:text-black border border-stone-200 transition-colors cursor-pointer shrink-0"
             aria-label="Close setup modal"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
 
-        {/* Input Category Selection (Big & Colorful) */}
-        <div className="flex flex-col gap-4 p-5 bg-[#f7f4ed]/90 border-b border-stone-200/80">
-          <div className="text-xs font-black uppercase tracking-wider text-black flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-amber-600" />
-            <span>Step 1: Choose Manipulator Classification</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {/* Industrial Grade Tab */}
+        {/* Input Category Selection & Controls (Ultra-Compact & Fully Responsive across all heights) */}
+        <div className="catalog-controls flex flex-col gap-1.5 sm:gap-2.5 p-2 sm:p-3 bg-[#f7f4ed]/90 border-b border-stone-200/80 shrink-0">
+          {/* Classification Selector: Compact Segmented Row */}
+          <div className="grid grid-cols-3 gap-1 sm:gap-2 max-w-full">
             <button
+              type="button"
               onClick={() => setSelectedCategory('industrial')}
               aria-pressed={selectedCategory === 'industrial'}
-              className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+              className={`flex items-center justify-center gap-1.5 px-2 py-1.5 sm:py-2 rounded-xl border-2 text-xs font-black transition-all cursor-pointer truncate ${
                 selectedCategory === 'industrial'
-                  ? 'bg-white border-orange-500 shadow-md ring-2 ring-orange-200/60'
-                  : 'bg-white/60 border-stone-200 hover:bg-white hover:border-orange-300'
+                  ? 'bg-white border-orange-500 text-orange-950 shadow-xs ring-2 ring-orange-200/60'
+                  : 'bg-white/60 border-stone-200 text-stone-700 hover:bg-white hover:border-orange-300'
               }`}
             >
-              <div className="p-2.5 rounded-xl bg-orange-100 text-orange-700 border border-orange-300 shrink-0">
-                <Factory className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-xs font-black text-black">Industrial Grade (22)</div>
-                <div className="text-[11px] text-stone-600 font-medium">
-                  CAD STLs: ABB, KUKA, Fanuc, Puma
-                </div>
-              </div>
+              <Factory className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+              <span className="truncate">Industrial ({industrialCount})</span>
             </button>
 
-            {/* Academic Skeletons Tab */}
             <button
+              type="button"
               onClick={() => setSelectedCategory('skeleton')}
               aria-pressed={selectedCategory === 'skeleton'}
-              className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+              className={`flex items-center justify-center gap-1.5 px-2 py-1.5 sm:py-2 rounded-xl border-2 text-xs font-black transition-all cursor-pointer truncate ${
                 selectedCategory === 'skeleton'
-                  ? 'bg-white border-emerald-500 shadow-md ring-2 ring-emerald-200/60'
-                  : 'bg-white/60 border-stone-200 hover:bg-white hover:border-emerald-300'
+                  ? 'bg-white border-emerald-500 text-emerald-950 shadow-xs ring-2 ring-emerald-200/60'
+                  : 'bg-white/60 border-stone-200 text-stone-700 hover:bg-white hover:border-emerald-300'
               }`}
             >
-              <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-700 border border-emerald-300 shrink-0">
-                <Bone className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-xs font-black text-black">Academic Skeletons (20)</div>
-                <div className="text-[11px] text-stone-600 font-medium">
-                  1R–6R, SCARA, Stanford, SRS, PRP
-                </div>
-              </div>
+              <Bone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span className="truncate">Skeletons ({skeletonCount})</span>
             </button>
 
-            {/* Custom Arm Builder Option */}
             <button
+              type="button"
               onClick={handleOpenCustomBuilder}
-              className="flex items-center gap-3 p-3.5 rounded-2xl border-2 border-dashed border-stone-300 bg-white/60 hover:bg-white hover:border-purple-400 text-left transition-all cursor-pointer group"
+              className="flex items-center justify-center gap-1.5 px-2 py-1.5 sm:py-2 rounded-xl border-2 border-dashed border-stone-300 bg-white/60 hover:bg-white hover:border-purple-400 text-xs font-black text-purple-900 transition-all cursor-pointer group truncate"
             >
-              <div className="p-2.5 rounded-xl bg-purple-100 text-purple-700 border border-purple-300 shrink-0 group-hover:scale-105 transition-transform">
-                <Wrench className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-xs font-black text-black flex items-center gap-1">
-                  <span>Custom Serial Arm</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-purple-600 group-hover:translate-x-0.5 transition-transform" />
-                </div>
-                <div className="text-[11px] text-stone-600 font-medium">
-                  Synthesize arbitrary DH links
-                </div>
-              </div>
+              <Wrench className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+              <span className="truncate">Custom Arm</span>
+              <ArrowRight className="w-3 h-3 text-purple-600 group-hover:translate-x-0.5 transition-transform shrink-0 hidden sm:inline" />
             </button>
           </div>
 
           {/* Quick Search & DOF Filter Buttons */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-stone-200">
-            {/* Search Box */}
-            <div className="relative flex-1 min-w-[260px]">
-              <Search className="absolute left-3.5 top-3 w-4 h-4 text-stone-500" />
+          <div className="flex flex-wrap items-center justify-between gap-1.5 sm:gap-2">
+            {/* Search Box: 16px font-size enforced to eliminate iOS/Android auto-zoom */}
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-stone-500" />
               <input
                 type="text"
-                placeholder="Search robot name or manufacturer (Puma, KUKA, ABB, SCARA)..."
+                placeholder="Search robot name or brand (Puma, KUKA, ABB, SCARA)..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-9 py-2.5 bg-white border border-stone-300 rounded-xl text-black font-semibold placeholder:text-stone-500 focus:border-stone-900 focus:ring-2 focus:ring-stone-200 focus:outline-none shadow-xs text-xs"
+                className="w-full pl-8 pr-7 py-1 sm:py-1.5 bg-white border border-stone-300 rounded-xl text-black font-semibold placeholder:text-stone-500 focus:border-stone-900 focus:ring-2 focus:ring-stone-200 focus:outline-none shadow-xs text-base"
               />
               {search && (
                 <button
+                  type="button"
                   onClick={() => setSearch('')}
-                  className="absolute right-3 top-3 text-stone-500 hover:text-black"
+                  className="absolute right-2 top-2 text-stone-500 hover:text-black p-0.5"
+                  aria-label="Clear search query"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
 
             {/* DOF Filter Buttons */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-black font-black text-xs mr-1">DOF:</span>
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-none py-0.5 shrink-0">
+              <span className="text-black font-black text-[11px] sm:text-xs mr-0.5 shrink-0">DOF:</span>
               <button
+                type="button"
                 onClick={() => setSelectedDof('all')}
                 aria-pressed={selectedDof === 'all'}
-                className={`px-3 py-1.5 rounded-xl font-black text-xs transition-all cursor-pointer ${
+                className={`px-2 py-0.5 sm:py-1 rounded-lg font-black text-xs transition-all cursor-pointer shrink-0 ${
                   selectedDof === 'all'
-                    ? 'bg-black text-white shadow-sm'
+                    ? 'bg-black text-white shadow-xs'
                     : 'bg-white text-black border border-stone-300 hover:bg-stone-100'
                 }`}
               >
@@ -251,29 +235,31 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
               </button>
               {[1, 2, 3, 4, 5, 6].map((dof) => (
                 <button
+                  type="button"
                   key={dof}
                   onClick={() => setSelectedDof(dof)}
                   aria-pressed={selectedDof === dof}
-                  className={`px-3 py-1.5 rounded-xl font-black text-xs transition-all cursor-pointer ${
+                  className={`px-1.5 py-0.5 sm:py-1 rounded-lg font-black text-xs transition-all cursor-pointer shrink-0 ${
                     selectedDof === dof
-                      ? 'bg-black text-white shadow-sm'
+                      ? 'bg-black text-white shadow-xs'
                       : 'bg-white text-black border border-stone-300 hover:bg-stone-100'
                   }`}
                 >
-                  {dof} DOF
+                  {dof}D
                 </button>
               ))}
             </div>
           </div>
 
           {/* Popular 1-Click Presets */}
-          <div className="flex items-center gap-1.5 flex-wrap pt-1">
-            <span className="text-[11px] font-black text-stone-700 mr-1">Quick Select:</span>
+          <div className="catalog-presets flex items-center gap-1 overflow-x-auto scrollbar-none py-0.5">
+            <span className="text-[10px] sm:text-[11px] font-black text-stone-600 mr-0.5 shrink-0">Presets:</span>
             {POPULAR_PRESETS.map((preset) => (
               <button
+                type="button"
                 key={preset.id}
                 onClick={() => handleSelect(preset.id)}
-                className={`px-2.5 py-1 border text-xs font-bold rounded-lg transition-all active:scale-95 cursor-pointer hover:shadow-sm ${preset.color}`}
+                className={`px-2 py-0.5 border text-[11px] font-bold rounded-lg transition-all active:scale-95 cursor-pointer hover:shadow-xs shrink-0 whitespace-nowrap ${preset.color}`}
               >
                 {preset.label}
               </button>
@@ -281,8 +267,8 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
           </div>
         </div>
 
-        {/* Robot Cards Grid (Big, Colorful, Crisp Black Text) */}
-        <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 bg-[#f7f4ed]/50">
+        {/* Robot Cards Grid - Scrollable with min-h-0 so flexbox shrinks properly on short screens */}
+        <div className="catalog-grid flex-1 min-h-0 overflow-y-auto p-2.5 sm:p-4 lg:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3.5 bg-[#f7f4ed]/50 pb-8 sm:pb-10">
           {filteredRobots.map((r) => {
             const isSelected = r.id === currentRobot.id;
             const badgeClass = getManufacturerBadgeColor(r.manufacturer);
@@ -295,52 +281,52 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
                 onClick={() => handleSelect(r.id)}
                 aria-pressed={isSelected}
                 aria-label={`Select robot ${r.name}, ${r.dof} degrees of freedom, manufacturer ${r.manufacturer}`}
-                className={`text-left w-full flex flex-col justify-between p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-stone-900 ${
+                className={`catalog-card text-left w-full flex flex-col justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-stone-900 select-none ${
                   isSelected
-                    ? 'bg-white border-stone-900 shadow-xl ring-4 ring-amber-400/40'
-                    : 'bg-white/90 border-stone-200/90 hover:border-stone-400 hover:shadow-lg hover:bg-white'
+                    ? 'bg-white border-stone-900 shadow-lg ring-4 ring-amber-400/40'
+                    : 'bg-white/95 border-stone-200/90 hover:border-stone-400 hover:shadow-md hover:bg-white'
                 }`}
               >
                 <div>
                   {/* Card Header with Visual Icon & DOF */}
-                  <div className="flex items-center justify-between gap-3 mb-3">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className={`p-2 rounded-xl border shrink-0 ${isSkeleton ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-amber-100 text-amber-900 border-amber-300'}`}>
-                        {isSkeleton ? <Bone className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className={`p-1.5 rounded-lg border shrink-0 ${isSkeleton ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-amber-100 text-amber-900 border-amber-300'}`}>
+                        {isSkeleton ? <Bone className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
                       </div>
                       <div className="min-w-0">
-                        <span className="text-sm font-black text-black truncate block">{r.name}</span>
-                        <div className="text-[11px] text-stone-600 font-bold truncate">
+                        <span className="text-xs sm:text-sm font-black text-black truncate block">{r.name}</span>
+                        <div className="text-[10px] sm:text-[11px] text-stone-600 font-bold truncate">
                           {r.model}
                         </div>
                       </div>
                     </div>
-                    <span className="px-2.5 py-1 text-xs font-black rounded-xl bg-stone-900 text-white shadow-xs shrink-0 whitespace-nowrap">
+                    <span className="px-2 py-0.5 text-[10px] sm:text-xs font-black rounded-lg bg-stone-900 text-white shadow-xs shrink-0 whitespace-nowrap">
                       {r.dof} DOF
                     </span>
                   </div>
 
                   {/* Brand and Spec Info */}
-                  <div className="space-y-1.5 mb-4 text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="text-stone-500 font-medium text-[11px]">Brand:</span>
-                      <span className={`px-2 py-0.5 rounded-md border text-[10px] font-black uppercase tracking-wider whitespace-nowrap ${badgeClass}`}>
+                  <div className="space-y-1 mb-2.5 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-stone-500 font-medium text-[10px]">Brand:</span>
+                      <span className={`px-1.5 py-0.5 rounded-md border text-[10px] font-black uppercase tracking-wider whitespace-nowrap ${badgeClass}`}>
                         {r.manufacturer}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-3 border-t border-stone-200 text-xs">
+                <div className="flex items-center justify-between pt-2 border-t border-stone-200 text-xs">
                   <span className="text-[10px] text-black font-bold uppercase tracking-wider bg-stone-100 px-2 py-1 rounded-md border border-stone-200 whitespace-nowrap">
                     {r.dhConvention} DH
                   </span>
                   {isSelected ? (
-                    <span className="flex items-center gap-1.5 text-black font-black text-xs bg-emerald-100 border border-emerald-300 px-3 py-1.5 rounded-xl shadow-xs whitespace-nowrap">
+                    <span className="catalog-card-action flex items-center gap-1.5 text-black font-black text-xs bg-emerald-100 border border-emerald-300 px-3 py-1.5 min-h-[44px] rounded-xl shadow-xs whitespace-nowrap">
                       <Check className="w-4 h-4 text-emerald-700" /> Active
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-black font-black text-xs hover:translate-x-0.5 transition-transform bg-stone-100 hover:bg-stone-200 border border-stone-300 px-3 py-1.5 rounded-xl whitespace-nowrap">
+                    <span className="catalog-card-action flex items-center gap-1 text-black font-black text-xs hover:translate-x-0.5 transition-transform bg-stone-100 hover:bg-stone-200 border border-stone-300 px-3 py-1.5 min-h-[44px] rounded-xl whitespace-nowrap">
                       Select & Load →
                     </span>
                   )}
@@ -351,13 +337,14 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 bg-white/90 border-t border-stone-200 text-xs">
-          <span className="text-stone-700 font-bold">
+        <div className="catalog-footer flex items-center justify-between px-3.5 py-2 sm:px-6 sm:py-2.5 bg-white/95 border-t border-stone-200 text-xs shrink-0">
+          <span className="text-stone-700 font-bold text-[11px] sm:text-xs">
             Showing <strong className="text-black font-black">{filteredRobots.length}</strong> of {ROBOTS_CATALOG.length} models
           </span>
           <button
+            type="button"
             onClick={onClose}
-            className="px-6 py-2.5 bg-black hover:bg-stone-800 active:scale-95 text-white font-black rounded-2xl shadow-md transition-all cursor-pointer"
+            className="px-4 sm:px-6 py-1.5 sm:py-2 min-h-[44px] bg-black hover:bg-stone-800 active:scale-95 text-white font-black rounded-xl shadow-md transition-all cursor-pointer"
           >
             Start Live Simulation
           </button>

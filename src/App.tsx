@@ -292,6 +292,26 @@ export function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showIKDrawer, showJointDrawer, setActiveTab, closeModal]);
 
+  // Prevent unwanted double-tap zoom on UI elements across mobile touch devices & desktop site mode
+  useEffect(() => {
+    let lastTouch = 0;
+    const handleTouchEnd = (e: TouchEvent) => {
+      const now = Date.now();
+      if (now - lastTouch <= 300) {
+        const target = e.target as HTMLElement | null;
+        // Don't suppress double tap on 3D canvas (OrbitControls)
+        if (target && !target.closest('canvas')) {
+          e.preventDefault();
+        }
+      }
+      lastTouch = now;
+    };
+    document.addEventListener('touchend', handleTouchEnd, { passive: false });
+    return () => {
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, []);
+
   const handleSelectTopTab = (tab: 'simulate' | 'trajectory') => {
     setTopTab(tab);
     // When switching top mode, close any open modal from previous mode if not applicable
@@ -314,7 +334,7 @@ export function App() {
   };
 
   return (
-    <div className="flex flex-col w-screen h-screen bg-[#f7f4ed] text-stone-900 overflow-hidden font-sans antialiased">
+    <div className="app-root-container flex flex-col w-full h-full h-[100dvh] min-h-full min-h-[100dvh] max-h-full max-h-[100dvh] bg-[#f7f4ed] text-stone-900 overflow-hidden font-sans antialiased">
       {/* Screen reader heading & live region announcements */}
       <h1 className="sr-only">KyntriX Robotics Simulation Laboratory</h1>
       <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
@@ -324,9 +344,58 @@ export function App() {
       </div>
 
       {/* 1. Ultra-Clean Top Bar */}
-      <header className="relative flex flex-col items-center justify-center px-4 sm:px-6 py-2 bg-[#f7f4ed]/95 backdrop-blur-2xl border-b border-stone-300/80 z-30 shrink-0 shadow-xs">
-        {/* Permanent KyntriX Wordmark - Top Left */}
-        <div className="absolute left-3 sm:left-6 top-1.5 sm:top-2 flex items-center z-40 pointer-events-auto">
+      <header className="app-top-header relative flex flex-col items-center justify-center px-3 sm:px-6 py-1.5 sm:py-2 bg-[#f7f4ed]/95 backdrop-blur-2xl border-b border-stone-300/80 z-30 shrink-0 shadow-xs">
+        {/* Mobile-only brand & actions row (< sm) */}
+        <div className="w-full flex items-center justify-between sm:hidden pb-1">
+          <picture>
+            <source srcSet="/wordmark.webp" type="image/webp" />
+            <img
+              src="/wordmark.png"
+              alt="KyntriX"
+              className="h-6 w-auto object-contain cursor-default"
+              draggable={false}
+            />
+          </picture>
+          <div className="flex items-center gap-1.5">
+            {/* Quick Model Selector Button on mobile header */}
+            <button
+              type="button"
+              onClick={() => setCatalogOpen(true)}
+              aria-label={`Current robot: ${robot.name}. Click to open catalog`}
+              title="Click to select or change robot model"
+              className="flex items-center gap-1 px-2 py-1 min-h-[36px] bg-amber-50 hover:bg-amber-100 text-stone-900 border border-amber-300 rounded-xl text-[11px] font-black cursor-pointer active:scale-95 shadow-2xs"
+            >
+              <Bot className="w-3.5 h-3.5 text-black shrink-0" />
+              <span className="max-w-[72px] truncate">{robot.name}</span>
+              <span className="text-[10px] text-stone-500 font-bold">▾</span>
+            </button>
+            {installPrompt && (
+              <button
+                type="button"
+                onClick={handleInstallApp}
+                aria-label="Install KyntriX application"
+                title="Install KyntriX as desktop/mobile app"
+                className="flex items-center gap-1 px-2.5 py-1 min-h-[36px] bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-[11px] font-black rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Install</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setHelpOpen(true)}
+              aria-label="Open robotics theory reference and keyboard shortcuts"
+              title="Robotics Reference & Shortcuts (Shortcut: ?)"
+              className="flex items-center gap-1 px-2.5 py-1 min-h-[36px] bg-white/90 hover:bg-white text-stone-800 text-[11px] font-black rounded-xl border border-stone-300 shadow-xs transition-all cursor-pointer active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-stone-700" />
+              <span>Guide</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Permanent KyntriX Wordmark - Top Left on sm+ */}
+        <div className="hidden sm:flex absolute left-6 top-2 items-center z-40 pointer-events-auto">
           <picture>
             <source srcSet="/wordmark.webp" type="image/webp" />
             <img
@@ -338,15 +407,15 @@ export function App() {
           </picture>
         </div>
 
-        {/* Right-Side Actions: Install & Help/Guide */}
-        <div className="absolute right-3 sm:right-6 top-1.5 sm:top-2 flex items-center gap-2 z-40">
+        {/* Right-Side Actions: Install & Help/Guide on sm+ */}
+        <div className="hidden sm:flex absolute right-6 top-2 items-center gap-2 z-40">
           {installPrompt && (
             <button
               type="button"
               onClick={handleInstallApp}
               aria-label="Install KyntriX application"
               title="Install KyntriX as desktop/mobile app"
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 min-h-[36px] bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+              className="flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
             >
               <Download className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Install</span>
@@ -358,7 +427,7 @@ export function App() {
             onClick={() => setHelpOpen(true)}
             aria-label="Open robotics theory reference and keyboard shortcuts"
             title="Robotics Reference & Shortcuts (Shortcut: ?)"
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 min-h-[36px] bg-white/90 hover:bg-white text-stone-800 text-xs font-black rounded-xl border border-stone-300 shadow-xs transition-all cursor-pointer active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
+            className="flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] bg-white/90 hover:bg-white text-stone-800 text-xs font-black rounded-xl border border-stone-300 shadow-xs transition-all cursor-pointer active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
           >
             <HelpCircle className="w-3.5 h-3.5 text-stone-700" />
             <span className="hidden sm:inline">Guide</span>
@@ -368,7 +437,7 @@ export function App() {
         {/* Top-Level Mode Selector */}
         <nav
           aria-label="Simulation Mode Selector"
-          className="flex items-center gap-2 sm:gap-3 p-1 sm:p-1.5 bg-white/90 backdrop-blur-xl rounded-2xl border-2 border-stone-200/90 shadow-md"
+          className="flex items-center gap-1 sm:gap-3 p-1 sm:p-1.5 bg-white/90 backdrop-blur-xl rounded-2xl border-2 border-stone-200/90 shadow-md max-w-full"
         >
           {/* Button 1: Simulate Kinematics */}
           <button
@@ -555,7 +624,8 @@ export function App() {
             role="dialog"
             aria-label="Joint Actuation Panel"
             onKeyDown={handleFocusTrap}
-            className="absolute top-3 right-3 bottom-20 sm:bottom-24 z-20 w-[calc(100vw-24px)] sm:w-88 lg:w-96 max-w-full bg-white/98 backdrop-blur-2xl border-2 border-stone-300/90 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right-4 duration-200"
+            style={{ bottom: 'max(5rem, calc(4.5rem + env(safe-area-inset-bottom, 0px)))' }}
+            className="absolute top-3 right-3 z-30 w-[calc(100vw-24px)] sm:w-88 lg:w-96 max-w-full bg-white/98 backdrop-blur-2xl border-2 border-stone-300/90 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right-4 duration-200"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200 bg-stone-50/80 shrink-0">
               <div className="flex items-center gap-2">
@@ -588,7 +658,7 @@ export function App() {
                 </button>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 min-h-0 overflow-y-auto pb-6">
               <JointControlPanel />
             </div>
           </div>
@@ -600,7 +670,8 @@ export function App() {
             role="dialog"
             aria-label="Inverse Kinematics Target Solver"
             onKeyDown={handleFocusTrap}
-            className="absolute top-3 right-3 bottom-20 sm:bottom-24 z-20 w-[calc(100vw-24px)] sm:w-96 md:w-[450px] lg:w-[490px] max-w-full bg-white/98 backdrop-blur-2xl border-2 border-stone-300/90 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right-4 duration-200"
+            style={{ bottom: 'max(5rem, calc(4.5rem + env(safe-area-inset-bottom, 0px)))' }}
+            className="absolute top-3 right-3 z-30 w-[calc(100vw-24px)] sm:w-96 md:w-[450px] lg:w-[490px] max-w-full bg-white/98 backdrop-blur-2xl border-2 border-stone-300/90 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right-4 duration-200"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200 bg-white shrink-0">
               <div className="flex items-center gap-2.5">
@@ -642,29 +713,32 @@ export function App() {
                 </button>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 min-h-0 overflow-y-auto pb-6">
               <IKStudio />
             </div>
           </div>
         )}
 
-        {/* Sleek Floating Glassmorphic Dock in 3D Viewport - Responsive across 320px to 1920px */}
-        <div className="absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 z-20 flex flex-wrap items-center justify-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-white/95 backdrop-blur-2xl border-2 border-stone-300/80 rounded-2xl shadow-xl max-w-[calc(100vw-16px)] overflow-x-auto">
+        {/* Sleek Floating Glassmorphic Dock in 3D Viewport - Single row horizontal non-wrapping across mobile and desktop */}
+        <div
+          style={{ bottom: 'max(0.625rem, calc(0.5rem + env(safe-area-inset-bottom, 0px)))' }}
+          className="absolute left-1/2 -translate-x-1/2 z-20 flex flex-nowrap items-center justify-start sm:justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-white/95 backdrop-blur-2xl border-2 border-stone-300/80 rounded-2xl shadow-xl max-w-[calc(100vw-16px)] overflow-x-auto scrollbar-none"
+        >
           {/* Robot Model Selector Pill */}
           <button
             type="button"
             onClick={() => setCatalogOpen(true)}
             title="Click to change robot model or view catalog"
             aria-label={`Current robot model: ${robot.name} (${robot.dof} DOF). Click to change model.`}
-            className="flex items-center gap-2 px-3 py-1.5 min-h-[44px] bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl transition-all cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
+            className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 min-h-[44px] bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl transition-all cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
           >
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-200 animate-pulse shrink-0" />
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 sm:gap-1.5">
               <Bot className="w-3.5 h-3.5 text-black shrink-0" />
               <span className="text-xs font-black text-black">{robot.name}</span>
               <span className="text-[10px] text-stone-600 font-bold">({robot.dof} DOF)</span>
             </div>
-            <span className="text-[10px] font-black text-black bg-white px-2 py-0.5 rounded border border-stone-300 ml-1 shrink-0">
+            <span className="text-[10px] font-black text-black bg-white px-1.5 sm:px-2 py-0.5 rounded border border-stone-300 ml-0.5 sm:ml-1 shrink-0">
               Change ▾
             </span>
           </button>
@@ -676,7 +750,7 @@ export function App() {
             title={isEStopped ? 'Emergency Stop active: Click to Reset/Resume' : 'Emergency Stop: Halt simulation immediately'}
             aria-label={isEStopped ? 'Emergency Stop is active. Click to reset.' : 'Emergency Stop Simulation'}
             aria-pressed={isEStopped}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 min-h-[44px] rounded-xl font-black text-xs transition-all cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 ${
+            className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 min-h-[44px] rounded-xl font-black text-xs transition-all cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 ${
               isEStopped
                 ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-500/40 animate-pulse ring-2 ring-rose-400'
                 : activeTrajectory && isPlaying
@@ -685,7 +759,7 @@ export function App() {
             }`}
           >
             <Square className={`w-3.5 h-3.5 ${isEStopped || (activeTrajectory && isPlaying) ? 'fill-white' : 'fill-rose-950'}`} />
-            <span>{isEStopped ? '■ E-STOPPED (Reset)' : '■ STOP'}</span>
+            <span>{isEStopped ? '■ E-STOP (Reset)' : '■ STOP'}</span>
           </button>
 
           {/* Singularity / Feasibility Telemetry Badge */}
@@ -697,7 +771,7 @@ export function App() {
             onClick={resetToHome}
             title="Reset Robot Pose to Calibrated Home Pose (Shortcut: H)"
             aria-label="Reset to Home Pose"
-            className="flex items-center gap-1 px-3 py-1.5 min-h-[44px] rounded-xl font-black text-xs bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-800 transition-all cursor-pointer shrink-0 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
+            className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 min-h-[44px] rounded-xl font-black text-xs bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-800 transition-all cursor-pointer shrink-0 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
           >
             <RotateCcw className="w-3.5 h-3.5 text-black" />
             <span>Home</span>
@@ -740,25 +814,25 @@ export function App() {
               : 'Reachable Workspace Point Cloud Studio'
           }
           onKeyDown={handleFocusTrap}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 lg:p-8 animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-2 sm:p-4 lg:p-8 animate-in fade-in duration-150"
           onClick={(e) => {
             if (e.target === e.currentTarget) closeModal();
           }}
         >
-          <div className={`flex flex-col w-full ${activeModal === 'dh' ? 'max-w-6xl xl:max-w-7xl' : 'max-w-4xl lg:max-w-5xl'} h-[88vh] bg-[#fbf9f5] border-2 border-stone-300/90 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150`}>
+          <div className={`studio-modal-container flex flex-col w-full ${activeModal === 'dh' ? 'max-w-6xl xl:max-w-7xl' : 'max-w-4xl lg:max-w-5xl'} h-[96%] h-[96dvh] max-h-[96%] max-h-[96dvh] bg-[#fbf9f5] border-2 border-stone-300/90 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150`}>
             {/* Pop-up Window Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 bg-white/90 backdrop-blur-md shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl bg-amber-100 text-black border border-amber-300 shadow-xs">
-                  {activeModal === 'dh' && <Table className="w-5 h-5 text-black" />}
-                  {activeModal === 'transform' && <Layers className="w-5 h-5 text-black" />}
-                  {activeModal === 'custom' && <Wrench className="w-5 h-5 text-black" />}
-                  {activeModal === 'trajectory' && <MoveUpRight className="w-5 h-5 text-black" />}
-                  {activeModal === 'analysis' && <LineChart className="w-5 h-5 text-black" />}
-                  {activeModal === 'workspace' && <Box className="w-5 h-5 text-black" />}
+            <div className="flex items-center justify-between px-3.5 py-2.5 sm:px-6 sm:py-4 border-b border-stone-200 bg-white/90 backdrop-blur-md shrink-0">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-amber-100 text-black border border-amber-300 shadow-xs shrink-0">
+                  {activeModal === 'dh' && <Table className="w-4 h-4 sm:w-5 sm:h-5 text-black" />}
+                  {activeModal === 'transform' && <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-black" />}
+                  {activeModal === 'custom' && <Wrench className="w-4 h-4 sm:w-5 sm:h-5 text-black" />}
+                  {activeModal === 'trajectory' && <MoveUpRight className="w-4 h-4 sm:w-5 sm:h-5 text-black" />}
+                  {activeModal === 'analysis' && <LineChart className="w-4 h-4 sm:w-5 sm:h-5 text-black" />}
+                  {activeModal === 'workspace' && <Box className="w-4 h-4 sm:w-5 sm:h-5 text-black" />}
                 </div>
-                <div>
-                  <h2 className="text-sm font-black text-black uppercase tracking-wider">
+                <div className="min-w-0">
+                  <h2 className="text-xs sm:text-sm font-black text-black uppercase tracking-wider truncate">
                     {activeModal === 'dh' && 'Denavit-Hartenberg (DH) Simulation Studio'}
                     {activeModal === 'transform' && 'Homogeneous Transformation Matrix Studio'}
                     {activeModal === 'custom' && 'Custom Robot Architecture Synthesizer'}
@@ -766,7 +840,7 @@ export function App() {
                     {activeModal === 'analysis' && 'Dynamic Telemetry & Kinematic Plots'}
                     {activeModal === 'workspace' && 'Reachable Workspace Point Cloud Studio'}
                   </h2>
-                  <p className="text-xs text-stone-600 font-medium">
+                  <p className="text-[11px] sm:text-xs text-stone-600 font-medium hidden sm:block truncate">
                     {activeModal === 'dh' && `Kinematic table, real-time joint simulation, 3D chain visualization, matrices, Jacobian & IK for ${robot.name}`}
                     {activeModal === 'transform' && 'Relative (A_i) and cumulative (T_0i) 4x4 coordinate transformations'}
                     {activeModal === 'custom' && 'Synthesize arbitrary serial kinematic arms with instant 3D compilation'}
@@ -777,23 +851,23 @@ export function App() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <span className="hidden sm:inline-block text-[11px] font-mono text-stone-500 font-bold bg-stone-100 px-2 py-0.5 rounded-lg border border-stone-200">
                   ESC to close
                 </span>
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="p-2 rounded-2xl hover:bg-stone-100 text-stone-600 hover:text-black border border-stone-200 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
+                  className="p-1.5 sm:p-2 rounded-xl sm:rounded-2xl hover:bg-stone-100 text-stone-600 hover:text-black border border-stone-200 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
                   aria-label="Close studio pop-up"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
             </div>
 
             {/* Pop-up Window Body (Spacious, Scrollable, Full Width with Suspense) */}
-            <div className="flex-1 overflow-y-auto p-2 bg-[#fbf9f5]">
+            <div className="flex-1 min-h-0 overflow-y-auto p-2 sm:p-4 bg-[#fbf9f5] pb-16 sm:pb-8">
               <Suspense fallback={<StudioLoadingFallback label={`Loading ${activeModal} studio...`} />}>
                 {activeModal === 'dh' && <DHTableStudio />}
                 {activeModal === 'transform' && <TransformationStudio />}

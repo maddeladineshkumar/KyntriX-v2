@@ -10,7 +10,7 @@ async function run() {
   const browser = await puppeteer.launch({ executablePath, headless: 'new', args: ['--no-sandbox'] });
   const page = await browser.newPage();
   await page.setViewport({ width: 844, height: 390, isMobile: true, hasTouch: true });
-  await page.goto('http://localhost:5174/', { waitUntil: 'networkidle0' });
+  await page.goto('http://localhost:5174/', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => window.__ROBOT_STORE__ !== undefined);
 
   const studios = [

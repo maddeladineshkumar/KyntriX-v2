@@ -260,6 +260,8 @@ export const useRobotStore = create<RobotState>((set, get) => ({
   },
 
   setJoints: (newQ: number[]) => {
+    if (get().isEStopped) return;
+    if (!Array.isArray(newQ) || !newQ.every(Number.isFinite)) return;
     const { robot } = get();
     const fkResult = computeFK(robot, newQ);
     const jacobian = computeJacobian(robot, newQ, fkResult);
@@ -267,6 +269,8 @@ export const useRobotStore = create<RobotState>((set, get) => ({
   },
 
   setJointValue: (index: number, val: number) => {
+    if (get().isEStopped) return;
+    if (typeof val !== 'number' || !Number.isFinite(val)) return;
     const { q, setJoints } = get();
     const nextQ = [...q];
     nextQ[index] = val;
@@ -274,6 +278,10 @@ export const useRobotStore = create<RobotState>((set, get) => ({
   },
 
   resetToHome: () => {
+    if (get().isEStopped) {
+      set({ statusAnnouncement: 'Cannot reset to home: Emergency stop is active.' });
+      return;
+    }
     const { robot, setJoints } = get();
     const homeQ = robot.joints.map((j) => (j.home !== undefined ? j.home : (j.min + j.max) / 2));
     setJoints(homeQ);
@@ -307,14 +315,27 @@ export const useRobotStore = create<RobotState>((set, get) => ({
 
     const currentReqId = ++ikRequestId;
 
-    // 1500ms safety watchdog: guarantees ikSolving is reset even if worker stalls
+    // 10000ms safety watchdog: guarantees ikSolving is reset and an honest unconverged result is recorded if worker stalls
     ikTimeoutTimer = setTimeout(() => {
       if (ikRequestId === currentReqId) {
-        console.warn('IK calculation timed out after 1500ms.');
+        console.warn('IK calculation timed out.');
         pendingIKCallbacks.delete(currentReqId);
-        set({ ikSolving: false, statusAnnouncement: 'IK calculation timed out after 1500ms.' });
+        const timeoutResult: IKPipelineResult = {
+          target: targetPose.clone(),
+          solutions: [],
+          bestSolution: null,
+          converged: false,
+          computationTimeMs: 10000,
+          allTestedBranches: 0,
+          failureReason: 'Target unreachable: calculation timed out.',
+        };
+        set({
+          ikResult: timeoutResult,
+          ikSolving: false,
+          statusAnnouncement: 'IK solve failed: Target unreachable or calculation timed out.',
+        });
       }
-    }, 1500);
+    }, 10000);
 
     const worker = getIKWorker();
     if (worker) {
@@ -388,10 +409,24 @@ export const useRobotStore = create<RobotState>((set, get) => ({
 
   applyIKSolution: (sol: IKSingleSolution, animate: boolean = true) => {
     if (!sol || !Array.isArray(sol.q) || sol.q.length === 0) return;
+    if (get().isEStopped) {
+      console.warn('Cannot apply IK solution while emergency stop is active.');
+      return;
+    }
+    if (!sol.converged || !sol.withinLimits) {
+      console.warn('Cannot apply unconverged or out-of-limit IK solution.');
+      return;
+    }
     const { robot, q } = get();
+    const tol = 1e-4;
     for (let i = 0; i < robot.dof; i++) {
       if (!Number.isFinite(sol.q[i])) {
         console.warn('IK solution contains non-finite joint value at index', i, sol.q);
+        return;
+      }
+      const joint = robot.joints[i];
+      if (joint && (sol.q[i] < joint.min - tol || sol.q[i] > joint.max + tol)) {
+        console.warn('Cannot apply out-of-limit IK solution at joint', i, sol.q[i]);
         return;
       }
     }
@@ -414,11 +449,18 @@ export const useRobotStore = create<RobotState>((set, get) => ({
         profile: 'quintic',
         samples: 60,
       });
+      if (!traj.isValid) {
+        set({
+          activeTrajectory: traj,
+          statusAnnouncement: `Cannot animate IK solution: ${traj.failureReason || 'Trajectory invalid.'}`,
+        });
+        return;
+      }
       set({
         activeTrajectory: traj,
         playback: {
           ...get().playback,
-          isPlaying: true,
+          isPlaying: !get().isEStopped,
           currentTime: 0,
           isLooping: false,
         },
@@ -488,6 +530,7 @@ export const useRobotStore = create<RobotState>((set, get) => ({
     const states: TrajectoryDataset['states'] = [];
 
     let seedQ = [...currentQ];
+    const failedSampleIndices: number[] = [];
     const batchSize = 25;
     let currentK = 0;
 
@@ -507,18 +550,40 @@ export const useRobotStore = create<RobotState>((set, get) => ({
         const ik = solveIK(robot, targetT, {
           initialGuess: seedQ,
           currentJoints: seedQ,
-          maxIterations: 40,
+          maxIterations: 20,
+          returnAllBranches: false,
         });
 
-        if (ik.bestSolution) {
+        let sampleSuccess = false;
+        let samplePosErr = Infinity;
+        let sampleOriErr = Infinity;
+        let waypointQ: number[];
+
+        if (ik.bestSolution && ik.bestSolution.converged && ik.bestSolution.withinLimits) {
+          sampleSuccess = true;
+          waypointQ = [...ik.bestSolution.q];
           seedQ = [...ik.bestSolution.q];
+          samplePosErr = ik.bestSolution.positionError;
+          sampleOriErr = ik.bestSolution.orientationError;
+        } else {
+          sampleSuccess = false;
+          failedSampleIndices.push(k);
+          if (ik.bestSolution && Array.isArray(ik.bestSolution.q) && ik.bestSolution.q.every(Number.isFinite)) {
+            waypointQ = [...ik.bestSolution.q];
+            samplePosErr = ik.bestSolution.positionError;
+            sampleOriErr = ik.bestSolution.orientationError;
+          } else {
+            waypointQ = [...seedQ];
+            samplePosErr = Infinity;
+            sampleOriErr = Infinity;
+          }
         }
 
-        const fk = computeFK(robot, seedQ);
-        const jac = computeJacobian(robot, seedQ, fk);
+        const fk = computeFK(robot, waypointQ);
+        const jac = computeJacobian(robot, waypointQ, fk);
 
         timeSteps.push(t);
-        positions.push(seedQ);
+        positions.push([...waypointQ]);
         velocities.push(new Array(robot.dof).fill(0));
         accelerations.push(new Array(robot.dof).fill(0));
         endEffectorPositions.push(fk.endEffectorTransform.getPosition());
@@ -528,7 +593,7 @@ export const useRobotStore = create<RobotState>((set, get) => ({
 
         states.push({
           time: t,
-          q: seedQ,
+          q: [...waypointQ],
           qDot: new Array(robot.dof).fill(0),
           qDdot: new Array(robot.dof).fill(0),
           endEffectorTransform: fk.endEffectorTransform,
@@ -536,6 +601,9 @@ export const useRobotStore = create<RobotState>((set, get) => ({
           euler: fk.endEffectorPose.euler,
           manipulability: jac.manipulability,
           conditionNumber: jac.conditionNumber,
+          ikSuccess: sampleSuccess,
+          positionError: samplePosErr,
+          orientationError: sampleOriErr,
         });
       }
 
@@ -546,7 +614,7 @@ export const useRobotStore = create<RobotState>((set, get) => ({
       if (currentK < nSteps) {
         setTimeout(processBatch, 0);
       } else {
-        // Compute real numerical derivatives for velocities and accelerations across actual timing (dt = 0.05s)
+        // Compute real numerical derivatives strictly from validated joint samples
         const dt = 0.05;
         const trajDuration = (nSteps - 1) * dt;
 
@@ -554,22 +622,23 @@ export const useRobotStore = create<RobotState>((set, get) => ({
           const v = new Array(robot.dof).fill(0);
           const a = new Array(robot.dof).fill(0);
 
-          if (nSteps >= 2) {
-            if (k === 0) {
+          const isCurValid = !failedSampleIndices.includes(k);
+          if (isCurValid && nSteps >= 2) {
+            if (k === 0 && !failedSampleIndices.includes(1)) {
               for (let j = 0; j < robot.dof; j++) {
                 v[j] = (positions[1][j] - positions[0][j]) / dt;
-                if (nSteps >= 3) {
+                if (nSteps >= 3 && !failedSampleIndices.includes(2)) {
                   a[j] = (positions[2][j] - 2 * positions[1][j] + positions[0][j]) / (dt * dt);
                 }
               }
-            } else if (k === nSteps - 1) {
+            } else if (k === nSteps - 1 && !failedSampleIndices.includes(nSteps - 2)) {
               for (let j = 0; j < robot.dof; j++) {
                 v[j] = (positions[nSteps - 1][j] - positions[nSteps - 2][j]) / dt;
-                if (nSteps >= 3) {
+                if (nSteps >= 3 && !failedSampleIndices.includes(nSteps - 3)) {
                   a[j] = (positions[nSteps - 1][j] - 2 * positions[nSteps - 2][j] + positions[nSteps - 3][j]) / (dt * dt);
                 }
               }
-            } else {
+            } else if (!failedSampleIndices.includes(k - 1) && !failedSampleIndices.includes(k + 1)) {
               for (let j = 0; j < robot.dof; j++) {
                 v[j] = (positions[k + 1][j] - positions[k - 1][j]) / (2 * dt);
                 a[j] = (positions[k + 1][j] - 2 * positions[k][j] + positions[k - 1][j]) / (dt * dt);
@@ -583,6 +652,11 @@ export const useRobotStore = create<RobotState>((set, get) => ({
           states[k].qDdot = a;
         }
 
+        const hasIKFailure = failedSampleIndices.length > 0;
+        const failureReason = hasIKFailure
+          ? `KyntriX "THANKS" trajectory tracking failed: ${failedSampleIndices.length} of ${nSteps} waypoints are unreachable or violate joint limits for robot ${robot.name ?? robot.id}.`
+          : undefined;
+
         const traj: TrajectoryDataset = {
           duration: trajDuration,
           timeSteps,
@@ -594,14 +668,22 @@ export const useRobotStore = create<RobotState>((set, get) => ({
           manipulabilities,
           conditionNumbers,
           states,
-          isValid: true,
-          hasIKFailure: false,
+          isValid: !hasIKFailure,
+          hasIKFailure,
+          failedSampleIndices,
+          failureReason,
         };
+
+        const willPlay = Boolean(traj.isValid && !hasIKFailure && !get().isEStopped);
+        const announcement = hasIKFailure
+          ? `Trajectory tracking failed: ${failedSampleIndices.length} waypoints unreachable for ${robot.name ?? robot.id}. Playback blocked.`
+          : 'KyntriX "THANKS" trajectory loaded successfully.';
 
         set({
           activeTrajectory: traj,
-          playback: { ...get().playback, isPlaying: true, currentTime: 0 },
+          playback: { ...get().playback, isPlaying: willPlay, currentTime: 0 },
           thanksLoadingProgress: null,
+          statusAnnouncement: announcement,
         });
       }
     };
@@ -611,6 +693,11 @@ export const useRobotStore = create<RobotState>((set, get) => ({
 
   playTrajectory: () => {
     if (get().isEStopped) return;
+    const { activeTrajectory } = get();
+    if (activeTrajectory && (!activeTrajectory.isValid || activeTrajectory.hasIKFailure)) {
+      set({ statusAnnouncement: 'Cannot play invalid trajectory or trajectory with IK failures.' });
+      return;
+    }
     set({ playback: { ...get().playback, isPlaying: true }, statusAnnouncement: 'Trajectory playback playing.' });
   },
 
@@ -641,14 +728,16 @@ export const useRobotStore = create<RobotState>((set, get) => ({
 
   stopTrajectory: () => {
     set({
-      isEStopped: false,
       playback: { ...get().playback, isPlaying: false, currentTime: 0 },
       statusAnnouncement: 'Trajectory playback stopped and reset to time zero.',
     });
-    get().seekTrajectory(0);
+    if (!get().isEStopped) {
+      get().seekTrajectory(0);
+    }
   },
 
   rewindTrajectory: () => {
+    if (get().isEStopped) return;
     const { activeTrajectory } = get();
     if (!activeTrajectory) return;
     set({
@@ -679,6 +768,7 @@ export const useRobotStore = create<RobotState>((set, get) => ({
   },
 
   seekTrajectory: (time: number) => {
+    if (get().isEStopped) return;
     const { activeTrajectory, setJoints } = get();
     if (!activeTrajectory || activeTrajectory.states.length === 0) return;
 

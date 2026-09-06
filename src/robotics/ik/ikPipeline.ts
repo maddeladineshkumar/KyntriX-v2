@@ -5,6 +5,7 @@ import { solve3RPlanar } from './analytical3R';
 import { hasSphericalWrist, solve6RSpherical } from './analytical6R';
 import { isSCARARobot, solveSCARA } from './analyticalSCARA';
 import { solveNumericalIK } from './numericalIK';
+import { forwardKinematics } from '../kinematics/forwardKinematics';
 
 /**
  * Check if robot is a standard 3R planar manipulator
@@ -30,69 +31,88 @@ function areSolutionsEqual(q1: number[], q2: number[], tol = 1e-2): boolean {
  * Generate heuristic starting seeds for multi-branch exploration
  */
 function generateBranchSeeds(robot: RobotDefinition, baseGuess: number[]): number[][] {
-  const seeds: number[][] = [baseGuess];
-  if (robot.dof >= 3) {
-    const j0 = robot.joints[0];
-    const j2 = robot.joints[2];
+  const seeds: number[][] = [[...baseGuess]];
 
-    const alt0 =
-      j0.type === 'revolute'
-        ? Math.atan2(Math.sin(baseGuess[0] + Math.PI), Math.cos(baseGuess[0] + Math.PI))
-        : j0.min + (j0.max - j0.min) * 0.75;
+  // 1. Robot home pose
+  const homeSeed = robot.joints.map((j) => (j.home !== undefined ? j.home : (j.min + j.max) / 2));
+  seeds.push(homeSeed);
 
-    const alt2 =
-      j2.type === 'revolute'
-        ? -baseGuess[2]
-        : j2.min + (j2.max - j2.min) * 0.25;
+  // 2. Robot midpoint pose
+  const midSeed = robot.joints.map((j) => (j.min + j.max) / 2);
+  seeds.push(midSeed);
 
-    // Shoulder alternate
-    const s1 = [...baseGuess];
-    s1[0] = alt0;
-    seeds.push(s1);
+  // 3. Alternate configurations along individual degrees of freedom (up to 6)
+  const maxDofToVary = Math.min(robot.dof, 6);
+  for (let i = 0; i < maxDofToVary; i++) {
+    const joint = robot.joints[i];
+    const sPlus = [...baseGuess];
+    const sMinus = [...baseGuess];
+    const sQuarter = [...baseGuess];
+    const sThreeQuarter = [...baseGuess];
 
-    // Elbow alternate
-    const s2 = [...baseGuess];
-    s2[2] = alt2;
-    seeds.push(s2);
-
-    // Shoulder + Elbow alternate
-    const s3 = [...baseGuess];
-    s3[0] = alt0;
-    s3[2] = alt2;
-    seeds.push(s3);
-  }
-
-  if (robot.dof >= 6) {
-    const j3 = robot.joints[3];
-    const j4 = robot.joints[4];
-    const j5 = robot.joints[5];
-
-    // Wrist flip: only apply angular flip if joints are revolute
-    const baseCount = seeds.length;
-    for (let i = 0; i < baseCount; i++) {
-      const flipped = [...seeds[i]];
-      if (j3.type === 'revolute') {
-        flipped[3] = Math.atan2(Math.sin(flipped[3] + Math.PI), Math.cos(flipped[3] + Math.PI));
-      }
-      if (j4.type === 'revolute') {
-        flipped[4] = -flipped[4];
-      }
-      if (j5.type === 'revolute') {
-        flipped[5] = Math.atan2(Math.sin(flipped[5] + Math.PI), Math.cos(flipped[5] + Math.PI));
-      }
-      seeds.push(flipped);
+    if (joint.type === 'revolute') {
+      sPlus[i] = Math.atan2(Math.sin(baseGuess[i] + Math.PI), Math.cos(baseGuess[i] + Math.PI));
+      sMinus[i] = -baseGuess[i];
+      sQuarter[i] = joint.min + (joint.max - joint.min) * 0.25;
+      sThreeQuarter[i] = joint.min + (joint.max - joint.min) * 0.75;
+      seeds.push(sPlus, sMinus, sQuarter, sThreeQuarter);
+    } else {
+      sQuarter[i] = joint.min + (joint.max - joint.min) * 0.25;
+      sThreeQuarter[i] = joint.min + (joint.max - joint.min) * 0.75;
+      seeds.push(sQuarter, sThreeQuarter);
     }
   }
 
-  // Clamp all seed values to valid joint limits
-  for (const seed of seeds) {
-    for (let j = 0; j < robot.dof; j++) {
+  // 4. Combined primary arm variations (joints 0, 1, 2 if available)
+  if (robot.dof >= 2) {
+    const sComb1 = [...baseGuess];
+    const sComb2 = [...baseGuess];
+    for (let i = 0; i < Math.min(robot.dof, 3); i++) {
+      const joint = robot.joints[i];
+      if (joint.type === 'revolute') {
+        sComb1[i] = i % 2 === 0 ? baseGuess[i] + Math.PI : -baseGuess[i];
+        sComb2[i] = i % 2 === 0 ? -baseGuess[i] : baseGuess[i] + Math.PI;
+      } else {
+        sComb1[i] = joint.min + (joint.max - joint.min) * 0.25;
+        sComb2[i] = joint.min + (joint.max - joint.min) * 0.75;
+      }
+    }
+    seeds.push(sComb1, sComb2);
+  }
+
+  // 5. Wrist flips for spherical/orientational joints (joints >= 3)
+  if (robot.dof >= 5) {
+    const flipWrist1 = [...baseGuess];
+    const flipWrist2 = [...homeSeed];
+    for (let i = 3; i < robot.dof; i++) {
+      const joint = robot.joints[i];
+      if (joint.type === 'revolute') {
+        flipWrist1[i] = Math.atan2(Math.sin(baseGuess[i] + Math.PI), Math.cos(baseGuess[i] + Math.PI));
+        flipWrist2[i] = -homeSeed[i];
+      }
+    }
+    seeds.push(flipWrist1, flipWrist2);
+  }
+
+  // 6. Systematic quarter and three-quarter grids across all joints
+  seeds.push(robot.joints.map((j) => j.min + (j.max - j.min) * 0.25));
+  seeds.push(robot.joints.map((j) => j.min + (j.max - j.min) * 0.75));
+  seeds.push(robot.joints.map((j, idx) => (idx % 2 === 0 ? j.min + (j.max - j.min) * 0.3 : j.min + (j.max - j.min) * 0.7)));
+  seeds.push(robot.joints.map((j, idx) => (idx % 2 === 0 ? j.min + (j.max - j.min) * 0.7 : j.min + (j.max - j.min) * 0.3)));
+
+  // Clamp all seeds to joint limits and deduplicate
+  const validSeeds: number[][] = [];
+  for (const s of seeds) {
+    const clamped = s.map((val, j) => {
       const joint = robot.joints[j];
-      seed[j] = Math.max(joint.min, Math.min(joint.max, seed[j]));
+      return Math.max(joint.min, Math.min(joint.max, val));
+    });
+    if (!validSeeds.some((existing) => areSolutionsEqual(existing, clamped, 1e-3))) {
+      validSeeds.push(clamped);
     }
   }
 
-  return seeds;
+  return validSeeds;
 }
 
 
@@ -121,13 +141,69 @@ export function solveIK(
   }
 
   const startTime = performance.now();
+
+  // Early geometric check: target outside maximum theoretical kinematic reach
+  let maxTheoreticalReach = 0;
+  for (const j of robot.joints) {
+    maxTheoreticalReach += Math.abs(j.a);
+    if (j.type === 'prismatic') {
+      maxTheoreticalReach += Math.max(Math.abs(j.min), Math.abs(j.max), Math.abs(j.d));
+    } else {
+      maxTheoreticalReach += Math.abs(j.d);
+    }
+  }
+  if (robot.endEffectorOffset) {
+    maxTheoreticalReach += robot.endEffectorOffset.getPosition().norm();
+  }
+
+  let targetPos = target.getPosition();
+  if (robot.baseTransform) {
+    targetPos = robot.baseTransform.rigidInverse().multiply(target).getPosition();
+  }
+
+  if (targetPos.norm() > maxTheoreticalReach + 0.05) {
+    const defaultInitial =
+      options.initialGuess ??
+      options.currentJoints ??
+      robot.joints.map((j) => (j.home !== undefined ? j.home : (j.min + j.max) / 2));
+    const fkAtInitial = forwardKinematics(robot, defaultInitial);
+    const posErr = fkAtInitial.endEffectorTransform.getPosition().subtract(target.getPosition()).norm();
+    const unconvSol: IKSingleSolution = {
+      q: [...defaultInitial],
+      converged: false,
+      iterations: 0,
+      positionError: posErr,
+      orientationError: Math.PI,
+      withinLimits: true,
+      manipulability: 0,
+      conditionNumber: Infinity,
+      rank: 0,
+      isSingular: false,
+      cost: Infinity,
+      solverType: 'numerical-dls',
+    };
+
+    return {
+      target,
+      solutions: [unconvSol],
+      bestSolution: null,
+      converged: false,
+      computationTimeMs: performance.now() - startTime,
+      allTestedBranches: 0,
+      failureReason: 'Target unreachable: outside maximum physical workspace reach.',
+    };
+  }
+
   const allCandidateSolutions: IKSingleSolution[] = [];
+
+  let analyticalFound = false;
 
   // 1. Try Analytical 3R Planar Solver if applicable
   if (is3RPlanar(robot)) {
     const planarSolutions = solve3RPlanar(robot, target, options.currentJoints);
-    for (const sol of planarSolutions) {
-      if (sol.converged) {
+    if (planarSolutions.length > 0) {
+      analyticalFound = true;
+      for (const sol of planarSolutions) {
         allCandidateSolutions.push(sol);
       }
     }
@@ -136,8 +212,9 @@ export function solveIK(
   // 2. Try Analytical SCARA (4-DOF) Solver if applicable
   if (isSCARARobot(robot)) {
     const scaraSolutions = solveSCARA(robot, target, options.currentJoints);
-    for (const sol of scaraSolutions) {
-      if (sol.converged) {
+    if (scaraSolutions.length > 0) {
+      analyticalFound = true;
+      for (const sol of scaraSolutions) {
         allCandidateSolutions.push(sol);
       }
     }
@@ -146,16 +223,17 @@ export function solveIK(
   // 3. Try Analytical 6R Spherical Wrist Solver if applicable
   if (hasSphericalWrist(robot)) {
     const sphericalSolutions = solve6RSpherical(robot, target, options.currentJoints);
-    for (const sol of sphericalSolutions) {
-      if (sol.converged) {
+    if (sphericalSolutions.length > 0) {
+      analyticalFound = true;
+      for (const sol of sphericalSolutions) {
         allCandidateSolutions.push(sol);
       }
     }
   }
 
   // 3. Numerical DLS Solver
-  // Only run heavy numerical branch exploration if no valid analytical solutions were found
-  const hasAnalytical = allCandidateSolutions.some((s) => s.converged);
+  // Only run heavy numerical branch exploration if no analytical solver was applicable/produced solutions
+  const hasAnalytical = analyticalFound;
 
   const defaultInitial =
     options.initialGuess ??
@@ -215,10 +293,7 @@ export function solveIK(
   // Sort solutions by cost (lowest cost first: converged, within limits, closest to currentJoints)
   uniqueSolutions.sort((a, b) => a.cost - b.cost);
 
-  const bestSolution = uniqueSolutions.find((s) => s.converged && s.withinLimits) ??
-    uniqueSolutions.find((s) => s.converged) ??
-    uniqueSolutions[0] ??
-    null;
+  const bestSolution = uniqueSolutions.find((s) => s.converged && s.withinLimits) ?? null;
 
   const totalTime = performance.now() - startTime;
 

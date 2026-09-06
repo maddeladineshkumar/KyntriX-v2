@@ -43,8 +43,26 @@ export function generateJointTrajectory(
     return emptyDataset('Start and goal joint coordinates must contain finite numbers.');
   }
 
-  // Compute displacement deltas, avoiding discontinuities across +/-pi for revolute joints
   const tol = 1e-4;
+  let limitViolationReason: string | undefined = undefined;
+
+  for (let j = 0; j < dof; j++) {
+    const joint = robot.joints[j];
+    if (joint) {
+      if (startQ[j] < joint.min - tol || startQ[j] > joint.max + tol) {
+        if (!limitViolationReason) {
+          limitViolationReason = `Start joint ${j} (${startQ[j].toFixed(4)}) exceeds limits [${joint.min.toFixed(4)}, ${joint.max.toFixed(4)}].`;
+        }
+      }
+      if (goalQ[j] < joint.min - tol || goalQ[j] > joint.max + tol) {
+        if (!limitViolationReason) {
+          limitViolationReason = `Goal joint ${j} (${goalQ[j].toFixed(4)}) exceeds limits [${joint.min.toFixed(4)}, ${joint.max.toFixed(4)}].`;
+        }
+      }
+    }
+  }
+
+  // Compute displacement deltas, avoiding discontinuities across +/-pi for revolute joints
   const deltas = new Array(dof);
   for (let j = 0; j < dof; j++) {
     const joint = robot.joints[j];
@@ -85,6 +103,16 @@ export function generateJointTrajectory(
       q[j] = startQ[j] + s * deltas[j];
       qDot[j] = sDot * deltas[j];
       qDdot[j] = sDdot * deltas[j];
+
+      const joint = robot.joints[j];
+      if (!Number.isFinite(q[j]) || !Number.isFinite(qDot[j]) || !Number.isFinite(qDdot[j])) {
+        return emptyDataset(`Interpolated trajectory produced non-finite values at joint ${j}, time ${t.toFixed(4)}s.`);
+      }
+      if (joint && (q[j] < joint.min - tol || q[j] > joint.max + tol)) {
+        if (!limitViolationReason) {
+          limitViolationReason = `Trajectory joint ${j} limit violated at time ${t.toFixed(4)}s: ${q[j].toFixed(4)} not in [${joint.min.toFixed(4)}, ${joint.max.toFixed(4)}].`;
+        }
+      }
     }
 
     // Authoritative forward kinematics and Jacobian
@@ -119,6 +147,8 @@ export function generateJointTrajectory(
     });
   }
 
+  const isValid = limitViolationReason === undefined;
+
   return {
     duration,
     timeSteps,
@@ -130,7 +160,8 @@ export function generateJointTrajectory(
     manipulabilities,
     conditionNumbers,
     states,
-    isValid: true,
-    hasIKFailure: false,
+    isValid,
+    hasIKFailure: !isValid,
+    failureReason: limitViolationReason,
   };
 }

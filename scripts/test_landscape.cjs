@@ -24,7 +24,7 @@ async function run() {
   for (const vp of viewports) {
     const page = await browser.newPage();
     await page.setViewport({ width: vp.width, height: vp.height, isMobile: true, hasTouch: true });
-    await page.goto('http://localhost:5174/', { waitUntil: 'networkidle0' });
+    await page.goto('http://localhost:5174/', { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => window.__ROBOT_STORE__ !== undefined);
 
     await page.screenshot({ path: path.join(outDir, `${vp.name}_01_main.png`) });

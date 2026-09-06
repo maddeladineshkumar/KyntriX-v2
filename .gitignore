@@ -39,4 +39,5 @@ test_screenshots/
 # Agent & workspace cache
 .gemini
 .antigravity
+.impeccable/
 

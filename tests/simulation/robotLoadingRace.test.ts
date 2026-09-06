@@ -125,6 +125,7 @@ describe('Asynchronous Robot Loading & Race Condition Tests', () => {
   });
 
   it('gracefully handles robot loading errors by recording loadError without crashing', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(robotsModule, 'loadRobotById').mockRejectedValue(new Error('Network offline: mesh unavailable'));
 
     const store = useRobotStore.getState();
@@ -133,5 +134,6 @@ describe('Asynchronous Robot Loading & Race Condition Tests', () => {
     const state = useRobotStore.getState();
     expect(state.loadError).toContain('Network offline: mesh unavailable');
     expect(state.robotLoading).toBe(false);
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to switch robot:', expect.any(Error));
   });
 });

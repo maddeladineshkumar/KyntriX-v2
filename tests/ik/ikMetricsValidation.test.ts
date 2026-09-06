@@ -137,8 +137,55 @@ describe('IK Result Metrics and Validation Hardening', () => {
     const result = solveIK(pumaRobot, unreachableTarget);
 
     expect(result.converged).toBe(false);
-    if (result.bestSolution) {
-      expect(result.bestSolution.converged).toBe(false);
+    expect(result.bestSolution).toBeNull();
+  });
+
+  it('analytical 3R solver rejects exact solutions outside declared joint limits', () => {
+    const narrow3R: RobotDefinition = {
+      ...robot3R,
+      joints: [
+        robot3R.joints[0],
+        { ...robot3R.joints[1], min: -0.2, max: 0.2 },
+        robot3R.joints[2],
+      ],
+    };
+    // q2 = 0.8 is outside [-0.2, 0.2]
+    const qOutside = [0.2, 0.8, -0.3];
+    const fkTarget = computeFK(narrow3R, qOutside);
+    const targetPose = fkTarget.endEffectorTransform;
+
+    const solutions = solve3RPlanar(narrow3R, targetPose);
+    expect(solutions.length).toBeGreaterThan(0);
+    for (const sol of solutions) {
+      expect(sol.withinLimits).toBe(false);
+      expect(sol.converged).toBe(false);
     }
+
+    const pipelineResult = solveIK(narrow3R, targetPose);
+    expect(pipelineResult.converged).toBe(false);
+    expect(pipelineResult.bestSolution).toBeNull();
+  });
+
+  it('numerical DLS solver rejects exact solutions outside declared joint limits', () => {
+    // Joint 5 of Puma560 limits are [-4.886, -1.396] (-280 deg to -80 deg).
+    // qKnown with joint 5 = -0.5 is outside limits.
+    const qOutside = [0.1, 0.3, -0.2, 0.4, -0.5, 0.2];
+    const fkTarget = computeFK(pumaRobot, qOutside);
+    const targetPose = fkTarget.endEffectorTransform;
+
+    const sol = solveNumericalIK(pumaRobot, targetPose, {
+      initialGuess: qOutside,
+      maxIterations: 30,
+    });
+
+    // Even if initial guess matches the target pose exactly, it violates limits so it must not converge
+    expect(sol.withinLimits).toBe(false);
+    expect(sol.converged).toBe(false);
+
+    const pipelineRes = solveIK(pumaRobot, targetPose, {
+      initialGuess: qOutside,
+    });
+    expect(pipelineRes.converged).toBe(false);
+    expect(pipelineRes.bestSolution).toBeNull();
   });
 });

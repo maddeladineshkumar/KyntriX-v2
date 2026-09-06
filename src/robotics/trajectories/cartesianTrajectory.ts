@@ -105,7 +105,7 @@ export function generateCartesianTrajectory(
     let samplePosErr = Infinity;
     let sampleOriErr = Infinity;
 
-    if (ikResult.bestSolution && ikResult.bestSolution.converged) {
+    if (ikResult.bestSolution && ikResult.bestSolution.converged && ikResult.bestSolution.withinLimits) {
       sampleSuccess = true;
       currentQ = [...ikResult.bestSolution.q];
       samplePosErr = ikResult.bestSolution.positionError;
@@ -113,7 +113,7 @@ export function generateCartesianTrajectory(
     } else {
       sampleSuccess = false;
       failedSampleIndices.push(k);
-      if (ikResult.bestSolution) {
+      if (ikResult.bestSolution && Array.isArray(ikResult.bestSolution.q) && ikResult.bestSolution.q.every(Number.isFinite)) {
         currentQ = [...ikResult.bestSolution.q];
         samplePosErr = ikResult.bestSolution.positionError;
         sampleOriErr = ikResult.bestSolution.orientationError;
@@ -142,26 +142,29 @@ export function generateCartesianTrajectory(
     const v = new Array(dof).fill(0);
     const a = new Array(dof).fill(0);
 
-    if (k === 0) {
-      for (let j = 0; j < dof; j++) {
-        v[j] = (positions[1][j] - positions[0][j]) / dt;
-        if (intSamples >= 3) {
-          a[j] = (positions[2][j] - 2 * positions[1][j] + positions[0][j]) / (dt * dt);
+    const isCurValid = !failedSampleIndices.includes(k);
+    if (isCurValid && intSamples >= 2) {
+      if (k === 0 && !failedSampleIndices.includes(1)) {
+        for (let j = 0; j < dof; j++) {
+          v[j] = (positions[1][j] - positions[0][j]) / dt;
+          if (intSamples >= 3 && !failedSampleIndices.includes(2)) {
+            a[j] = (positions[2][j] - 2 * positions[1][j] + positions[0][j]) / (dt * dt);
+          }
         }
-      }
-    } else if (k === intSamples - 1) {
-      for (let j = 0; j < dof; j++) {
-        v[j] = (positions[intSamples - 1][j] - positions[intSamples - 2][j]) / dt;
-        if (intSamples >= 3) {
-          a[j] =
-            (positions[intSamples - 1][j] - 2 * positions[intSamples - 2][j] + positions[intSamples - 3][j]) /
-            (dt * dt);
+      } else if (k === intSamples - 1 && !failedSampleIndices.includes(intSamples - 2)) {
+        for (let j = 0; j < dof; j++) {
+          v[j] = (positions[intSamples - 1][j] - positions[intSamples - 2][j]) / dt;
+          if (intSamples >= 3 && !failedSampleIndices.includes(intSamples - 3)) {
+            a[j] =
+              (positions[intSamples - 1][j] - 2 * positions[intSamples - 2][j] + positions[intSamples - 3][j]) /
+              (dt * dt);
+          }
         }
-      }
-    } else {
-      for (let j = 0; j < dof; j++) {
-        v[j] = (positions[k + 1][j] - positions[k - 1][j]) / (2 * dt);
-        a[j] = (positions[k + 1][j] - 2 * positions[k][j] + positions[k - 1][j]) / (dt * dt);
+      } else if (!failedSampleIndices.includes(k - 1) && !failedSampleIndices.includes(k + 1)) {
+        for (let j = 0; j < dof; j++) {
+          v[j] = (positions[k + 1][j] - positions[k - 1][j]) / (2 * dt);
+          a[j] = (positions[k + 1][j] - 2 * positions[k][j] + positions[k - 1][j]) / (dt * dt);
+        }
       }
     }
 

@@ -944,10 +944,15 @@ export function solveDHInverseKinematics(
     new Vector3(targetPos.x, targetPos.y, targetPos.z)
   );
 
-  return solveIK(robot, targetMat, {
+  const res = solveIK(robot, targetMat, {
     currentJoints: currentQ,
     returnAllBranches: true,
   });
+
+  return {
+    ...res,
+    bestSolution: res.bestSolution ?? res.solutions[0] ?? null,
+  };
 }
 
 /**

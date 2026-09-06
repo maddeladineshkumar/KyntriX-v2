@@ -305,17 +305,17 @@ export function solve6RSpherical(
         'analytical-6r',
         1,
         {
-          positionTolerance: POSITION_TOLERANCE * 10,
-          orientationTolerance: ORIENTATION_TOLERANCE * 10,
+          positionTolerance: POSITION_TOLERANCE,
+          orientationTolerance: ORIENTATION_TOLERANCE,
           currentJoints,
+          requireJointLimits: true,
         }
       );
 
-      if (solution.converged) {
-        solutions.push(solution);
-      }
+      solutions.push(solution);
     }
   }
 
-  return solutions;
+  const validSolutions = solutions.filter((s) => s.converged && s.withinLimits);
+  return validSolutions.length > 0 ? validSolutions : solutions;
 }

@@ -419,12 +419,18 @@ export const AnalysisStudio: React.FC = () => {
 
             {/* Plot Lines */}
             {seriesData.map((series) => {
-              const pathPoints = series.values
+              const validPoints = series.values
                 .map((val, idx) => {
                   const t = timeSteps[idx];
-                  return `${scaleX(t)},${scaleY(val)}`;
+                  if (!Number.isFinite(val) || !Number.isFinite(t)) return null;
+                  const x = scaleX(t);
+                  const y = scaleY(val);
+                  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+                  return `${x},${y}`;
                 })
-                .join(' ');
+                .filter((p): p is string => p !== null);
+
+              if (validPoints.length === 0) return null;
 
               return (
                 <polyline
@@ -434,7 +440,7 @@ export const AnalysisStudio: React.FC = () => {
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  points={pathPoints}
+                  points={validPoints.join(' ')}
                 />
               );
             })}

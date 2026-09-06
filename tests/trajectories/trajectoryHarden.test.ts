@@ -4,7 +4,7 @@ import { generateCartesianTrajectory } from '../../src/robotics/trajectories/car
 import { useRobotStore } from '../../src/state/robotStore';
 import { computeFK } from '../../src/robotics/kinematics/forwardKinematics';
 import type { RobotDefinition } from '../../src/data/schema/robotSchema';
-import { Matrix4 } from '../../src/robotics/math';
+import { Matrix4, Vector3 } from '../../src/robotics/math';
 import pumaJson from '../../src/data/robots/Puma560.json';
 import skeleton3RJson from '../../src/data/robots/skeleton_3R.json';
 
@@ -54,6 +54,74 @@ describe('Trajectory Hardening & Emergency Stop Tests', () => {
       samples: 50,
     });
     expect(nonFiniteQ.isValid).toBe(false);
+    expect(nonFiniteQ.failureReason).toBeDefined();
+  });
+
+  it('generateJointTrajectory rejects start or goal outside joint limits, narrow artificial limits, and out-of-range goals', () => {
+    // 1. Narrow artificial limits on 3R robot: joint 0 limits [-0.1, 0.1]
+    const narrowRobot: RobotDefinition = {
+      ...robot3R,
+      joints: [
+        { ...robot3R.joints[0], min: -0.1, max: 0.1 },
+        robot3R.joints[1],
+        robot3R.joints[2],
+      ],
+    };
+
+    // Start outside limits
+    const startOutside = generateJointTrajectory(narrowRobot, {
+      startQ: [0.5, 0, 0],
+      goalQ: [0, 0, 0],
+      duration: 1.0,
+      samples: 20,
+    });
+    expect(startOutside.isValid).toBe(false);
+    expect(startOutside.failureReason).toContain('Start joint 0');
+
+    // Goal outside limits
+    const goalOutside = generateJointTrajectory(narrowRobot, {
+      startQ: [0, 0, 0],
+      goalQ: [0.5, 0, 0],
+      duration: 1.0,
+      samples: 20,
+    });
+    expect(goalOutside.isValid).toBe(false);
+    expect(goalOutside.failureReason).toContain('Goal joint 0');
+
+    // Goal out-of-range for Puma 560
+    const pumaGoalOutside = generateJointTrajectory(pumaRobot, {
+      startQ: pumaRobot.joints.map((j) => j.home),
+      goalQ: [0, 0, 0, 0, 5.0, 0], // joint 5 limit is [-4.886, -1.396]
+      duration: 2.0,
+      samples: 20,
+    });
+    expect(pumaGoalOutside.isValid).toBe(false);
+    expect(pumaGoalOutside.failureReason).toContain('Goal joint 4');
+
+    // Revolute wrapping that crosses outside allowed interval
+    // Joint limits [-2.5, +2.5]. Start at +2.0, Goal at -2.0.
+    // The shortest delta via wrapping would be +2.28 rad (reaching +4.28 rad),
+    // but [+2.0, +4.28] exceeds max limit +2.5!
+    const narrowWrapRobot: RobotDefinition = {
+      ...robot3R,
+      joints: [
+        { ...robot3R.joints[0], min: -2.5, max: 2.5 },
+        robot3R.joints[1],
+        robot3R.joints[2],
+      ],
+    };
+    const wrapTraj = generateJointTrajectory(narrowWrapRobot, {
+      startQ: [2.0, 0, 0],
+      goalQ: [-2.0, 0, 0],
+      duration: 1.0,
+      samples: 21,
+    });
+    // Direct interpolation travels from +2.0 down to -2.0 without exceeding [-2.5, 2.5]
+    expect(wrapTraj.isValid).toBe(true);
+    for (const qSample of wrapTraj.positions) {
+      expect(qSample[0]).toBeGreaterThanOrEqual(-2.5 - 1e-4);
+      expect(qSample[0]).toBeLessThanOrEqual(2.5 + 1e-4);
+    }
   });
 
   it('rejects invalid duration or sample count in Cartesian trajectory', () => {
@@ -263,5 +331,48 @@ describe('Trajectory Hardening & Emergency Stop Tests', () => {
     store.resumeFromEStop();
     expect(useRobotStore.getState().isEStopped).toBe(false);
     expect(useRobotStore.getState().playback.isPlaying).toBe(true);
+  });
+
+  it('guarantees generateCartesianTrajectory handles unreachable targets without NaN propagation and records failedSampleIndices', () => {
+    // Start at valid home pose
+    const startQ = pumaRobot.joints.map((j) => j.home);
+    const startFK = computeFK(pumaRobot, startQ);
+    const startPose = startFK.endEffectorTransform;
+
+    // Goal pose far outside workspace (10 meters away)
+    const farGoalPose = Matrix4.fromRotationTranslation(
+      startPose.getRotation(),
+      new Vector3(10.0, 10.0, 10.0)
+    );
+
+    const traj = generateCartesianTrajectory(pumaRobot, {
+      startPose,
+      goalPose: farGoalPose,
+      startQ,
+      duration: 2.0,
+      samples: 20,
+    });
+
+    expect(traj.isValid).toBe(false);
+    expect(traj.hasIKFailure).toBe(true);
+    expect(traj.failedSampleIndices.length).toBeGreaterThan(0);
+    expect(traj.failureReason).toContain('Cartesian path unreachable');
+
+    // All computed velocities, accelerations, and states must be finite numbers
+    for (const v of traj.velocities) {
+      for (const val of v) {
+        expect(Number.isFinite(val)).toBe(true);
+      }
+    }
+    for (const a of traj.accelerations) {
+      for (const val of a) {
+        expect(Number.isFinite(val)).toBe(true);
+      }
+    }
+    for (const q of traj.positions) {
+      for (const val of q) {
+        expect(Number.isFinite(val)).toBe(true);
+      }
+    }
   });
 });

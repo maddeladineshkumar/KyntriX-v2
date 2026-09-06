@@ -22,8 +22,8 @@ describe('6R Analytical Inverse Kinematics (Spherical Wrist)', () => {
   });
 
   it('solves 6R IK roundtrip analytically and verifies all solutions with FK', () => {
-    // Known joint configuration in reachable interior workspace
-    const qKnown = [0.2, 0.4, -0.3, 0.5, -0.6, 0.3];
+    // Known joint configuration in reachable interior workspace (Puma 560 joint 5 is in [-280, -80] deg)
+    const qKnown = [0.2, 0.4, -0.3, 0.5, -2.5, 0.3];
     const fkTarget = computeFK(pumaRobot, qKnown);
     const targetPose = fkTarget.endEffectorTransform;
 
@@ -41,6 +41,20 @@ describe('6R Analytical Inverse Kinematics (Spherical Wrist)', () => {
       const verifyFK = computeFK(pumaRobot, sol.q);
       const posDist = verifyFK.endEffectorTransform.getPosition().distanceTo(targetPose.getPosition());
       expect(posDist).toBeLessThan(2e-3);
+    }
+  });
+
+  it('rejects an exact mathematical solution when outside declared joint limits', () => {
+    // Joint 5 = -0.6 rad (-34 deg) is outside Puma 560 declared limits [-4.886 rad, -1.396 rad]
+    const qOutsideLimits = [0.2, 0.4, -0.3, 0.5, -0.6, 0.3];
+    const fkTarget = computeFK(pumaRobot, qOutsideLimits);
+    const targetPose = fkTarget.endEffectorTransform;
+
+    const solutions = solve6RSpherical(pumaRobot, targetPose, qOutsideLimits);
+    // Mandatory joint limit enforcement: any out-of-limit solution must have converged === false
+    for (const sol of solutions) {
+      expect(sol.converged).toBe(false);
+      expect(sol.withinLimits).toBe(false);
     }
   });
 

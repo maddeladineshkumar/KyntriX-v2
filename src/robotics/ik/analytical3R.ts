@@ -104,13 +104,15 @@ export function solve3RPlanar(
       'analytical-3r',
       1,
       {
-        positionTolerance: POSITION_TOLERANCE * 5,
-        orientationTolerance: ORIENTATION_TOLERANCE * 5,
+        positionTolerance: POSITION_TOLERANCE,
+        orientationTolerance: ORIENTATION_TOLERANCE,
         currentJoints,
+        requireJointLimits: true,
       }
     );
     solutions.push(solution);
   }
 
-  return solutions;
+  const validSolutions = solutions.filter((s) => s.converged && s.withinLimits);
+  return validSolutions.length > 0 ? validSolutions : solutions;
 }

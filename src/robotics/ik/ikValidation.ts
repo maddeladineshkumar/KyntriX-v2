@@ -28,11 +28,11 @@ export function finalizeIKSolution(
   options: FinalizeSolutionOptions = {}
 ): IKSingleSolution {
   const {
-    positionTolerance = POSITION_TOLERANCE * 10,
-    orientationTolerance = ORIENTATION_TOLERANCE * 10,
+    positionTolerance = POSITION_TOLERANCE,
+    orientationTolerance = ORIENTATION_TOLERANCE,
     currentJoints,
     isOrientationFree = false,
-    requireJointLimits = false,
+    requireJointLimits = true,
   } = options;
 
   // 1. Strict finite check
@@ -89,10 +89,10 @@ export function finalizeIKSolution(
   const rank = jac.rank;
   const isSingular = jac.isSingular;
 
-  // 5. Convergence determination: must satisfy tolerance, finite values, and optional joint limit requirement
+  // 5. Convergence determination: must satisfy tolerance, finite values, and MANDATORY joint limit requirement
   const passesPosition = Number.isFinite(posError) && posError <= positionTolerance;
   const passesOrientation = isOrientationFree || (Number.isFinite(rotError) && rotError <= orientationTolerance);
-  const converged = allFinite && passesPosition && passesOrientation && (!requireJointLimits || withinLimits);
+  const converged = allFinite && withinLimits && passesPosition && passesOrientation && (!requireJointLimits || withinLimits);
 
   // 6. Consistent cost computation
   let cost = posError * 20 + (isOrientationFree ? 0 : rotError * 5);

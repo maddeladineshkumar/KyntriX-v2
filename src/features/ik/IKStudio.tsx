@@ -210,12 +210,14 @@ export const IKStudio: React.FC = () => {
   };
 
   const handleSelectSolution = (sol: IKSingleSolution, idx: number, animate: boolean) => {
+    if (!sol.converged || !sol.withinLimits) return;
     setActiveSolIdx(idx);
     setPrePreviewQ(null);
     applyIKSolution(sol, animate);
   };
 
   const handlePreview3D = (sol: IKSingleSolution) => {
+    if (!sol.converged || !sol.withinLimits) return;
     if (prePreviewQ === null) {
       setPrePreviewQ([...q]);
     }
@@ -774,11 +776,17 @@ export const IKStudio: React.FC = () => {
               return (
                 <div
                   key={idx}
-                  onClick={() => handleSelectSolution(sol, idx, true)}
-                  className={`p-3 rounded-2xl border-2 transition-all cursor-pointer shadow-xs hover:border-black ${
-                    isSelected || isBest
-                      ? 'bg-amber-50/70 border-amber-500/80 ring-2 ring-amber-400/30'
-                      : 'bg-white border-stone-200 hover:bg-stone-50'
+                  onClick={() => {
+                    if (sol.converged && sol.withinLimits) {
+                      handleSelectSolution(sol, idx, true);
+                    }
+                  }}
+                  className={`p-3 rounded-2xl border-2 transition-all shadow-xs ${
+                    !sol.converged || !sol.withinLimits
+                      ? 'bg-stone-100/80 border-stone-200 opacity-75 cursor-not-allowed'
+                      : isSelected || isBest
+                      ? 'bg-amber-50/70 border-amber-500/80 ring-2 ring-amber-400/30 cursor-pointer hover:border-black'
+                      : 'bg-white border-stone-200 hover:bg-stone-50 cursor-pointer hover:border-black'
                   }`}
                 >
                   {/* Card Header */}
@@ -807,13 +815,13 @@ export const IKStudio: React.FC = () => {
                     </div>
 
                     {/* Joint limits status pill */}
-                    {sol.withinLimits ? (
+                    {sol.withinLimits && sol.converged ? (
                       <span className="inline-flex items-center gap-0.5 text-[10px] font-black text-emerald-900 px-1.5 py-0.2 rounded bg-emerald-100 border border-emerald-300">
                         <CheckCircle2 className="w-3 h-3 text-emerald-700" /> Pass
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-0.5 text-[10px] font-black text-rose-900 px-1.5 py-0.2 rounded bg-rose-100 border border-rose-300">
-                        <AlertTriangle className="w-3 h-3 text-rose-700" /> Limit
+                        <AlertTriangle className="w-3 h-3 text-rose-700" /> {!sol.withinLimits ? 'Limit Exceeded' : 'Not Converged'}
                       </span>
                     )}
                   </div>
@@ -841,13 +849,18 @@ export const IKStudio: React.FC = () => {
                     {/* Preview in 3D Button */}
                     <button
                       type="button"
+                      disabled={!sol.withinLimits || !sol.converged}
                       onClick={(e) => {
                         e.stopPropagation();
                         handlePreview3D(sol);
                       }}
                       title="Temporarily preview robot pose in 3D without trajectory"
                       aria-label={`Preview solution ${idx + 1} in 3D`}
-                      className="flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-xl bg-white hover:bg-stone-100 active:scale-95 text-stone-800 font-bold text-xs border border-stone-300 shadow-2xs transition-all cursor-pointer"
+                      className={`flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-xl text-stone-800 font-bold text-xs border border-stone-300 shadow-2xs transition-all ${
+                        !sol.withinLimits || !sol.converged
+                          ? 'opacity-40 cursor-not-allowed bg-stone-100'
+                          : 'bg-white hover:bg-stone-100 active:scale-95 cursor-pointer'
+                      }`}
                     >
                       <Eye className="w-3.5 h-3.5 text-stone-700" />
                       <span>Preview in 3D</span>
@@ -856,11 +869,16 @@ export const IKStudio: React.FC = () => {
                     {/* Animate to Pose Button */}
                     <button
                       type="button"
+                      disabled={!sol.withinLimits || !sol.converged}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleSelectSolution(sol, idx, true);
                       }}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-500 active:scale-95 text-black font-black text-xs border border-stone-900 shadow-2xs transition-all cursor-pointer"
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl font-black text-xs border shadow-2xs transition-all ${
+                        !sol.withinLimits || !sol.converged
+                          ? 'opacity-40 cursor-not-allowed bg-stone-200 text-stone-500 border-stone-300'
+                          : 'bg-amber-400 hover:bg-amber-500 active:scale-95 text-black border-stone-900 cursor-pointer'
+                      }`}
                     >
                       <Play className="w-3.5 h-3.5 fill-black text-black" />
                       <span>Animate</span>
@@ -869,12 +887,17 @@ export const IKStudio: React.FC = () => {
                     {/* Snap Pose Button */}
                     <button
                       type="button"
+                      disabled={!sol.withinLimits || !sol.converged}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleSelectSolution(sol, idx, false);
                       }}
                       title="Instant Jump without trajectory animation"
-                      className="flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-xl bg-white hover:bg-stone-100 active:scale-95 text-stone-800 font-bold text-xs border border-stone-300 shadow-2xs transition-all cursor-pointer"
+                      className={`flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-xl font-bold text-xs border border-stone-300 shadow-2xs transition-all ${
+                        !sol.withinLimits || !sol.converged
+                          ? 'opacity-40 cursor-not-allowed bg-stone-100 text-stone-400'
+                          : 'bg-white hover:bg-stone-100 active:scale-95 text-stone-800 cursor-pointer'
+                      }`}
                     >
                       <Zap className="w-3.5 h-3.5 text-stone-700" />
                       <span>Snap</span>

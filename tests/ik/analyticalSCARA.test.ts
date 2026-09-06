@@ -81,4 +81,23 @@ describe('Analytical SCARA Inverse Kinematics', () => {
       expect(posDist).toBeLessThan(1e-3);
     }
   });
+
+  it('rejects exact mathematical SCARA solutions outside declared joint limits', () => {
+    // Joint 3 (prismatic) declared limits are [0.0, 0.5]. Target with d3 = 0.8 is physically reachable
+    // geometrically without limits, but violates joint 3 limits.
+    const qOutsideLimits = [0.4, -0.7, 0.8, 0.5];
+    const fkTarget = computeFK(scara, qOutsideLimits);
+    const targetPose = fkTarget.endEffectorTransform;
+
+    const solutions = solveSCARA(scara, targetPose);
+    expect(solutions.length).toBeGreaterThan(0);
+    for (const sol of solutions) {
+      expect(sol.withinLimits).toBe(false);
+      expect(sol.converged).toBe(false);
+    }
+
+    const pipelineResult = solveIK(scara, targetPose);
+    expect(pipelineResult.converged).toBe(false);
+    expect(pipelineResult.bestSolution).toBeNull();
+  });
 });

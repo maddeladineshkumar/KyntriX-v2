@@ -919,7 +919,7 @@ export const DHTableStudio: React.FC = () => {
 
       const isPositionOnly = robot.dof <= 3;
       const effectiveConverged = ikRes.bestSolution
-        ? (isPositionOnly ? ikRes.bestSolution.positionError <= 1e-3 : ikRes.converged)
+        ? (isPositionOnly ? (ikRes.bestSolution.positionError <= 1e-3 && ikRes.bestSolution.withinLimits) : ikRes.converged)
         : false;
 
       setIkResultStats({

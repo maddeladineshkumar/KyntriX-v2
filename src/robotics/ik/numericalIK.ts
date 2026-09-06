@@ -108,13 +108,13 @@ export function solveNumericalIK(
 
     // Track best solution & stagnation
     const combinedError = posError + (use6DOF ? oriError * 0.1 : 0);
-    if (combinedError < minCombinedError - 1e-9) {
+    if (combinedError < minCombinedError - 1e-12) {
       minCombinedError = combinedError;
       bestQ = [...q];
       stagnantCount = 0;
     } else {
       stagnantCount++;
-      if (stagnantCount >= 22 && iter >= 35) {
+      if (stagnantCount >= 30 && iter >= 45) {
         break; // Early termination on true stagnation
       }
     }
@@ -179,7 +179,7 @@ export function solveNumericalIK(
     const deltaQ = solveNxN(A, g);
 
     // 8. Exact Null-space projection for joint limit avoidance (secondary task)
-    const activeNullSpace = options.enableNullSpace ?? (robot.dof > mRows);
+    const activeNullSpace = options.enableNullSpace === true;
     if (activeNullSpace && robot.dof > mRows) {
       // Gradient of quadratic joint limit distance penalty function
       const gradH: number[] = new Array(robot.dof);
@@ -238,24 +238,7 @@ export function solveNumericalIK(
     for (let j = 0; j < robot.dof; j++) {
       q[j] += deltaQ[j];
       const joint = robot.joints[j];
-      if (joint.type === 'revolute') {
-        // Continuous rotation handling
-        if (q[j] > joint.max) {
-          if (q[j] - 2 * Math.PI >= joint.min) {
-            q[j] -= 2 * Math.PI;
-          } else {
-            q[j] = joint.max;
-          }
-        } else if (q[j] < joint.min) {
-          if (q[j] + 2 * Math.PI <= joint.max) {
-            q[j] += 2 * Math.PI;
-          } else {
-            q[j] = joint.min;
-          }
-        }
-      } else {
-        q[j] = Math.max(joint.min, Math.min(joint.max, q[j]));
-      }
+      q[j] = Math.max(joint.min, Math.min(joint.max, q[j]));
     }
   }
 

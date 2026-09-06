@@ -175,4 +175,39 @@ describe('Authoritative 42-Robot Kinematic & Asset Verification', () => {
       }
     }
   });
+
+  it('validates profile-wide Inverse Kinematics round-trip convergence from perturbed seeds across all 42 robots', async () => {
+    for (const entry of ROBOTS_CATALOG) {
+      const robot = await loadRobotById(entry.id);
+      // Valid target configuration comfortably inside joint limits
+      const q_target = robot.joints.map((j) => {
+        const span = j.max - j.min;
+        return j.min + 0.45 * span;
+      });
+      const fk = forwardKinematics(robot, q_target);
+      const target = fk.endEffectorTransform;
+
+      // Start from a different valid initial configuration
+      const q_seed = robot.joints.map((j, idx) => {
+        const span = j.max - j.min;
+        const pert = j.type === 'revolute' ? 0.08 : 0.03;
+        const candidate = q_target[idx] + (idx % 2 === 0 ? pert : -pert);
+        return Math.max(j.min + 0.05 * span, Math.min(j.max - 0.05 * span, candidate));
+      });
+
+      const ik = solveIK(robot, target, {
+        initialGuess: q_seed,
+        maxIterations: 100,
+        positionTolerance: 1e-3,
+        orientationTolerance: 1e-2,
+      });
+
+      expect(ik.converged).toBe(true);
+      expect(ik.bestSolution).not.toBeNull();
+      if (ik.bestSolution) {
+        expect(ik.bestSolution.withinLimits).toBe(true);
+        expect(ik.bestSolution.positionError).toBeLessThan(1e-3);
+      }
+    }
+  }, 30000);
 });

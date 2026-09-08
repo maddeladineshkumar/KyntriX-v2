@@ -95,7 +95,7 @@ Industrial CAD STL models are exported from authoritative vendor specifications 
 | 6 | `ABBIRB6650` | ABB | 6 | 6R Heavy Payload | 0.001 | 0.840 m | ~2.750 m | Verified |
 | 7 | `EpsonC3A60CT` | Epson | 6 | 6R Compact Assembly | 0.001 | 0.220 m | ~0.600 m | Verified |
 | 8 | `FanucM10iA` | Fanuc | 6 | 6R Hollow Wrist | 0.001 | 0.450 m | ~1.420 m | Verified |
-| 9 | `FanucM410iB` | Fanuc | 5 | 5R Palletizer | 0.001 | 0.620 m | ~2.850 m | Verified |
+| 9 | `FanucM410iB` | Fanuc | 5 | 5R Palletizer | 0.001 | 1.596 m | ~2.850 m | Verified |
 | 10 | `FanucR1000i` | Fanuc | 6 | 6R Spot Welding | 0.001 | 0.665 m | ~2.100 m | Verified |
 | 11 | `FanucR2000i` | Fanuc | 6 | 6R Heavy Industrial | 0.001 | 0.670 m | ~2.650 m | Verified |
 | 12 | `FanucS430` | Fanuc | 6 | 6R High Payload | 0.001 | 0.750 m | ~2.480 m | Verified |

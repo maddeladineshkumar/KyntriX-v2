@@ -123,6 +123,7 @@ let ikTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
 let targetSolveDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 const pendingIKCallbacks = new Map<number, (res: SerializedIKResult) => void>();
 let selectRobotGeneration = 0;
+let thanksRequestId = 0;
 
 function getIKWorker(): Worker | null {
   if (typeof Worker === 'undefined') return null;
@@ -230,6 +231,7 @@ export const useRobotStore = create<RobotState>((set, get) => ({
   },
 
   setRobot: (newRobot: RobotDefinition) => {
+    thanksRequestId++;
     const prevQ = get().q;
     const sameRobot = get().robot && get().robot.id === newRobot.id;
     const q = newRobot.joints.map((j, idx) => {
@@ -251,6 +253,7 @@ export const useRobotStore = create<RobotState>((set, get) => ({
       ikResult: null,
       activeTrajectory: null,
       workspacePoints: null,
+      thanksLoadingProgress: null,
       playback: { ...get().playback, isPlaying: false, currentTime: 0 },
       viewOptions: {
         ...get().viewOptions,
@@ -261,7 +264,7 @@ export const useRobotStore = create<RobotState>((set, get) => ({
 
   setJoints: (newQ: number[]) => {
     if (get().isEStopped) return;
-    if (!Array.isArray(newQ) || !newQ.every(Number.isFinite)) return;
+    if (!Array.isArray(newQ) || newQ.length !== get().robot.dof || !newQ.every(Number.isFinite)) return;
     const { robot } = get();
     const fkResult = computeFK(robot, newQ);
     const jacobian = computeJacobian(robot, newQ, fkResult);
@@ -512,6 +515,8 @@ export const useRobotStore = create<RobotState>((set, get) => ({
 
   loadThanksTraj: () => {
     const { robot, q: currentQ } = get();
+    const activeRequestId = ++thanksRequestId;
+    const targetRobotId = robot.id;
     interface ThanksWp {
       index: number;
       position: number[];
@@ -537,6 +542,9 @@ export const useRobotStore = create<RobotState>((set, get) => ({
     set({ thanksLoadingProgress: 0 });
 
     const processBatch = () => {
+      if (activeRequestId !== thanksRequestId || get().robot.id !== targetRobotId) {
+        return;
+      }
       const endK = Math.min(currentK + batchSize, nSteps);
 
       for (let k = currentK; k < endK; k++) {
@@ -678,6 +686,10 @@ export const useRobotStore = create<RobotState>((set, get) => ({
         const announcement = hasIKFailure
           ? `Trajectory tracking failed: ${failedSampleIndices.length} waypoints unreachable for ${robot.name ?? robot.id}. Playback blocked.`
           : 'KyntriX "THANKS" trajectory loaded successfully.';
+
+        if (activeRequestId !== thanksRequestId || get().robot.id !== targetRobotId) {
+          return;
+        }
 
         set({
           activeTrajectory: traj,

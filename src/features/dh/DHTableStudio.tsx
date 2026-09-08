@@ -8,7 +8,6 @@ import {
   FileSpreadsheet,
   Code,
   FileText,
-  Plus,
   Trash2,
   ArrowUpDown,
   Sliders,
@@ -23,7 +22,6 @@ import {
   Upload,
   BookOpen,
   Sparkles,
-  Target,
   Zap,
 } from 'lucide-react';
 import { Matrix4 } from '../../robotics/math/Matrix4';
@@ -47,7 +45,7 @@ import { processContinuousSweepShortcut } from './continuousSweepShortcuts';
 import type { IKSingleSolution } from '../../robotics/ik/types';
 
 type EditableField = 'theta' | 'd' | 'a' | 'alpha' | 'offset' | 'min' | 'max';
-type StudioSubTab = 'table' | 'simulation3d' | 'pose' | 'matrices' | 'jacobian' | 'ik';
+type StudioSubTab = 'table' | 'pose' | 'matrices' | 'jacobian' | 'ik';
 
 export const DHTableStudio: React.FC = () => {
   const {
@@ -81,6 +79,30 @@ export const DHTableStudio: React.FC = () => {
   const [focusJointIdx, setFocusJointIdx] = useState<number>(0);
   const [traceResetKey, setTraceResetKey] = useState<number>(0);
 
+  // DH Parameter & Offset Change Studio State
+  const [smoothParamAnimation, setSmoothParamAnimation] = useState<boolean>(true);
+  const [animationDurationMs, setAnimationDurationMs] = useState<number>(600);
+  const [selectedJointIdx, setSelectedJointIdx] = useState<number>(0);
+  const [selectedChangeField, setSelectedChangeField] = useState<EditableField>('offset');
+  const [customChangeValInput, setCustomChangeValInput] = useState<string>('');
+  const [animatingParam, setAnimatingParam] = useState<{
+    jointIdx: number;
+    field: EditableField;
+    startVal: number;
+    targetVal: number;
+    progress: number;
+  } | null>(null);
+  const paramAnimRef = useRef<number | null>(null);
+  const animatingParamRef = useRef(animatingParam);
+  useEffect(() => {
+    animatingParamRef.current = animatingParam;
+  }, [animatingParam]);
+
+  // Academic Reference & Theory Modal State
+  const [showAcademicPopup, setShowAcademicPopup] = useState<boolean>(false);
+  const [isPopupFullScreen, setIsPopupFullScreen] = useState<boolean>(false);
+  const [academicTab, setAcademicTab] = useState<'principles' | 'parameters' | 'offset' | 'craig_vs_std' | 'frame_rules' | 'ik'>('principles');
+
   // Mutable refs to decouple animation loop from React render cycles and avoid GC pressure
   const sweepSpeedRef = useRef(sweepSpeed);
   const sweepModeRef = useRef(sweepMode);
@@ -105,8 +127,15 @@ export const DHTableStudio: React.FC = () => {
     setIsSweeping(false);
     setActiveSweepJointIdx(null);
     setFocusJointIdx((prev) => Math.min(prev, Math.max(0, robot.joints.length - 1)));
+    setSelectedJointIdx((prev) => Math.min(prev, Math.max(0, robot.joints.length - 1)));
     setTraceResetKey((k) => k + 1);
   }
+
+  // Clamped safe selected joint index for Change Studio
+  const safeSelectedJointIdx = Math.min(
+    selectedJointIdx,
+    Math.max(0, robot.joints.length - 1)
+  );
 
   const lastToggleTimeRef = useRef<number>(0);
   const sweepAnimRef = useRef<number | null>(null);
@@ -247,6 +276,14 @@ export const DHTableStudio: React.FC = () => {
     branches: number;
   } | null>(null);
   const [ikSolving, setIkSolving] = useState(false);
+
+  // Cleanly reset IK state when active robot changes
+  useEffect(() => {
+    setCustomIKTarget(null);
+    setIkSolution(null);
+    setIkBranches([]);
+    setIkResultStats(null);
+  }, [robot.id]);
 
   // File import ref
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -424,6 +461,33 @@ export const DHTableStudio: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Cleanup any ongoing parameter and sweep animation frames on unmount
+  useEffect(() => {
+    return () => {
+      if (paramAnimRef.current !== null) {
+        cancelAnimationFrame(paramAnimRef.current);
+        paramAnimRef.current = null;
+      }
+      const activeAnim = animatingParamRef.current;
+      if (activeAnim) {
+        const curRobot = useRobotStore.getState().robot;
+        const finalizedJoints = curRobot.joints.map((j, idx) => {
+          if (idx !== activeAnim.jointIdx) return j;
+          const updated = { ...j, [activeAnim.field]: activeAnim.targetVal };
+          if (activeAnim.field === 'min' || activeAnim.field === 'max') {
+            updated.home = Math.max(updated.min, Math.min(updated.max, updated.home));
+          }
+          return updated;
+        });
+        useRobotStore.getState().setRobot({ ...curRobot, joints: finalizedJoints });
+      }
+      if (sweepAnimRef.current !== null) {
+        cancelAnimationFrame(sweepAnimRef.current);
+        sweepAnimRef.current = null;
+      }
+    };
+  }, []);
+
   // Copy feedback trigger
   const copyFeedback = (type: 'csv' | 'latex' | 'json' | 'md' | 'matrix') => {
     setCopiedType(type);
@@ -597,6 +661,172 @@ export const DHTableStudio: React.FC = () => {
     return { isValid: true, siValue: siVal };
   };
 
+  // Check if a field represents an angular dimension
+  const isFieldAngle = (field: EditableField, type: JointType) => {
+    return (
+      field === 'theta' ||
+      field === 'alpha' ||
+      ((field === 'offset' || field === 'min' || field === 'max') && type === 'revolute')
+    );
+  };
+
+  // Smooth Parameter Animation Engine for Live 3D Viewport Updates
+  const startParameterAnimation = (
+    jointIdx: number,
+    field: EditableField,
+    targetVal: number,
+    durationMs: number = animationDurationMs
+  ) => {
+    setIsSweeping(false);
+    if (paramAnimRef.current !== null) {
+      cancelAnimationFrame(paramAnimRef.current);
+      paramAnimRef.current = null;
+    }
+
+    // If an animation was previously running on a DIFFERENT joint or field,
+    // cleanly finalize that joint to its target value in the store.
+    const activeAnim = animatingParamRef.current;
+    if (activeAnim && (activeAnim.jointIdx !== jointIdx || activeAnim.field !== field)) {
+      const curRobot = useRobotStore.getState().robot;
+      const finalizedJoints = curRobot.joints.map((j, idx) => {
+        if (idx !== activeAnim.jointIdx) return j;
+        const updated = { ...j, [activeAnim.field]: activeAnim.targetVal };
+        if (activeAnim.field === 'min' || activeAnim.field === 'max') {
+          updated.home = Math.max(updated.min, Math.min(updated.max, updated.home));
+        }
+        return updated;
+      });
+      useRobotStore.getState().setRobot({ ...curRobot, joints: finalizedJoints });
+    }
+
+    const currentRobot = useRobotStore.getState().robot;
+    const currentJoint = currentRobot.joints[jointIdx];
+    if (!currentJoint) return;
+    const startVal = (currentJoint as any)[field] ?? 0;
+    let startTime: number | null = null;
+
+    const animState = {
+      jointIdx,
+      field,
+      startVal,
+      targetVal,
+      progress: 0,
+    };
+    animatingParamRef.current = animState;
+    setAnimatingParam(animState);
+
+    const step = (now: number) => {
+      if (startTime === null) startTime = now;
+      const elapsed = now - startTime;
+      const t = Math.min(1, Math.max(0, elapsed / durationMs));
+      // Ease in-out cubic
+      const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      const curVal = startVal + (targetVal - startVal) * ease;
+
+      const latestRobot = useRobotStore.getState().robot;
+      const updatedJoints = latestRobot.joints.map((j, idx) => {
+        if (idx !== jointIdx) return j;
+        const updated = { ...j, [field]: curVal };
+        if (field === 'min' || field === 'max') {
+          updated.home = Math.max(updated.min, Math.min(updated.max, updated.home));
+        }
+        return updated;
+      });
+      setRobot({ ...latestRobot, joints: updatedJoints });
+
+      const updatedAnim = {
+        jointIdx,
+        field,
+        startVal,
+        targetVal,
+        progress: t,
+      };
+      animatingParamRef.current = updatedAnim;
+      setAnimatingParam(updatedAnim);
+
+      if (t < 1) {
+        paramAnimRef.current = requestAnimationFrame(step);
+      } else {
+        const finalJoints = latestRobot.joints.map((j, idx) => {
+          if (idx !== jointIdx) return j;
+          const updated = { ...j, [field]: targetVal };
+          if (field === 'min' || field === 'max') {
+            updated.home = Math.max(updated.min, Math.min(updated.max, updated.home));
+          }
+          return updated;
+        });
+        setRobot({ ...latestRobot, joints: finalJoints });
+        animatingParamRef.current = null;
+        setAnimatingParam(null);
+        paramAnimRef.current = null;
+      }
+    };
+
+    paramAnimRef.current = requestAnimationFrame(step);
+  };
+
+  // Step joint offset via stepper button (+ / -)
+  const handleStepJointOffset = (jointIdx: number, direction: -1 | 1) => {
+    setIsSweeping(false);
+    const joint = robot.joints[jointIdx];
+    if (!joint) return;
+    const isRev = joint.type === 'revolute';
+    const delta = isRev ? (jogStepDeg * DEG_TO_RAD) : (jogStepMm / 1000);
+    // If this joint's offset is already animating, accumulate from its target to prevent drift
+    const activeAnim = animatingParamRef.current;
+    const baseOffset = (activeAnim && activeAnim.jointIdx === jointIdx && activeAnim.field === 'offset')
+      ? activeAnim.targetVal
+      : joint.offset;
+    const newOffset = baseOffset + direction * delta;
+    if (smoothParamAnimation) {
+      startParameterAnimation(jointIdx, 'offset', newOffset);
+    } else {
+      const updatedJoints = robot.joints.map((j, idx) =>
+        idx === jointIdx ? { ...j, offset: newOffset } : j
+      );
+      setRobot({ ...robot, joints: updatedJoints });
+    }
+  };
+
+  // Step parameter via Change Studio presets
+  const handleStepParameterChange = (deltaVal: number, isAbsolute: boolean = false) => {
+    setIsSweeping(false);
+    const joint = robot.joints[safeSelectedJointIdx];
+    if (!joint) return;
+    const activeAnim = animatingParamRef.current;
+    const curBaseVal = (activeAnim && activeAnim.jointIdx === safeSelectedJointIdx && activeAnim.field === selectedChangeField)
+      ? activeAnim.targetVal
+      : ((joint as any)[selectedChangeField] ?? 0);
+    const targetVal = isAbsolute ? deltaVal : curBaseVal + deltaVal;
+
+    if (smoothParamAnimation) {
+      startParameterAnimation(safeSelectedJointIdx, selectedChangeField, targetVal);
+    } else {
+      const updatedJoints = robot.joints.map((j, idx) =>
+        idx === safeSelectedJointIdx ? { ...j, [selectedChangeField]: targetVal } : j
+      );
+      setRobot({ ...robot, joints: updatedJoints });
+    }
+  };
+
+  // Apply custom value from Change Studio input
+  const handleApplyChangeFromStudio = () => {
+    const joint = robot.joints[safeSelectedJointIdx];
+    if (!joint) return;
+    const { isValid, siValue } = validateField(customChangeValInput, joint, selectedChangeField);
+    if (!isValid) return;
+
+    if (smoothParamAnimation) {
+      startParameterAnimation(safeSelectedJointIdx, selectedChangeField, siValue);
+    } else {
+      const updatedJoints = robot.joints.map((j, idx) =>
+        idx === safeSelectedJointIdx ? { ...j, [selectedChangeField]: siValue } : j
+      );
+      setRobot({ ...robot, joints: updatedJoints });
+    }
+    setCustomChangeValInput('');
+  };
+
   // 5. Commit cell value to store
   const commitCell = (jointIdx: number, field: EditableField) => {
     const key = `${jointIdx}_${field}`;
@@ -629,22 +859,26 @@ export const DHTableStudio: React.FC = () => {
       return next;
     });
 
-    const updatedJoints = robot.joints.map((j, idx) => {
-      if (idx !== jointIdx) return j;
-      const updated = { ...j, [field]: siValue };
-      if (field === 'min' || field === 'max') {
-        updated.home = Math.max(updated.min, Math.min(updated.max, updated.home));
-      }
-      return updated;
-    });
+    if (smoothParamAnimation && (field === 'theta' || field === 'd' || field === 'a' || field === 'alpha' || field === 'offset')) {
+      startParameterAnimation(jointIdx, field, siValue);
+    } else {
+      const updatedJoints = robot.joints.map((j, idx) => {
+        if (idx !== jointIdx) return j;
+        const updated = { ...j, [field]: siValue };
+        if (field === 'min' || field === 'max') {
+          updated.home = Math.max(updated.min, Math.min(updated.max, updated.home));
+        }
+        return updated;
+      });
 
-    const updatedRobot: RobotDefinition = {
-      ...robot,
-      joints: updatedJoints,
-    };
+      const updatedRobot: RobotDefinition = {
+        ...robot,
+        joints: updatedJoints,
+      };
 
-    setRobot(updatedRobot);
-    setTraceResetKey((k) => k + 1);
+      setRobot(updatedRobot);
+      setTraceResetKey((k) => k + 1);
+    }
   };
 
   const handleCellChange = (jointIdx: number, field: EditableField, value: string) => {
@@ -706,57 +940,178 @@ export const DHTableStudio: React.FC = () => {
     setTraceResetKey((k) => k + 1);
   };
 
-  // 7. Add / Remove Joints
-  const handleAddJoint = () => {
-    const newIdx = robot.joints.length;
-    const newJoint: JointDefinition = {
-      id: `${robot.id}_joint${newIdx + 1}`,
-      name: `Joint ${newIdx + 1}`,
-      index: newIdx,
-      type: 'revolute',
-      theta: 0,
-      d: 0,
-      a: 0.15,
-      alpha: 0,
-      offset: 0,
-      min: -Math.PI,
-      max: Math.PI,
-      home: 0,
-    };
-
-    const newLink: LinkDefinition = {
-      id: `${robot.id}_link${newIdx + 1}`,
-      name: `Link ${newIdx + 1}`,
-      index: newIdx + 1,
-    };
-
-    const updatedRobot: RobotDefinition = {
-      ...robot,
-      dof: robot.joints.length + 1,
-      joints: [...robot.joints, newJoint],
-      links: [...robot.links, newLink],
-    };
-
-    setRobot(updatedRobot);
-    setTraceResetKey((k) => k + 1);
-  };
-
-  const handleRemoveLastJoint = () => {
-    if (robot.joints.length <= 1) return;
-
-    const updatedJoints = robot.joints.slice(0, -1);
-    const keepLinksCount = robot.links.length > robot.joints.length ? updatedJoints.length + 1 : updatedJoints.length;
-    const updatedLinks = robot.links.slice(0, Math.max(1, keepLinksCount));
-
-    const updatedRobot: RobotDefinition = {
-      ...robot,
-      dof: updatedJoints.length,
-      joints: updatedJoints,
-      links: updatedLinks,
-    };
-
-    setRobot(updatedRobot);
-    setTraceResetKey((k) => k + 1);
+  // Academic DH Reference & Theory Content Renderer
+  const renderAcademicContent = (tab: typeof academicTab) => {
+    switch (tab) {
+      case 'principles':
+        return (
+          <div className="space-y-4 text-xs leading-relaxed text-stone-800">
+            <div className="p-3.5 bg-amber-50/80 border border-amber-300 rounded-xl">
+              <h3 className="text-xs font-black uppercase tracking-wider text-amber-950 mb-1.5 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                Denavit-Hartenberg (DH) Principles & Mathematical Foundations
+              </h3>
+              <p>
+                In spatial serial link kinematics, establishing coordinate frames arbitrarily requires 6 independent parameters (3 Cartesian position offsets and 3 Euler rotation angles) for each link. The seminal Denavit & Hartenberg (1955) formulation exploits kinematic geometry to describe any arbitrary serial kinematic chain using strictly <strong>4 parameters per joint</strong> (θ, d, a, α).
+              </p>
+            </div>
+            <div className="p-3.5 bg-white border border-stone-200 rounded-xl space-y-2">
+              <h4 className="font-black text-black">Minimal Parameter Constraint Conditions:</h4>
+              <ul className="list-disc pl-5 space-y-1 text-stone-700">
+                <li><strong>Axis Alignment:</strong> The axis of motion (actuation) of joint i is chosen as the axis z_(i-1) (Standard) or z_i (Craig).</li>
+                <li><strong>Common Normal:</strong> The origin of frame i is placed at the intersection of axis z_i with the unique common normal between axes z_(i-1) and z_i.</li>
+                <li><strong>Reduced Dimensionality:</strong> By ensuring axis x_i is perpendicular to both z_(i-1) and z_i, 2 degrees of freedom are eliminated, reducing the transformation complexity from 6 parameters down to 4.</li>
+              </ul>
+            </div>
+          </div>
+        );
+      case 'parameters':
+        return (
+          <div className="space-y-4 text-xs leading-relaxed text-stone-800">
+            <div className="p-3.5 bg-amber-50/80 border border-amber-300 rounded-xl">
+              <h3 className="text-xs font-black uppercase tracking-wider text-amber-950 mb-1.5">
+                The 4 Classic DH Parameters Explained
+              </h3>
+              <p>
+                Each link transformation is decomposed into 2 rotations and 2 translations executed along alternating axes (Z and X).
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="p-3 bg-white border border-stone-200 rounded-xl space-y-1">
+                <span className="font-mono font-black text-amber-900 text-sm">1. θ_i (Joint Angle)</span>
+                <p className="text-stone-600">Rotation about z_(i-1) from x_(i-1) to x_i according to right-hand rule. For revolute joints, this is the dynamic generalized coordinate (q_i).</p>
+              </div>
+              <div className="p-3 bg-white border border-stone-200 rounded-xl space-y-1">
+                <span className="font-mono font-black text-emerald-900 text-sm">2. d_i (Link Offset)</span>
+                <p className="text-stone-600">Translation along z_(i-1) from origin O_(i-1) to the intersection of the common normal with z_(i-1). Variable generalized coordinate for prismatic joints.</p>
+              </div>
+              <div className="p-3 bg-white border border-stone-200 rounded-xl space-y-1">
+                <span className="font-mono font-black text-blue-900 text-sm">3. a_i (Link Length)</span>
+                <p className="text-stone-600">Translation distance along x_i from z_(i-1) to z_i. This is the geometric length of the common normal between consecutive joint axes.</p>
+              </div>
+              <div className="p-3 bg-white border border-stone-200 rounded-xl space-y-1">
+                <span className="font-mono font-black text-purple-900 text-sm">4. α_i (Link Twist)</span>
+                <p className="text-stone-600">Angle of rotation about x_i from z_(i-1) to z_i according to right-hand rule. Establishes relative spatial tilt between joint axes.</p>
+              </div>
+            </div>
+          </div>
+        );
+      case 'offset':
+        return (
+          <div className="space-y-4 text-xs leading-relaxed text-stone-800">
+            <div className="p-3.5 bg-amber-50/80 border border-amber-300 rounded-xl">
+              <h3 className="text-xs font-black uppercase tracking-wider text-amber-950 mb-1.5">
+                Role of the Joint Offset (θ_offset / d_offset)
+              </h3>
+              <p>
+                In industrial and educational robotics, the mechanical zero position (where encoder index pulses or physical home markers align) rarely coincides with the pure mathematical DH zero pose (q_i = 0).
+              </p>
+            </div>
+            <div className="p-3.5 bg-white border border-stone-200 rounded-xl space-y-2">
+              <h4 className="font-black text-black">Total Actuated Coordinate Formulation:</h4>
+              <p className="font-mono bg-stone-100 p-2 rounded-lg border border-stone-300">
+                θ_total = q_revolute + θ_offset &emsp;|&emsp; d_total = q_prismatic + d_offset
+              </p>
+              <ul className="list-disc pl-5 space-y-1 text-stone-700">
+                <li><strong>Home Calibration:</strong> Offset allows aligning software kinematics to CAD models and robot controller presets without altering underlying link length (a) or twist (α).</li>
+                <li><strong>Downstream Propagation:</strong> Modifying joint i offset rotates or translates all subsequent frames (F_i ... F_n), shifting the end-effector pose in SE(3).</li>
+              </ul>
+            </div>
+          </div>
+        );
+      case 'craig_vs_std':
+        return (
+          <div className="space-y-4 text-xs leading-relaxed text-stone-800">
+            <div className="p-3.5 bg-amber-50/80 border border-amber-300 rounded-xl">
+              <h3 className="text-xs font-black uppercase tracking-wider text-amber-950 mb-1.5">
+                Craig's Modified DH vs Standard DH Conventions
+              </h3>
+              <p>
+                Two primary DH conventions dominate modern robotics engineering: the classical Standard DH (Denavit & Hartenberg 1955) and Craig's Modified DH (John Craig 1986).
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="p-3 bg-white border border-stone-200 rounded-xl space-y-2">
+                <span className="font-black text-black text-xs uppercase tracking-wide">Standard DH (Denavit-Hartenberg)</span>
+                <p className="text-stone-600">Frame i is attached to link i, with z_i along joint i+1. Operations order: Rot(Z, θ) → Trans(Z, d) → Trans(X, a) → Rot(X, α).</p>
+                <code className="block font-mono text-[10px] bg-stone-100 p-1.5 rounded border border-stone-300">
+                  A_i = Rot_Z(θ_i) · Trans_Z(d_i) · Trans_X(a_i) · Rot_X(α_i)
+                </code>
+              </div>
+              <div className="p-3 bg-white border border-stone-200 rounded-xl space-y-2">
+                <span className="font-black text-black text-xs uppercase tracking-wide">Craig's Modified DH (John Craig)</span>
+                <p className="text-stone-600">Frame i is attached to link i, with z_i along joint i. Operations order: Rot(X, α_(i-1)) → Trans(X, a_(i-1)) → Rot(Z, θ_i) → Trans(Z, d_i).</p>
+                <code className="block font-mono text-[10px] bg-stone-100 p-1.5 rounded border border-stone-300">
+                  A_i = Rot_X(α_(i-1)) · Trans_X(a_(i-1)) · Rot_Z(θ_i) · Trans_Z(d_i)
+                </code>
+              </div>
+            </div>
+          </div>
+        );
+      case 'frame_rules':
+        return (
+          <div className="space-y-4 text-xs leading-relaxed text-stone-800">
+            <div className="p-3.5 bg-amber-50/80 border border-amber-300 rounded-xl">
+              <h3 className="text-xs font-black uppercase tracking-wider text-amber-950 mb-1.5">
+                The 3 Fundamental DH Frame Assignment Rules
+              </h3>
+              <p>
+                To maintain mathematical consistency and guarantee valid DH transformation matrices, frame assignment must adhere strictly to 3 geometric invariants:
+              </p>
+            </div>
+            <div className="space-y-2.5">
+              <div className="p-3 bg-white border border-stone-200 rounded-xl">
+                <span className="font-black text-black">Rule 1: Axis of Actuation Alignment (Z-Axis)</span>
+                <p className="text-stone-600 mt-1">Axis z_i is collinear with the axis of revolution (revolute joint) or translation (prismatic joint) of joint i+1 (Standard convention).</p>
+              </div>
+              <div className="p-3 bg-white border border-stone-200 rounded-xl">
+                <span className="font-black text-black">Rule 2: Common Normal Perpendicularity (X-Axis)</span>
+                <p className="text-stone-600 mt-1">Axis x_i must be strictly perpendicular to z_(i-1) AND intersect z_(i-1). If z_(i-1) and z_i intersect, x_i is chosen perpendicular to their plane (x_i = ± z_(i-1) × z_i).</p>
+              </div>
+              <div className="p-3 bg-white border border-stone-200 rounded-xl">
+                <span className="font-black text-black">Rule 3: Right-Handed Coordinate Orthonormality (Y-Axis)</span>
+                <p className="text-stone-600 mt-1">Axis y_i is defined by the cross product to complete a right-handed Cartesian triad: y_i = z_i × x_i.</p>
+              </div>
+            </div>
+          </div>
+        );
+      case 'ik':
+        return (
+          <div className="space-y-4 text-xs leading-relaxed text-stone-800">
+            <div className="p-3.5 bg-amber-50/80 border border-amber-300 rounded-xl">
+              <h3 className="text-xs font-black uppercase tracking-wider text-amber-950 mb-1.5">
+                Pieper's Solvability & Closed-Form Analytical IK
+              </h3>
+              <p>
+                Analytical inverse kinematics requires solving highly nonlinear trigonometric algebraic equations. In general, 6-DOF serial manipulators do not admit closed-form solutions unless specific geometric conditions are satisfied.
+              </p>
+            </div>
+            <div className="p-3.5 bg-white border border-stone-200 rounded-xl space-y-2">
+              <h4 className="font-black text-black">Pieper's Theorem Criterion:</h4>
+              <p className="text-stone-700">
+                According to <strong>Pieper's criteria (Donald Pieper, 1968)</strong>, a 6-DOF manipulator possesses a closed-form analytical inverse kinematics solution if:
+              </p>
+              <ul className="list-disc pl-5 space-y-1 text-stone-700">
+                <li><strong>Condition A:</strong> Three consecutive joint axes intersect at a single common point (e.g. spherical wrist joints 4, 5, 6 as in Puma 560 and Stanford Arm).</li>
+                <li><strong>Condition B:</strong> Three consecutive joint axes are mutually parallel.</li>
+              </ul>
+            </div>
+            <div className="p-3.5 bg-white border border-stone-200 rounded-xl space-y-2">
+              <h4 className="font-black text-black">Kinematic Decoupling:</h4>
+              <p className="text-stone-700">
+                Under spherical wrist geometry, the 6-DOF IK decouples into two 3-DOF subproblems:
+              </p>
+              <ol className="list-decimal pl-5 space-y-1 text-stone-700">
+                <li><strong>Position Kinematics:</strong> Wrist center point p_w = p_EE - d_6 R [0, 0, 1]^T depends strictly on joints 1, 2, and 3.</li>
+                <li><strong>Orientation Kinematics:</strong> Spherical wrist joints (4, 5, 6) solve R_36 = R_3^T R_target using standard Z-Y-Z or Z-X-Z Euler angle decomposition.</li>
+              </ol>
+            </div>
+            <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-600 text-[11px]">
+              <span className="font-bold text-stone-800">Numerical DLS Fallback:</span> When a robot does not satisfy Pieper's criteria (e.g., offset wrists or non-intersecting axes), numerical Damped Least Squares (Levenberg-Marquardt) Jacobian pseudo-inverse methods iteratively converge to valid solutions.
+            </div>
+          </div>
+        );
+    }
   };
 
   // 8. Toggle DH Convention (Standard <-> Modified Craig)
@@ -914,26 +1269,38 @@ export const DHTableStudio: React.FC = () => {
     setTimeout(() => {
       const ikRes = solveDHInverseKinematics(robot, targetPosM, targetRotRad, q);
       setIkSolving(false);
-      setIkSolution(ikRes.bestSolution);
-      setIkBranches(ikRes.solutions);
 
       const isPositionOnly = robot.dof <= 3;
-      const effectiveConverged = ikRes.bestSolution
-        ? (isPositionOnly ? (ikRes.bestSolution.positionError <= 1e-3 && ikRes.bestSolution.withinLimits) : ikRes.converged)
-        : false;
+      const effectiveConverged = ikRes.converged && !!ikRes.bestSolution && (
+        isPositionOnly
+          ? (ikRes.bestSolution.positionError <= 1e-3 && ikRes.bestSolution.withinLimits)
+          : (ikRes.bestSolution.converged && ikRes.bestSolution.withinLimits)
+      );
+
+      if (effectiveConverged && ikRes.bestSolution) {
+        setIkSolution(ikRes.bestSolution);
+        const validBranches = ikRes.solutions.filter((s) => s.converged);
+        setIkBranches(validBranches.length > 0 ? validBranches : [ikRes.bestSolution]);
+      } else {
+        setIkSolution(null);
+        setIkBranches([]);
+      }
 
       setIkResultStats({
         converged: effectiveConverged,
-        posErrorMm: ikRes.bestSolution ? ikRes.bestSolution.positionError * 1000 : Infinity,
-        oriErrorDeg: ikRes.bestSolution ? ikRes.bestSolution.orientationError * RAD_TO_DEG : Infinity,
+        posErrorMm: effectiveConverged && ikRes.bestSolution ? ikRes.bestSolution.positionError * 1000 : Infinity,
+        oriErrorDeg: effectiveConverged && ikRes.bestSolution ? ikRes.bestSolution.orientationError * RAD_TO_DEG : Infinity,
         timeMs: ikRes.computationTimeMs,
-        branches: ikRes.allTestedBranches,
+        branches: effectiveConverged ? ikRes.allTestedBranches : 0,
       });
 
-      if (effectiveConverged && ikRes.bestSolution) {
+      // Only auto-animate if converged AND auto-animate is enabled!
+      // When auto-animate is unchecked, do NOT snap or apply solution to robot.
+      // Leave the robot in place so user can review discovered branches and pick which one to animate.
+      if (effectiveConverged && ikRes.bestSolution && ikAutoAnimate) {
         setIsSweeping(false);
         setTraceResetKey((k) => k + 1);
-        applyIKSolution(ikRes.bestSolution, ikAutoAnimate);
+        applyIKSolution(ikRes.bestSolution, true);
       }
     }, 20);
   };
@@ -954,6 +1321,7 @@ export const DHTableStudio: React.FC = () => {
     }
 
     if (targetSol && Array.isArray(targetSol.q)) {
+      setIkSolution(targetSol);
       setIsSweeping(false);
       setTraceResetKey((k) => k + 1);
       applyIKSolution(targetSol, animate);
@@ -1004,7 +1372,7 @@ export const DHTableStudio: React.FC = () => {
   }, [currentIKTargetMeters]);
 
   return (
-    <div className="flex flex-col h-full bg-[#faf8f5] text-black p-4 lg:p-6 overflow-y-auto select-none space-y-4">
+    <div className="flex flex-col lg:flex-row w-full h-full min-h-0 overflow-hidden bg-[#fbf9f5] text-black select-none">
       {/* Hidden File Input for Importing DH JSON */}
       <input
         type="file"
@@ -1015,101 +1383,156 @@ export const DHTableStudio: React.FC = () => {
         aria-hidden="true"
       />
 
-      {/* 1. MASTER TOOLBAR & PRESETS CONTROLS */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-white border-2 border-stone-200 rounded-2xl shadow-xs">
-        {/* Left: Preset Selector & Convention & Units */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Preset Architectures Dropdown */}
-          <div className="flex items-center gap-1.5 bg-stone-100 px-2.5 py-1 rounded-xl border border-stone-300">
-            <BookOpen className="w-3.5 h-3.5 text-stone-700" />
-            <select
-              onChange={(e) => {
-                if (e.target.value) handleSelectPreset(e.target.value);
-              }}
-              defaultValue=""
-              aria-label="Select Calibrated DH Robot Preset"
-              className="text-xs font-black bg-transparent border-none outline-hidden cursor-pointer text-stone-900"
-            >
-              <option value="" disabled>
-                Load DH Preset...
-              </option>
-              {DH_PRESETS.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} ({p.dof} DOF)
-                </option>
-              ))}
-            </select>
+      {/* LEFT HALF: Persistent Live 3D Robot Simulation Viewport */}
+      <div
+        data-testid="dh-simulation-viewport-container"
+        className="w-full lg:w-1/2 h-[280px] sm:h-[340px] lg:h-full flex flex-col border-b lg:border-b-0 lg:border-r border-stone-300 bg-[#f6f3ea] relative shrink-0 p-2.5 sm:p-3 lg:p-4 overflow-hidden"
+      >
+        <div className="flex items-center justify-between pb-2 mb-2 border-b border-stone-300 shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-black uppercase tracking-wider text-black">
+              Live 3D Robot Simulation Viewport
+            </span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-100 text-amber-950 font-bold border border-amber-300">
+              {robot.name} ({robot.dof} DOF)
+            </span>
           </div>
-
-          {/* Clickable Convention Badge */}
-          <button
-            onClick={handleToggleConvention}
-            title="Click to toggle between Standard and Craig's Modified DH convention"
-            aria-label="Toggle DH Convention"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-xl bg-amber-100 hover:bg-amber-200 text-black border border-amber-300 shadow-2xs transition-all cursor-pointer active:scale-95"
-          >
-            <ArrowUpDown className="w-3.5 h-3.5 text-amber-800" />
-            <span>{isStandard ? 'Standard DH' : 'Modified DH (Craig)'}</span>
-          </button>
-
-          {/* Unit Toggle */}
-          <div className="flex items-center bg-stone-100 p-0.5 rounded-xl border border-stone-300 text-xs font-black">
-            <button
-              onClick={() => {
-                setUseSI(false);
-                setCellDrafts({});
-                setCellErrors({});
-                setIkTargetDrafts({});
-                setJointDrafts({});
-              }}
-              aria-label="Display units in degrees and millimeters"
-              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                !useSI ? 'bg-amber-400 text-black shadow-xs font-black' : 'text-stone-700 hover:text-black'
-              }`}
-            >
-              deg / mm
-            </button>
-            <button
-              onClick={() => {
-                setUseSI(true);
-                setCellDrafts({});
-                setCellErrors({});
-                setIkTargetDrafts({});
-                setJointDrafts({});
-              }}
-              aria-label="Display units in radians and meters"
-              className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                useSI ? 'bg-amber-400 text-black shadow-xs font-black' : 'text-stone-700 hover:text-black'
-              }`}
-            >
-              rad / m
-            </button>
-          </div>
-
-          {/* Add / Remove Joints */}
           <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-mono text-stone-600 hidden sm:inline">
+              EE: [{useSI ? analysis.endEffector.position.x.toFixed(3) : analysis.endEffector.position.xMm.toFixed(0)}, {useSI ? analysis.endEffector.position.y.toFixed(3) : analysis.endEffector.position.yMm.toFixed(0)}, {useSI ? analysis.endEffector.position.z.toFixed(3) : analysis.endEffector.position.zMm.toFixed(0)}] {useSI ? 'm' : 'mm'}
+            </span>
             <button
-              onClick={handleAddJoint}
-              title="Add a new joint to the kinematic chain"
-              aria-label="Add Joint"
-              className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-300 rounded-xl text-xs font-black transition-all cursor-pointer shadow-2xs active:scale-95"
+              onClick={handleClearTrace}
+              title="Clear End-Effector Motion Trail"
+              aria-label="Clear trace trail"
+              className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold text-[11px] transition-all cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5 text-emerald-800" />
-              <span>Add Joint</span>
-            </button>
-
-            <button
-              onClick={handleRemoveLastJoint}
-              disabled={robot.joints.length <= 1}
-              title="Remove the last joint from the kinematic chain"
-              aria-label="Remove Last Joint"
-              className="flex items-center gap-1 px-2.5 py-1.5 bg-rose-100 hover:bg-rose-200 disabled:opacity-40 disabled:pointer-events-none text-rose-950 border border-rose-300 rounded-xl text-xs font-black transition-all cursor-pointer shadow-2xs active:scale-95"
-            >
-              <Trash2 className="w-3.5 h-3.5 text-rose-800" />
-              <span>Remove Last</span>
+              <Trash2 className="w-3 h-3 text-stone-600" />
+              <span>Clear Trace</span>
             </button>
           </div>
         </div>
+        <div className="flex-1 min-h-0 w-full h-full relative">
+          <DHSimulation3DView
+            robot={robot}
+            fk={analysis.fk}
+            q={q}
+            targetPoint={targetPointFor3D}
+            height="100%"
+            className="h-full"
+            useSI={useSI}
+            onJointChange={(jointIdx, val) => {
+              setIsSweeping(false);
+              setJointValue(jointIdx, val);
+            }}
+            onResetHome={handleResetHomePose}
+            onZeroAll={handleZeroAllJoints}
+            isSweeping={isSweeping}
+            onToggleSweep={handleToggleSweep}
+            activeJogStepDeg={jogStepDeg}
+            activeJogStepMm={jogStepMm}
+            onJogStepDegChange={setJogStepDeg}
+            onJogStepMmChange={setJogStepMm}
+            sweepSpeed={sweepSpeed}
+            onSweepSpeedChange={setSweepSpeed}
+            sweepMode={sweepMode}
+            onSweepModeChange={setSweepMode}
+            sweepAmplitude={sweepAmplitude}
+            onSweepAmplitudeChange={setSweepAmplitude}
+            activeSweepJointIdx={activeSweepJointIdx}
+            focusJointIdx={focusJointIdx}
+            onFocusJointIdxChange={setFocusJointIdx}
+            traceResetKey={traceResetKey}
+            onClearTrace={handleClearTrace}
+          />
+        </div>
+      </div>
+
+      {/* RIGHT HALF: DH Table Studio Controls & Deep Kinematics Tabs */}
+      <div className="flex-1 w-full lg:w-1/2 h-full flex flex-col min-h-0 overflow-y-auto p-3 lg:p-4 space-y-4">
+        {/* 1. MASTER TOOLBAR & PRESETS CONTROLS */}
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-white border-2 border-stone-200 rounded-2xl shadow-xs">
+          {/* Left: Preset Selector & Convention & Units & Academic Guide */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Preset Architectures Dropdown */}
+            <div className="flex items-center gap-1.5 bg-stone-100 px-2.5 py-1 rounded-xl border border-stone-300">
+              <BookOpen className="w-3.5 h-3.5 text-stone-700" />
+              <select
+                onChange={(e) => {
+                  if (e.target.value) handleSelectPreset(e.target.value);
+                }}
+                defaultValue=""
+                aria-label="Select Calibrated DH Robot Preset"
+                className="text-xs font-black bg-transparent border-none outline-hidden cursor-pointer text-stone-900"
+              >
+                <option value="" disabled>
+                  Load DH Preset...
+                </option>
+                {DH_PRESETS.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} ({p.dof} DOF)
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Clickable Convention Badge */}
+            <button
+              onClick={handleToggleConvention}
+              title="Click to toggle between Standard and Craig's Modified DH convention"
+              aria-label="Toggle DH Convention"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black rounded-xl bg-amber-100 hover:bg-amber-200 text-black border border-amber-300 shadow-2xs transition-all cursor-pointer active:scale-95"
+            >
+              <ArrowUpDown className="w-3.5 h-3.5 text-amber-800" />
+              <span>{isStandard ? 'Standard DH' : 'Modified DH (Craig)'}</span>
+            </button>
+
+            {/* Unit Toggle */}
+            <div className="flex items-center bg-stone-100 p-0.5 rounded-xl border border-stone-300 text-xs font-black">
+              <button
+                onClick={() => {
+                  setUseSI(false);
+                  setCellDrafts({});
+                  setCellErrors({});
+                  setIkTargetDrafts({});
+                  setJointDrafts({});
+                }}
+                aria-label="Display units in degrees and millimeters"
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                  !useSI ? 'bg-amber-400 text-black shadow-xs font-black' : 'text-stone-700 hover:text-black'
+                }`}
+              >
+                deg / mm
+              </button>
+              <button
+                onClick={() => {
+                  setUseSI(true);
+                  setCellDrafts({});
+                  setCellErrors({});
+                  setIkTargetDrafts({});
+                  setJointDrafts({});
+                }}
+                aria-label="Display units in radians and meters"
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                  useSI ? 'bg-amber-400 text-black shadow-xs font-black' : 'text-stone-700 hover:text-black'
+                }`}
+              >
+                rad / m
+              </button>
+            </div>
+
+            {/* Academic Guide Modal Trigger Button */}
+            <button
+              onClick={() => setShowAcademicPopup(true)}
+              title="Open Academic DH Parameter Theory, Offset Role, & Kinematics Guide"
+              aria-label="Open Academic DH Theory & Guide"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-2xs active:scale-95"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-white" />
+              <span>Academic Guide</span>
+            </button>
+          </div>
 
         {/* Right: Import / Export Toolbar */}
         <div className="flex flex-wrap items-center gap-1.5">
@@ -1436,7 +1859,7 @@ export const DHTableStudio: React.FC = () => {
         </div>
 
         {/* Joint Sliders Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-3 pt-1">
           {robot.joints.map((joint, idx) => {
             const isRev = joint.type === 'revolute';
             const curQ = q[idx] ?? 0;
@@ -1457,7 +1880,7 @@ export const DHTableStudio: React.FC = () => {
             return (
               <div
                 key={joint.id || idx}
-                className={`flex flex-col p-2.5 rounded-xl border shadow-2xs transition-all ${
+                className={`flex flex-col p-2.5 rounded-xl border shadow-2xs transition-all overflow-hidden ${
                   isPrimarySweepJoint
                     ? 'border-amber-500 bg-amber-50/95 ring-2 ring-amber-400/80 shadow-xs'
                     : isSecondarySweep
@@ -1465,33 +1888,33 @@ export const DHTableStudio: React.FC = () => {
                     : 'border-stone-200 bg-[#faf8f5] hover:border-amber-400'
                 }`}
               >
-                <div className="flex items-center justify-between text-xs mb-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-black text-black">
+                <div className="flex items-center justify-between text-xs mb-1.5 min-w-0">
+                  <div className="flex items-center gap-1.5 min-w-0 truncate">
+                    <span className="font-black text-black truncate">
                       J{idx + 1}: {joint.name}
                     </span>
                     {isPrimarySweepJoint && (
-                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-rose-500 text-white font-black animate-pulse">
+                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-rose-500 text-white font-black animate-pulse shrink-0">
                         SWEEPING
                       </span>
                     )}
                     {isSecondarySweep && (
-                      <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-amber-400 text-black font-black">
+                      <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-amber-400 text-black font-black shrink-0">
                         WAVE
                       </span>
                     )}
                   </div>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-100 text-amber-950 font-bold border border-amber-300">
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-100 text-amber-950 font-bold border border-amber-300 shrink-0">
                     {joint.type === 'revolute' ? 'REV' : 'PRIS'}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 w-full min-w-0">
                   <button
                     onClick={() => handleJogJoint(idx, -1)}
                     title={`Jog ${joint.name} -${isRev ? jogStepDeg + '°' : jogStepMm + 'mm'}`}
                     aria-label={`Jog ${joint.name} minus`}
-                    className="w-6 h-6 flex items-center justify-center rounded-lg bg-white hover:bg-amber-200 text-black font-black border border-stone-300 active:scale-95 transition-all cursor-pointer shadow-2xs text-xs"
+                    className="w-6 h-6 shrink-0 flex items-center justify-center rounded-lg bg-white hover:bg-amber-200 text-black font-black border border-stone-300 active:scale-95 transition-all cursor-pointer shadow-2xs text-xs"
                   >
                     -
                   </button>
@@ -1510,13 +1933,13 @@ export const DHTableStudio: React.FC = () => {
                     aria-valuemax={joint.max}
                     aria-valuenow={curQ}
                     aria-valuetext={valueText}
-                    className="flex-1 accent-amber-500 cursor-pointer h-1.5 bg-stone-200 rounded-lg"
+                    className="flex-1 min-w-0 accent-amber-500 cursor-pointer h-1.5 bg-stone-200 rounded-lg"
                   />
                   <button
                     onClick={() => handleJogJoint(idx, 1)}
                     title={`Jog ${joint.name} +${isRev ? jogStepDeg + '°' : jogStepMm + 'mm'}`}
                     aria-label={`Jog ${joint.name} plus`}
-                    className="w-6 h-6 flex items-center justify-center rounded-lg bg-white hover:bg-amber-200 text-black font-black border border-stone-300 active:scale-95 transition-all cursor-pointer shadow-2xs text-xs"
+                    className="w-6 h-6 shrink-0 flex items-center justify-center rounded-lg bg-white hover:bg-amber-200 text-black font-black border border-stone-300 active:scale-95 transition-all cursor-pointer shadow-2xs text-xs"
                   >
                     +
                   </button>
@@ -1549,7 +1972,7 @@ export const DHTableStudio: React.FC = () => {
                       if (e.key === 'Enter') e.currentTarget.blur();
                     }}
                     aria-label={`Simulation Joint ${idx + 1} numeric input`}
-                    className="w-16 px-1.5 py-0.5 text-right font-mono text-xs font-bold rounded border border-stone-300 bg-white"
+                    className="w-14 shrink-0 px-1 py-0.5 text-right font-mono text-xs font-bold rounded border border-stone-300 bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-400 focus:outline-none"
                   />
                 </div>
 
@@ -1575,17 +1998,6 @@ export const DHTableStudio: React.FC = () => {
           }`}
         >
           <span>📋 DH Parameters Table</span>
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('simulation3d')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
-            activeSubTab === 'simulation3d'
-              ? 'bg-amber-400 text-black shadow-sm'
-              : 'text-stone-700 hover:text-black hover:bg-stone-100/50'
-          }`}
-        >
-          <span>🌐 3D Chain Simulation</span>
         </button>
 
         <button
@@ -1831,21 +2243,21 @@ export const DHTableStudio: React.FC = () => {
                           ? 'text-black bg-amber-200/90 border-amber-400 ring-1 ring-amber-400'
                           : 'text-amber-950 bg-amber-100/70 border-amber-200'
                       }`}>
-                        <div className="flex items-center justify-end gap-1">
+                        <div className="flex items-center justify-end gap-1 shrink-0">
                           <button
                             onClick={() => handleJogJoint(idx, -1)}
                             title={`Jog ${joint.name} -${isRevolute ? jogStepDeg + '°' : jogStepMm + ' mm'}`}
                             aria-label={`Jog ${joint.name} minus`}
-                            className="w-5 h-5 flex items-center justify-center rounded bg-amber-200 hover:bg-amber-300 text-black font-black cursor-pointer active:scale-90 transition-all text-xs"
+                            className="w-5 h-5 shrink-0 flex items-center justify-center rounded bg-amber-200 hover:bg-amber-300 text-black font-black cursor-pointer active:scale-90 transition-all text-xs"
                           >
                             -
                           </button>
-                          <span className="min-w-[58px] text-right font-black">{activeQDisp}</span>
+                          <span className="min-w-[58px] text-right font-black shrink-0">{activeQDisp}</span>
                           <button
                             onClick={() => handleJogJoint(idx, 1)}
                             title={`Jog ${joint.name} +${isRevolute ? jogStepDeg + '°' : jogStepMm + ' mm'}`}
                             aria-label={`Jog ${joint.name} plus`}
-                            className="w-5 h-5 flex items-center justify-center rounded bg-amber-200 hover:bg-amber-300 text-black font-black cursor-pointer active:scale-90 transition-all text-xs"
+                            className="w-5 h-5 shrink-0 flex items-center justify-center rounded bg-amber-200 hover:bg-amber-300 text-black font-black cursor-pointer active:scale-90 transition-all text-xs"
                           >
                             +
                           </button>
@@ -1857,7 +2269,43 @@ export const DHTableStudio: React.FC = () => {
                       {renderEditableCell('d')}
                       {renderEditableCell('a')}
                       {renderEditableCell('alpha')}
-                      {renderEditableCell('offset')}
+                      {/* Offset Column with Stepper Buttons */}
+                      <td key="offset" className="py-2 px-2 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleStepJointOffset(idx, -1)}
+                            title={`Decrease Joint ${idx + 1} offset`}
+                            aria-label={`Joint ${idx + 1} offset minus`}
+                            className="w-5 h-5 shrink-0 flex items-center justify-center rounded bg-stone-100 hover:bg-amber-200 text-stone-800 hover:text-black font-black border border-stone-300 active:scale-90 transition-all cursor-pointer text-xs"
+                          >
+                            -
+                          </button>
+                          <input
+                            type="number"
+                            step="any"
+                            value={cellDrafts[`${idx}_offset`] ?? getDisplayValue(joint, 'offset')}
+                            onChange={(e) => handleCellChange(idx, 'offset', e.target.value)}
+                            onBlur={() => commitCell(idx, 'offset')}
+                            onKeyDown={(e) => handleCellKeyDown(e, idx, 'offset')}
+                            aria-label={`Joint ${idx + 1} offset`}
+                            className={`w-16 shrink-0 px-1.5 py-1 text-right font-mono text-xs font-bold rounded-lg border transition-all ${
+                              cellErrors[`${idx}_offset`]
+                                ? 'border-red-500 bg-red-50 text-red-900 ring-1 ring-red-500'
+                                : 'border-stone-300 bg-stone-50 text-black focus:bg-white focus:border-amber-500 focus:ring-1 focus:ring-amber-400'
+                            }`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleStepJointOffset(idx, 1)}
+                            title={`Increase Joint ${idx + 1} offset`}
+                            aria-label={`Joint ${idx + 1} offset plus`}
+                            className="w-5 h-5 shrink-0 flex items-center justify-center rounded bg-stone-100 hover:bg-amber-200 text-stone-800 hover:text-black font-black border border-stone-300 active:scale-90 transition-all cursor-pointer text-xs"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </td>
                       {renderEditableCell('min')}
                       {renderEditableCell('max')}
                     </tr>
@@ -1866,62 +2314,235 @@ export const DHTableStudio: React.FC = () => {
               </tbody>
             </table>
           </div>
-        </div>
-      )}
 
-      {/* TAB 2: 3D KINEMATIC CHAIN SIMULATION VIEWPORT */}
-      {activeSubTab === 'simulation3d' && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-xs text-stone-600 font-medium px-1">
-            <span>
-              Real-time 3D simulation of {robot.name} with coordinate frames ($F_0 \ldots F_n$) and end-effector motion trail
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-amber-800 font-bold">
-                Current EE: [{analysis.endEffector.position.xMm.toFixed(1)}, {analysis.endEffector.position.yMm.toFixed(1)}, {analysis.endEffector.position.zMm.toFixed(1)}] mm
+          {/* DH Parameter & Offset Change Studio Card */}
+          <div className="p-4 bg-white border-2 border-stone-200 rounded-2xl shadow-xs space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 pb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-amber-400 text-black">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-black uppercase tracking-wider text-black">
+                    DH Parameter & Offset Change Studio (Live 3D Animation)
+                  </span>
+                  <p className="text-[11px] text-stone-500 font-medium">
+                    Select any joint and parameter to smoothly actuate and observe real-time kinematics transformation
+                  </p>
+                </div>
+              </div>
+
+              {/* Smooth Animation Toggle & Duration Presets */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSmoothParamAnimation((prev) => !prev)}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer border ${
+                    smoothParamAnimation
+                      ? 'bg-emerald-100 text-emerald-950 border-emerald-300'
+                      : 'bg-stone-100 text-stone-600 border-stone-300'
+                  }`}
+                >
+                  <Zap className={`w-3.5 h-3.5 ${smoothParamAnimation ? 'text-emerald-700' : 'text-stone-500'}`} />
+                  <span>Smooth Animation: {smoothParamAnimation ? 'ON' : 'OFF'}</span>
+                </button>
+
+                <div className="flex items-center gap-1 bg-stone-100 p-0.5 rounded-xl border border-stone-300 text-xs font-black">
+                  {[300, 600, 1000].map((dur) => (
+                    <button
+                      key={dur}
+                      type="button"
+                      onClick={() => setAnimationDurationMs(dur)}
+                      className={`px-2 py-0.5 rounded-lg transition-all cursor-pointer font-mono ${
+                        animationDurationMs === dur
+                          ? 'bg-amber-400 text-black shadow-2xs font-bold'
+                          : 'text-stone-600 hover:text-black'
+                      }`}
+                    >
+                      {dur}ms
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Joint Selector Buttons (J1, J2, ... Jn) */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] text-stone-500 uppercase tracking-wider font-bold">Target Joint:</span>
+              <div className="flex flex-wrap items-center gap-1">
+                {robot.joints.map((j, idx) => (
+                  <button
+                    key={j.id || idx}
+                    type="button"
+                    onClick={() => setSelectedJointIdx(idx)}
+                    className={`px-3 py-1 rounded-xl text-xs font-mono font-black border transition-all cursor-pointer ${
+                      safeSelectedJointIdx === idx
+                        ? 'bg-amber-400 text-black border-amber-500 shadow-2xs scale-105'
+                        : 'bg-stone-100 hover:bg-stone-200 text-stone-700 border-stone-300'
+                    }`}
+                  >
+                    J{idx + 1}
+                  </button>
+                ))}
+              </div>
+              <span className="text-xs text-stone-600 font-bold ml-1">
+                ({robot.joints[safeSelectedJointIdx]?.name || `Joint ${safeSelectedJointIdx + 1}`})
               </span>
-              <button
-                onClick={handleClearTrace}
-                title="Clear End-Effector Motion Trail"
-                aria-label="Clear trace trail"
-                className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold text-[11px] transition-all cursor-pointer"
-              >
-                <Trash2 className="w-3 h-3 text-stone-600" />
-                <span>Clear Trace</span>
-              </button>
+            </div>
+
+            {/* Parameter Field Selector */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] text-stone-500 uppercase tracking-wider font-bold">Parameter:</span>
+              <div className="flex flex-wrap items-center gap-1">
+                {(['offset', 'theta', 'd', 'a', 'alpha'] as EditableField[]).map((field) => (
+                  <button
+                    key={field}
+                    type="button"
+                    onClick={() => setSelectedChangeField(field)}
+                    className={`px-3 py-1 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                      selectedChangeField === field
+                        ? 'bg-black text-white border-black shadow-2xs'
+                        : 'bg-stone-100 hover:bg-stone-200 text-stone-800 border-stone-300'
+                    }`}
+                  >
+                    {field === 'offset' && 'Offset'}
+                    {field === 'theta' && 'θ (Angle)'}
+                    {field === 'd' && 'd (Offset)'}
+                    {field === 'a' && 'a (Length)'}
+                    {field === 'alpha' && 'α (Twist)'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Parameter Adjustment Presets & Steppers */}
+            <div className="p-3 bg-[#faf8f5] rounded-xl border border-stone-200 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[11px] font-black text-stone-700">
+                  Quick Nudge & Presets ({isFieldAngle(selectedChangeField, robot.joints[safeSelectedJointIdx]?.type || 'revolute') ? 'Angular °' : 'Linear mm'}):
+                </span>
+                {animatingParam && (
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-400 text-black font-black animate-pulse">
+                    ANIMATING ({(animatingParam.progress * 100).toFixed(0)}%)
+                  </span>
+                )}
+              </div>
+
+              {isFieldAngle(selectedChangeField, robot.joints[safeSelectedJointIdx]?.type || 'revolute') ? (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {[-90, -45, -15, -5, 5, 15, 45, 90].map((deg) => (
+                    <button
+                      key={deg}
+                      type="button"
+                      onClick={() => handleStepParameterChange(deg * DEG_TO_RAD, false)}
+                      className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 text-black border border-stone-300 text-xs font-mono font-bold transition-all cursor-pointer active:scale-95 shadow-2xs"
+                    >
+                      {deg > 0 ? `+${deg}°` : `${deg}°`}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => handleStepParameterChange(0, true)}
+                    className="px-2.5 py-1 rounded-lg bg-stone-200 hover:bg-stone-300 text-stone-900 border border-stone-400 text-xs font-mono font-black transition-all cursor-pointer active:scale-95"
+                  >
+                    Reset 0°
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {[-100, -50, -10, -5, 5, 10, 50, 100].map((mm) => (
+                    <button
+                      key={mm}
+                      type="button"
+                      onClick={() => handleStepParameterChange(mm / 1000, false)}
+                      className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100 text-black border border-stone-300 text-xs font-mono font-bold transition-all cursor-pointer active:scale-95 shadow-2xs"
+                    >
+                      {mm > 0 ? `+${mm}mm` : `${mm}mm`}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => handleStepParameterChange(0, true)}
+                    className="px-2.5 py-1 rounded-lg bg-stone-200 hover:bg-stone-300 text-stone-900 border border-stone-400 text-xs font-mono font-black transition-all cursor-pointer active:scale-95"
+                  >
+                    Reset 0mm
+                  </button>
+                </div>
+              )}
+
+              {/* Direct Value Input */}
+              <div className="flex items-center gap-2 pt-1 border-t border-stone-200">
+                <span className="text-[11px] font-black text-stone-600">Set Custom Value:</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder={useSI ? 'Value in rad / m' : 'Value in ° / mm'}
+                  value={customChangeValInput}
+                  onChange={(e) => setCustomChangeValInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleApplyChangeFromStudio();
+                  }}
+                  className="w-36 px-2 py-1 text-right font-mono text-xs font-bold rounded-lg border border-stone-300 bg-white"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyChangeFromStudio}
+                  className="px-3 py-1 bg-amber-400 hover:bg-amber-500 text-black font-black text-xs rounded-lg transition-all cursor-pointer shadow-2xs active:scale-95"
+                >
+                  Apply & Animate
+                </button>
+              </div>
             </div>
           </div>
-          <DHSimulation3DView
-            robot={robot}
-            fk={analysis.fk}
-            q={q}
-            targetPoint={targetPointFor3D}
-            height="480px"
-            useSI={useSI}
-            onJointChange={(jointIdx, val) => {
-              setIsSweeping(false);
-              setJointValue(jointIdx, val);
-            }}
-            onResetHome={handleResetHomePose}
-            onZeroAll={handleZeroAllJoints}
-            isSweeping={isSweeping}
-            onToggleSweep={handleToggleSweep}
-            activeJogStepDeg={jogStepDeg}
-            activeJogStepMm={jogStepMm}
-            onJogStepDegChange={setJogStepDeg}
-            onJogStepMmChange={setJogStepMm}
-            sweepSpeed={sweepSpeed}
-            onSweepSpeedChange={setSweepSpeed}
-            sweepMode={sweepMode}
-            onSweepModeChange={setSweepMode}
-            sweepAmplitude={sweepAmplitude}
-            onSweepAmplitudeChange={setSweepAmplitude}
-            activeSweepJointIdx={activeSweepJointIdx}
-            focusJointIdx={focusJointIdx}
-            onFocusJointIdxChange={setFocusJointIdx}
-            traceResetKey={traceResetKey}
-            onClearTrace={handleClearTrace}
-          />
+
+          {/* Academic DH Reference & Theory Guide Panel */}
+          <div className="p-4 bg-white border-2 border-stone-200 rounded-2xl shadow-xs space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 pb-2">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-amber-600" />
+                <h3 className="text-xs font-black uppercase tracking-wider text-black">
+                  Academic DH Reference & Theory Guide
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAcademicPopup(true)}
+                className="px-2.5 py-1 text-[11px] font-black bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-lg border border-stone-300 transition-all cursor-pointer"
+              >
+                Open in Full Drawer ↗
+              </button>
+            </div>
+
+            {/* Guide Tabs */}
+            <div className="flex items-center gap-1 overflow-x-auto pb-1">
+              {[
+                { id: 'principles', label: 'Principles' },
+                { id: 'parameters', label: '4 Parameters' },
+                { id: 'offset', label: 'Offset Role' },
+                { id: 'craig_vs_std', label: 'Craig vs Standard' },
+                { id: 'frame_rules', label: 'Frame Assignment' },
+                { id: 'ik', label: 'Inverse Kinematics' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setAcademicTab(tab.id as any)}
+                  className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
+                    academicTab === tab.id
+                      ? 'bg-amber-400 text-black shadow-2xs'
+                      : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Guide Content */}
+            <div className="pt-2">
+              {renderAcademicContent(academicTab)}
+            </div>
+          </div>
         </div>
       )}
 
@@ -2981,11 +3602,13 @@ export const DHTableStudio: React.FC = () => {
                   </div>
                 )}
 
-                {/* Solved Joint Angles for Best Solution */}
-                {ikSolution && (
+                {/* Solved Joint Angles for Best Solution - only rendered when reachable and converged */}
+                {ikResultStats.converged && ikSolution && (
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-sans font-black text-stone-700">Best Match Joint Angles:</span>
+                      <span className="text-[11px] font-sans font-black text-stone-700">
+                        {ikBranches.length > 1 && ikSolution !== ikBranches[0] ? 'Selected Branch Joint Angles:' : 'Best Match Joint Angles:'}
+                      </span>
                       <span className="text-[10px] font-mono px-1.5 py-0.2 bg-amber-100 text-amber-900 border border-amber-300 rounded font-black">
                         {ikSolution.solverType ?? 'IK Solver'}
                       </span>
@@ -3033,21 +3656,27 @@ export const DHTableStudio: React.FC = () => {
                   </div>
                 )}
 
-                {/* Candidate Solution Branches */}
-                {ikBranches.length > 1 && (
+                {/* Candidate Solution Branches - only rendered when reachable and converged */}
+                {ikResultStats.converged && ikBranches.length > 0 && (
                   <div className="space-y-2 pt-2 border-t border-stone-200">
                     <span className="text-[11px] font-sans font-black text-stone-700 uppercase tracking-wide">
                       All Discovered Branches ({ikBranches.length}):
                     </span>
                     <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                       {ikBranches.map((branch, bIdx) => {
-                        const isBest = branch === ikSolution || bIdx === 0;
+                        const isBest = bIdx === 0;
+                        const isSelected = branch === ikSolution;
                         const isCurrent = branch.q.every((val, idx) => Math.abs(val - (q[idx] ?? 0)) < 0.02);
                         return (
                           <div
                             key={bIdx}
-                            className={`p-2.5 rounded-xl border-2 transition-all ${
-                              isBest ? 'bg-amber-50/70 border-amber-400' : 'bg-stone-50 border-stone-200'
+                            onClick={() => setIkSolution(branch)}
+                            className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-amber-50/90 border-amber-500 shadow-xs ring-2 ring-amber-400/40'
+                                : isBest
+                                ? 'bg-amber-50/50 border-amber-300 hover:border-amber-400'
+                                : 'bg-stone-50 border-stone-200 hover:border-stone-300'
                             }`}
                           >
                             <div className="flex items-center justify-between mb-1.5">
@@ -3056,6 +3685,11 @@ export const DHTableStudio: React.FC = () => {
                                 {isBest && (
                                   <span className="px-1.5 py-0.2 text-[9px] font-black rounded bg-amber-400 text-black border border-stone-900 shadow-2xs">
                                     BEST MATCH
+                                  </span>
+                                )}
+                                {isSelected && !isBest && (
+                                  <span className="px-1.5 py-0.2 text-[9px] font-black rounded bg-amber-200 text-amber-950 border border-amber-400">
+                                    SELECTED
                                   </span>
                                 )}
                                 {isCurrent && (
@@ -3080,20 +3714,27 @@ export const DHTableStudio: React.FC = () => {
                               <div>Ori Err: {(branch.orientationError * RAD_TO_DEG).toFixed(2)}°</div>
                             </div>
 
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                               <button
                                 type="button"
+                                disabled={!branch.withinLimits}
                                 onClick={() => handleApplyIKSolution(branch, true)}
-                                className="flex-1 py-1.5 px-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs rounded-lg shadow-2xs transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                                title={branch.withinLimits ? 'Animate robot to this branch' : 'Exceeds joint limits'}
+                                className={`flex-1 py-1.5 px-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 disabled:hover:bg-emerald-500 text-white font-black text-xs rounded-lg shadow-2xs transition-all active:scale-95 flex items-center justify-center gap-1 ${
+                                  branch.withinLimits ? 'cursor-pointer' : 'cursor-not-allowed'
+                                }`}
                               >
                                 <Play className="w-3 h-3 fill-white" />
                                 <span>Animate</span>
                               </button>
                               <button
                                 type="button"
+                                disabled={!branch.withinLimits}
                                 onClick={() => handleApplyIKSolution(branch, false)}
-                                title="Instant Jump without trajectory animation"
-                                className="py-1.5 px-2.5 bg-stone-100 hover:bg-stone-200 text-stone-800 font-black text-xs rounded-lg border border-stone-300 shadow-2xs transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                                title={branch.withinLimits ? 'Instant Jump without trajectory animation' : 'Exceeds joint limits'}
+                                className={`py-1.5 px-2.5 bg-stone-100 hover:bg-stone-200 disabled:opacity-40 disabled:hover:bg-stone-100 text-stone-800 font-black text-xs rounded-lg border border-stone-300 shadow-2xs transition-all active:scale-95 flex items-center justify-center gap-1 ${
+                                  branch.withinLimits ? 'cursor-pointer' : 'cursor-not-allowed'
+                                }`}
                               >
                                 <Zap className="w-3 h-3" />
                                 <span>Snap</span>
@@ -3113,50 +3754,98 @@ export const DHTableStudio: React.FC = () => {
             )}
           </div>
 
-          {/* Embedded 3D Kinematic Chain Simulation with IK Target */}
+          {/* Academic Inverse Kinematics Theory Guide */}
           <div className="lg:col-span-2 p-4 bg-white border-2 border-stone-200 rounded-2xl shadow-xs space-y-3">
-            <div className="flex items-center justify-between border-b border-stone-200 pb-2">
+            <div className="flex items-center gap-2 border-b border-stone-200 pb-2">
+              <BookOpen className="w-4 h-4 text-amber-600" />
+              <h3 className="text-xs font-black uppercase tracking-wider text-black">
+                Academic Inverse Kinematics Theory Guide
+              </h3>
+            </div>
+            {renderAcademicContent('ik')}
+          </div>
+        </div>
+      )}
+      </div>
+
+      {/* 5. ACADEMIC DH THEORY & REFERENCE DRAWER MODAL */}
+      {showAcademicPopup && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowAcademicPopup(false);
+          }}
+        >
+          <div
+            className={`w-full ${
+              isPopupFullScreen ? 'max-w-full' : 'max-w-4xl'
+            } h-full bg-[#fbf9f5] border-l-2 border-stone-300 shadow-2xl flex flex-col slide-in-from-right duration-200 overflow-hidden`}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-stone-300 bg-white/95 shrink-0">
               <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-rose-600" />
-                <span className="text-xs font-black uppercase tracking-wider text-black">
-                  3D Kinematic Chain Motion & Target Marker
-                </span>
+                <BookOpen className="w-5 h-5 text-amber-600" />
+                <div>
+                  <h2 className="text-sm font-black text-black">
+                    Academic DH Parameter Reference & Theory Guide
+                  </h2>
+                  <p className="text-[11px] text-stone-500 font-medium">
+                    Rigorous robotics theory, conventions, frame rules & closed-form IK
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center gap-2 font-mono text-[11px] text-stone-600">
-                <span>Target: [{currentIKTargetMeters.x.toFixed(3)}, {currentIKTargetMeters.y.toFixed(3)}, {currentIKTargetMeters.z.toFixed(3)}] m</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsPopupFullScreen((prev) => !prev)}
+                  title={isPopupFullScreen ? 'Dock to right side' : 'Expand full width'}
+                  aria-label={isPopupFullScreen ? 'Dock to right side' : 'Expand full width'}
+                  className="px-2.5 py-1 text-xs font-black rounded-lg border border-stone-300 bg-stone-100 hover:bg-stone-200 text-stone-700 transition-all cursor-pointer"
+                >
+                  {isPopupFullScreen ? 'Dock Right' : 'Expand Full'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAcademicPopup(false)}
+                  title="Close Academic Guide"
+                  aria-label="Close Academic Guide Modal"
+                  className="w-7 h-7 flex items-center justify-center rounded-lg bg-stone-100 hover:bg-rose-100 text-stone-700 hover:text-rose-700 transition-all cursor-pointer"
+                >
+                  ✕
+                </button>
               </div>
             </div>
-            <DHSimulation3DView
-              robot={robot}
-              fk={analysis.fk}
-              q={q}
-              targetPoint={targetPointFor3D}
-              height="380px"
-              useSI={useSI}
-              onJointChange={(jointIdx, val) => {
-                setIsSweeping(false);
-                setJointValue(jointIdx, val);
-              }}
-              onResetHome={handleResetHomePose}
-              onZeroAll={handleZeroAllJoints}
-              isSweeping={isSweeping}
-              onToggleSweep={handleToggleSweep}
-              activeJogStepDeg={jogStepDeg}
-              activeJogStepMm={jogStepMm}
-              onJogStepDegChange={setJogStepDeg}
-              onJogStepMmChange={setJogStepMm}
-              sweepSpeed={sweepSpeed}
-              onSweepSpeedChange={setSweepSpeed}
-              sweepMode={sweepMode}
-              onSweepModeChange={setSweepMode}
-              sweepAmplitude={sweepAmplitude}
-              onSweepAmplitudeChange={setSweepAmplitude}
-              activeSweepJointIdx={activeSweepJointIdx}
-              focusJointIdx={focusJointIdx}
-              onFocusJointIdxChange={setFocusJointIdx}
-              traceResetKey={traceResetKey}
-              onClearTrace={handleClearTrace}
-            />
+
+            {/* Modal Navigation Subtabs */}
+            <div className="flex items-center gap-1.5 p-2 bg-stone-100 border-b border-stone-200 overflow-x-auto shrink-0">
+              {[
+                { id: 'principles', label: 'Principles' },
+                { id: 'parameters', label: '4 Parameters' },
+                { id: 'offset', label: 'Offset Role' },
+                { id: 'craig_vs_std', label: 'Craig vs Standard' },
+                { id: 'frame_rules', label: 'Frame Assignment' },
+                { id: 'ik', label: 'Inverse Kinematics' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setAcademicTab(tab.id as any)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
+                    academicTab === tab.id
+                      ? 'bg-amber-400 text-black shadow-2xs'
+                      : 'bg-white text-stone-700 hover:bg-stone-200/70 border border-stone-200'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Modal Content Body */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
+              {renderAcademicContent(academicTab)}
+            </div>
           </div>
         </div>
       )}

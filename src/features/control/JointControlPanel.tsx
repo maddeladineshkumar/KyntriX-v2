@@ -177,7 +177,7 @@ export const JointControlPanel: React.FC = () => {
           return (
             <div
               key={joint.id}
-              className={`p-3.5 rounded-2xl border-2 transition-all ${
+              className={`p-3.5 rounded-2xl border-2 transition-all overflow-hidden ${
                 isNearLimit
                   ? 'bg-amber-50/90 border-amber-400 shadow-md shadow-amber-500/10'
                   : 'bg-white border-stone-200/90 shadow-sm hover:border-stone-400 hover:shadow-md'
@@ -205,7 +205,7 @@ export const JointControlPanel: React.FC = () => {
                 </div>
 
                 {/* Direct Numeric Input Box */}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
                   <input
                     type="number"
                     aria-label={`Joint ${idx + 1} value`}
@@ -221,9 +221,9 @@ export const JointControlPanel: React.FC = () => {
                         handleStep(isRevolute ? -1 : -10);
                       }
                     }}
-                    className="w-16 px-1.5 py-0.5 text-right font-mono text-xs font-black text-black bg-stone-50 border-2 border-stone-300 rounded-md focus:border-black focus:bg-white focus:outline-none"
+                    className="w-16 px-1.5 py-0.5 text-right font-mono text-xs font-black text-black bg-stone-50 border-2 border-stone-300 rounded-md focus:border-black focus:bg-white focus:outline-none shrink-0"
                   />
-                  <span className="text-xs text-black font-mono font-bold w-4">{unit}</span>
+                  <span className="text-xs text-black font-mono font-bold w-4 shrink-0">{unit}</span>
                 </div>
               </div>
 

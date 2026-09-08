@@ -13,15 +13,17 @@ class MeshLoaderService {
   }
 
   /**
-   * Load an STL mesh from URL, returning a cached THREE.BufferGeometry.
+   * Load an STL mesh from URL, returning an independent clone of the cached THREE.BufferGeometry.
+   * Clones protect the cached master geometry from GPU buffer deallocation when individual meshes are disposed.
    */
   async loadSTL(url: string): Promise<THREE.BufferGeometry | null> {
     if (this.cache.has(url)) {
-      return this.cache.get(url)!;
+      return this.cache.get(url)!.clone();
     }
 
     if (this.loadingPromises.has(url)) {
-      return this.loadingPromises.get(url)!;
+      const master = await this.loadingPromises.get(url)!;
+      return master ? master.clone() : null;
     }
 
     const base = import.meta.env.BASE_URL || '/';
@@ -49,7 +51,8 @@ class MeshLoaderService {
     });
 
     this.loadingPromises.set(url, promise);
-    return promise;
+    const master = await promise;
+    return master ? master.clone() : null;
   }
 
   /**

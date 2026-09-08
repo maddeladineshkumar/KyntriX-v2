@@ -107,7 +107,7 @@ export function computeGeometricJacobian(
  */
 function computeSymmetricEigenvalues(A_orig: number[][], size: number): number[] {
   const A = A_orig.map((row) => [...row]);
-  const maxIter = 50;
+  const maxIter = Math.max(100, size * size * 10);
 
   for (let iter = 0; iter < maxIter; iter++) {
     // Find largest off-diagonal element

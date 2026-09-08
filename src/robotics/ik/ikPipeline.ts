@@ -147,7 +147,7 @@ export function solveIK(
   for (const j of robot.joints) {
     maxTheoreticalReach += Math.abs(j.a);
     if (j.type === 'prismatic') {
-      maxTheoreticalReach += Math.max(Math.abs(j.min), Math.abs(j.max), Math.abs(j.d));
+      maxTheoreticalReach += Math.abs(j.d) + Math.max(Math.abs(j.min), Math.abs(j.max)) + Math.abs(j.offset ?? 0);
     } else {
       maxTheoreticalReach += Math.abs(j.d);
     }
@@ -195,7 +195,6 @@ export function solveIK(
   }
 
   const allCandidateSolutions: IKSingleSolution[] = [];
-
   let analyticalFound = false;
 
   // 1. Try Analytical 3R Planar Solver if applicable
@@ -223,16 +222,17 @@ export function solveIK(
   // 3. Try Analytical 6R Spherical Wrist Solver if applicable
   if (hasSphericalWrist(robot)) {
     const sphericalSolutions = solve6RSpherical(robot, target, options.currentJoints);
-    if (sphericalSolutions.length > 0) {
+    for (const sol of sphericalSolutions) {
+      allCandidateSolutions.push(sol);
+    }
+    // Only suppress numerical DLS fallback if at least one analytical spherical solution is converged and within limits
+    if (sphericalSolutions.some((s) => s.converged && s.withinLimits)) {
       analyticalFound = true;
-      for (const sol of sphericalSolutions) {
-        allCandidateSolutions.push(sol);
-      }
     }
   }
 
-  // 3. Numerical DLS Solver
-  // Only run heavy numerical branch exploration if no analytical solver was applicable/produced solutions
+  // Numerical DLS Solver
+  // Runs if no analytical solver was applicable, or if analytical 6R failed to find a valid solution within limits
   const hasAnalytical = analyticalFound;
 
   const defaultInitial =
@@ -243,10 +243,11 @@ export function solveIK(
   let branchCount = allCandidateSolutions.length;
 
   if (!hasAnalytical) {
-    // Run primary numerical solve
+    // Run primary numerical solve (auto-enable null-space joint limit avoidance for redundant manipulators)
     const primarySol = solveNumericalIK(robot, target, {
       ...options,
       initialGuess: defaultInitial,
+      enableNullSpace: options.enableNullSpace ?? (robot.dof > 6),
     });
     allCandidateSolutions.push(primarySol);
     branchCount = 1;
@@ -266,6 +267,7 @@ export function solveIK(
           ...options,
           maxIterations: options.maxIterations ?? 60,
           initialGuess: seed,
+          enableNullSpace: options.enableNullSpace ?? (robot.dof > 6),
         });
 
         if (branchSol.converged) {

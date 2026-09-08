@@ -79,8 +79,13 @@ export class Euler {
       } else {
         // Gimbal lock: b = 0 or b = pi
         a = 0;
-        b = r22 > 0 ? 0 : Math.PI;
-        c = Math.atan2(r10, r00);
+        if (r22 > 0) {
+          b = 0;
+          c = Math.atan2(r10, r00);
+        } else {
+          b = Math.PI;
+          c = Math.atan2(r10, -r00);
+        }
       }
       return new Euler(a, b, c, 'ZYZ');
     }

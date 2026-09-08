@@ -814,12 +814,20 @@ export function App() {
               : 'Reachable Workspace Point Cloud Studio'
           }
           onKeyDown={handleFocusTrap}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-2 sm:p-4 lg:p-8 animate-in fade-in duration-150"
+          className={`fixed inset-0 z-50 flex ${
+            activeModal === 'dh'
+              ? 'p-0 bg-[#fbf9f5]'
+              : 'items-center justify-center bg-black/40 backdrop-blur-md p-2 sm:p-4 lg:p-8'
+          } animate-in fade-in duration-150`}
           onClick={(e) => {
             if (e.target === e.currentTarget) closeModal();
           }}
         >
-          <div className={`studio-modal-container flex flex-col w-full ${activeModal === 'dh' ? 'max-w-6xl xl:max-w-7xl' : 'max-w-4xl lg:max-w-5xl'} h-[96%] h-[96dvh] max-h-[96%] max-h-[96dvh] bg-[#fbf9f5] border-2 border-stone-300/90 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150`}>
+          <div className={`studio-modal-container flex flex-col w-full ${
+            activeModal === 'dh'
+              ? 'h-full max-h-full rounded-none border-0 shadow-none'
+              : 'max-w-4xl lg:max-w-5xl h-[96%] h-[96dvh] max-h-[96%] max-h-[96dvh] bg-[#fbf9f5] border-2 border-stone-300/90 rounded-2xl sm:rounded-3xl shadow-2xl'
+          } bg-[#fbf9f5] overflow-hidden animate-in zoom-in-95 duration-150`}>
             {/* Pop-up Window Header */}
             <div className="flex items-center justify-between px-3.5 py-2.5 sm:px-6 sm:py-4 border-b border-stone-200 bg-white/90 backdrop-blur-md shrink-0">
               <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
@@ -841,7 +849,7 @@ export function App() {
                     {activeModal === 'workspace' && 'Reachable Workspace Point Cloud Studio'}
                   </h2>
                   <p className="text-[11px] sm:text-xs text-stone-600 font-medium hidden sm:block truncate">
-                    {activeModal === 'dh' && `Kinematic table, real-time joint simulation, 3D chain visualization, matrices, Jacobian & IK for ${robot.name}`}
+                    {activeModal === 'dh' && `Live 3D robot simulation & kinematic DH parameters table for ${robot.name}`}
                     {activeModal === 'transform' && 'Relative (A_i) and cumulative (T_0i) 4x4 coordinate transformations'}
                     {activeModal === 'custom' && 'Synthesize arbitrary serial kinematic arms with instant 3D compilation'}
                     {activeModal === 'trajectory' && 'Joint-space and Cartesian straight line trajectory interpolation'}
@@ -867,7 +875,7 @@ export function App() {
             </div>
 
             {/* Pop-up Window Body (Spacious, Scrollable, Full Width with Suspense) */}
-            <div className="flex-1 min-h-0 overflow-y-auto p-2 sm:p-4 bg-[#fbf9f5] pb-16 sm:pb-8">
+            <div className={`flex-1 min-h-0 ${activeModal === 'dh' ? 'overflow-hidden p-0' : 'overflow-y-auto p-2 sm:p-4 bg-[#fbf9f5] pb-16 sm:pb-8'}`}>
               <Suspense fallback={<StudioLoadingFallback label={`Loading ${activeModal} studio...`} />}>
                 {activeModal === 'dh' && <DHTableStudio />}
                 {activeModal === 'transform' && <TransformationStudio />}

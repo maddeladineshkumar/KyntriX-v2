@@ -381,12 +381,12 @@ export const DH_PRESETS: DHPreset[] = [
         index: 0,
         type: 'revolute',
         theta: 0,
-        d: 0.6718,
+        d: 0.66,
         a: 0,
-        alpha: -Math.PI / 2,
+        alpha: Math.PI / 2,
         offset: 0,
-        min: -Math.PI,
-        max: Math.PI,
+        min: -2.792526803190927,
+        max: 2.792526803190927,
         home: 0,
       },
       {
@@ -395,24 +395,24 @@ export const DH_PRESETS: DHPreset[] = [
         type: 'revolute',
         theta: 0,
         d: 0,
-        a: 0.4318,
-        alpha: 0,
+        a: 0.432,
+        alpha: Math.PI,
         offset: 0,
-        min: -Math.PI,
-        max: Math.PI,
-        home: 0,
+        min: -0.6108652381980153,
+        max: 3.7524578917878086,
+        home: Math.PI / 2,
       },
       {
         name: 'Joint 3 (Elbow)',
         index: 2,
         type: 'revolute',
         theta: 0,
-        d: 0.15005,
-        a: 0.0203,
-        alpha: -Math.PI / 2,
+        d: 0.15,
+        a: 0.002,
+        alpha: Math.PI / 2,
         offset: 0,
-        min: -Math.PI,
-        max: Math.PI,
+        min: -3.9269908169872414,
+        max: 0.7853981633974483,
         home: 0,
       },
       {
@@ -420,12 +420,12 @@ export const DH_PRESETS: DHPreset[] = [
         index: 3,
         type: 'revolute',
         theta: 0,
-        d: 0.4318,
+        d: -0.432,
         a: 0,
         alpha: Math.PI / 2,
         offset: 0,
-        min: -Math.PI,
-        max: Math.PI,
+        min: -4.642575810304916,
+        max: 4.642575810304916,
         home: 0,
       },
       {
@@ -435,23 +435,23 @@ export const DH_PRESETS: DHPreset[] = [
         theta: 0,
         d: 0,
         a: 0,
-        alpha: -Math.PI / 2,
+        alpha: Math.PI / 2,
         offset: 0,
-        min: -Math.PI,
-        max: Math.PI,
-        home: 0,
+        min: -4.886921905584122,
+        max: -1.3962634015954636,
+        home: -4.71238898038469,
       },
       {
         name: 'Joint 6 (Tool Flange)',
         index: 5,
         type: 'revolute',
         theta: 0,
-        d: 0.0565,
+        d: -0.056,
         a: 0,
-        alpha: 0,
+        alpha: -Math.PI,
         offset: 0,
-        min: -Math.PI,
-        max: Math.PI,
+        min: -6.283185307179586,
+        max: 6.283185307179586,
         home: 0,
       },
     ],
@@ -896,8 +896,11 @@ export function computeDHAnalysis(
     if (j.type === 'revolute') {
       maxTheoreticalReachM += Math.abs(j.a) + Math.abs(j.d);
     } else {
-      maxTheoreticalReachM += Math.abs(j.a) + Math.abs(j.max);
+      maxTheoreticalReachM += Math.abs(j.a) + Math.abs(j.d) + Math.max(Math.abs(j.min), Math.abs(j.max)) + Math.abs(j.offset ?? 0);
     }
+  }
+  if (robot.endEffectorOffset) {
+    maxTheoreticalReachM += robot.endEffectorOffset.getPosition().norm();
   }
   if (maxTheoreticalReachM < 1e-4) maxTheoreticalReachM = 0.001;
 

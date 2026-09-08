@@ -345,9 +345,8 @@ export const DHSimulation3DView: React.FC<DHSimulation3DViewProps> = ({
   useEffect(() => {
     if (!fk || !robot) return;
 
-    // Guard: switching robots or modifying kinematic architecture must reset end-effector trace
+    // Guard: switching robots or modifying kinematic architecture (DOF) must reset end-effector trace
     if (
-      prevRobotRef.current !== robot ||
       prevRobotIdRef.current !== robot.id ||
       prevDofRef.current !== robot.dof
     ) {
@@ -473,6 +472,7 @@ export const DHSimulation3DView: React.FC<DHSimulation3DViewProps> = ({
   if (!isWebGLSupported) {
     return (
       <div
+        data-testid="dh-simulation-viewport"
         className={`flex flex-col items-center justify-center p-8 text-center rounded-2xl border-2 border-stone-300 bg-[#f6f3ea] ${className}`}
         style={{ height }}
       >
@@ -491,6 +491,7 @@ export const DHSimulation3DView: React.FC<DHSimulation3DViewProps> = ({
 
   return (
     <div
+      data-testid="dh-simulation-viewport"
       className={`relative w-full rounded-2xl overflow-hidden border-2 border-stone-300 bg-[#f6f3ea] shadow-inner select-none ${className}`}
       style={{ height }}
     >

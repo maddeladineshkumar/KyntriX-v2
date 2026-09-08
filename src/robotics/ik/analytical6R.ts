@@ -273,28 +273,39 @@ export function solve6RSpherical(
         q[5] += dq[2];
       }
 
-      // Check joint limits and normalize modulo 2pi
-      let withinLimits = true;
+      // Check joint limits and select optimal 2k*pi representation closest to current joints
       const normalizedQ: number[] = [];
 
       for (let i = 0; i < 6; i++) {
-        let angle = Math.atan2(Math.sin(q[i]), Math.cos(q[i]));
+        const rawAngle = q[i];
         const joint = robot.joints[i];
-
         const tol = 1e-5;
-        if (angle < joint.min - tol || angle > joint.max + tol) {
-          if (angle + 2 * Math.PI >= joint.min - tol && angle + 2 * Math.PI <= joint.max + tol) {
-            angle += 2 * Math.PI;
-          } else if (angle - 2 * Math.PI >= joint.min - tol && angle - 2 * Math.PI <= joint.max + tol) {
-            angle -= 2 * Math.PI;
-          } else {
-            withinLimits = false;
-          }
+        const refAngle = currentJoints && Number.isFinite(currentJoints[i]) ? currentJoints[i] : (joint.home ?? 0);
+
+        // Find equivalent representation q + 2*k*pi that stays within limits and is closest to reference
+        const candidates: number[] = [];
+        for (let k = -2; k <= 2; k++) {
+          candidates.push(rawAngle + 2 * Math.PI * k);
         }
-        if (withinLimits) {
-          angle = Math.max(joint.min, Math.min(joint.max, angle));
+
+        const validCandidates = candidates.filter(
+          (c) => c >= joint.min - tol && c <= joint.max + tol
+        );
+
+        let chosenAngle: number;
+        if (validCandidates.length > 0) {
+          validCandidates.sort((a, b) => Math.abs(a - refAngle) - Math.abs(b - refAngle));
+          chosenAngle = Math.max(joint.min, Math.min(joint.max, validCandidates[0]));
+        } else {
+          // If outside limits, select representation closest to joint limits window
+          candidates.sort((a, b) => {
+            const distA = a < joint.min ? joint.min - a : a > joint.max ? a - joint.max : 0;
+            const distB = b < joint.min ? joint.min - b : b > joint.max ? b - joint.max : 0;
+            return distA - distB;
+          });
+          chosenAngle = candidates[0];
         }
-        normalizedQ.push(angle);
+        normalizedQ.push(chosenAngle);
       }
 
       // Universal Authoritative Validation & Dexterity Computation

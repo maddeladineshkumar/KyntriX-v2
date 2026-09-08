@@ -25,11 +25,26 @@ export interface IKWorkerResponse {
   result: SerializedIKResult;
 }
 
+function rehydrateRobot(robot: RobotDefinition): RobotDefinition {
+  if (!robot) return robot;
+  const rehydrated = { ...robot };
+  if (rehydrated.baseTransform && !(rehydrated.baseTransform instanceof Matrix4)) {
+    const elems = (rehydrated.baseTransform as any).elements ?? rehydrated.baseTransform;
+    rehydrated.baseTransform = Matrix4.fromArray(Array.isArray(elems) ? elems : Array.from(elems));
+  }
+  if (rehydrated.endEffectorOffset && !(rehydrated.endEffectorOffset instanceof Matrix4)) {
+    const elems = (rehydrated.endEffectorOffset as any).elements ?? rehydrated.endEffectorOffset;
+    rehydrated.endEffectorOffset = Matrix4.fromArray(Array.isArray(elems) ? elems : Array.from(elems));
+  }
+  return rehydrated;
+}
+
 self.onmessage = (e: MessageEvent<IKWorkerRequest>) => {
   const { id, robot, targetElements, options } = e.data;
   try {
     const target = new Matrix4(targetElements);
-    const result = solveIK(robot, target, options);
+    const activeRobot = rehydrateRobot(robot);
+    const result = solveIK(activeRobot, target, options);
 
     const response: IKWorkerResponse = {
       id,

@@ -37,6 +37,17 @@ export class Matrix4 {
     ]);
   }
 
+  static fromArray(elements: ArrayLike<number>): Matrix4 {
+    return new Matrix4(elements);
+  }
+
+  fromArray(elements: ArrayLike<number>): this {
+    for (let i = 0; i < 16; i++) {
+      this.elements[i] = Number.isFinite(elements[i]) ? elements[i] : 0;
+    }
+    return this;
+  }
+
   static fromRotationTranslation(R: Matrix3, p: Vector3): Matrix4 {
     const rm = R.elements;
     return new Matrix4([

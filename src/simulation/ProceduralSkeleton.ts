@@ -72,7 +72,14 @@ export class ProceduralSkeleton extends THREE.Group {
    * Repositions and rescales existing meshes without GC pressure.
    */
   updateSkeleton(fk: FKResult): void {
-    const origins = fk.origins;
+    const origins = [...fk.origins];
+    if (fk.endEffectorTransform) {
+      const eePos = fk.endEffectorTransform.getPosition();
+      const lastOrigin = origins[origins.length - 1];
+      if (!lastOrigin || lastOrigin.distanceTo(eePos) > 1e-4) {
+        origins.push(eePos);
+      }
+    }
     const n = origins.length;
 
     // Ensure pool matches required count

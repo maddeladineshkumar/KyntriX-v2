@@ -198,12 +198,32 @@ export class Matrix3 {
 
     if (theta > Math.PI - 1e-4) {
       // Near pi (180 degrees): extract principal axis from symmetric part (R_rel + I) / 2
+      // Use maximum diagonal pivot selection to resolve component signs reliably across all planes
       let ux = Math.sqrt(Math.max(0, (m[0] + 1) * 0.5));
       let uy = Math.sqrt(Math.max(0, (m[4] + 1) * 0.5));
       let uz = Math.sqrt(Math.max(0, (m[8] + 1) * 0.5));
 
-      if (m[1] < 0) uy = -uy;
-      if (m[2] < 0) uz = -uz;
+      // Off-diagonal products in row-major Matrix3:
+      // m[1] (0,1), m[3] (1,0) -> 2 * ux * uy
+      // m[2] (0,2), m[6] (2,0) -> 2 * ux * uz
+      // m[5] (1,2), m[7] (2,1) -> 2 * uy * uz
+      const xy = m[1] + m[3];
+      const xz = m[2] + m[6];
+      const yz = m[5] + m[7];
+
+      if (m[0] >= m[4] && m[0] >= m[8]) {
+        // ux is dominant (pivot on X)
+        if (xy < 0) uy = -uy;
+        if (xz < 0) uz = -uz;
+      } else if (m[4] >= m[8]) {
+        // uy is dominant (pivot on Y)
+        if (xy < 0) ux = -ux;
+        if (yz < 0) uz = -uz;
+      } else {
+        // uz is dominant (pivot on Z)
+        if (xz < 0) ux = -ux;
+        if (yz < 0) uy = -uy;
+      }
 
       const axisRel = new Vector3(ux, uy, uz).normalize();
       // Transform axis from body frame to base/world frame: axis_base = R_c * axis_body

@@ -1,4 +1,4 @@
-﻿import { Matrix3 } from './Matrix3';
+import { Matrix3 } from './Matrix3';
 import { Vector3 } from './Vector3';
 import { EPSILON } from './constants';
 
@@ -38,7 +38,7 @@ export class Quaternion {
     const trace = r00 + r11 + r22;
 
     if (trace > 0) {
-      const s = 0.5 / Math.sqrt(trace + 1.0);
+      const s = 0.5 / Math.sqrt(Math.max(1e-12, trace + 1.0));
       return new Quaternion(
         (r21 - r12) * s,
         (r02 - r20) * s,
@@ -46,7 +46,7 @@ export class Quaternion {
         0.25 / s
       ).normalize();
     } else if (r00 > r11 && r00 > r22) {
-      const s = 2.0 * Math.sqrt(1.0 + r00 - r11 - r22);
+      const s = Math.max(1e-12, 2.0 * Math.sqrt(Math.max(0, 1.0 + r00 - r11 - r22)));
       return new Quaternion(
         0.25 * s,
         (r01 + r10) / s,
@@ -54,7 +54,7 @@ export class Quaternion {
         (r21 - r12) / s
       ).normalize();
     } else if (r11 > r22) {
-      const s = 2.0 * Math.sqrt(1.0 + r11 - r00 - r22);
+      const s = Math.max(1e-12, 2.0 * Math.sqrt(Math.max(0, 1.0 + r11 - r00 - r22)));
       return new Quaternion(
         (r01 + r10) / s,
         0.25 * s,
@@ -62,7 +62,7 @@ export class Quaternion {
         (r02 - r20) / s
       ).normalize();
     } else {
-      const s = 2.0 * Math.sqrt(1.0 + r22 - r00 - r11);
+      const s = Math.max(1e-12, 2.0 * Math.sqrt(Math.max(0, 1.0 + r22 - r00 - r11)));
       return new Quaternion(
         (r02 + r20) / s,
         (r12 + r21) / s,

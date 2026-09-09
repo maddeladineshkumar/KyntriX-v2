@@ -1,24 +1,494 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>KyntriX — Online 3D Robotics Simulator &amp; Kinematics Laboratory</title>
+    
+    <!-- Core Technical SEO Meta Tags -->
+    <meta name="description" content="Professional web-native 3D robotics simulation platform. Explore 42 industrial and educational robots, compute Standard &amp; Craig DH parameters, solve forward &amp; inverse kinematics, and simulate dynamic trajectories." />
+    <meta name="keywords" content="robotics simulator, kinematics simulator, denavit hartenberg calculator, DH parameters, 3d robot simulation, forward kinematics, inverse kinematics 6R, Puma 560, ABB IRB 120, KUKA KR5, Fanuc robot, SCARA kinematics, robotics laboratory, educational robotics, roboanalyzer" />
+    <meta name="author" content="KyntriX Robotics Engineering Group" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <link rel="canonical" href="https://kyntrix.org/" />
+
+    <!-- Open Graph Social Metadata -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="KyntriX" />
+    <meta property="og:url" content="https://kyntrix.org/" />
+    <meta property="og:title" content="KyntriX — Web 3D Robotics Kinematics &amp; Simulation Laboratory" />
+    <meta property="og:description" content="Interactive browser-based 3D robotics simulation platform. Analyze 42 industrial and educational robots with real-time DH parameters, forward &amp; inverse kinematics, and dynamic trajectories." />
+    <meta property="og:image" content="https://kyntrix.org/wordmark.png" />
+    <meta property="og:image:secure_url" content="https://kyntrix.org/wordmark.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="KyntriX 3D Robotics Kinematics &amp; Simulation Laboratory" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter / X Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="KyntriX — Web 3D Robotics Kinematics &amp; Simulation Laboratory" />
+    <meta name="twitter:description" content="Interactive browser-based 3D robotics simulation platform with DH parameters, forward &amp; inverse kinematics, and dynamic trajectories." />
+    <meta name="twitter:image" content="https://kyntrix.org/wordmark.png" />
+    <meta name="twitter:image:alt" content="KyntriX Robotics Simulator" />
+
+    <!-- Favicon & PWA Icons -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#f7f4ed" />
-    <title>KyntriX</title>
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Performance & Font Preconnects -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    <link rel="preload" href="/wordmark.webp" as="image" type="image/webp" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+
+    <!-- Structured Data: Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "@id": "https://kyntrix.org/#software",
+          "name": "KyntriX",
+          "url": "https://kyntrix.org/",
+          "description": "Professional web-native 3D robotics simulation platform for serial manipulators, forward and inverse kinematics, Denavit-Hartenberg parameter synthesis, and dynamic trajectory planning.",
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "All modern web browsers (WebGL compatible)",
+          "browserRequirements": "Requires WebGL support",
+          "softwareVersion": "2.0.0",
+          "inLanguage": "en-US",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock"
+          },
+          "author": {
+            "@type": "Organization",
+            "name": "KyntriX Robotics Engineering Group",
+            "url": "https://kyntrix.org/"
+          },
+          "featureList": [
+            "Authoritative 3D WebGL Visualization Engine (Z-up coordinate frame)",
+            "42 High-Fidelity Robot Models (22 Industrial CAD Meshes + 20 Educational Skeletons)",
+            "Denavit-Hartenberg (DH) Parameter Studio (Standard and Craig Modified DH)",
+            "Multi-Strategy Inverse Kinematics Pipeline (Closed-form 6R Pieper decoupling and Numerical DLS)",
+            "Spatial Geometric Jacobian, Singularity Warning, and Yoshikawa Manipulability Index",
+            "Continuous Trajectory Simulation (Trapezoidal, Cubic, and Quintic Polynomials)",
+            "3D Reachable Workspace Point Cloud Generator via Off-Thread Web Workers",
+            "Custom Robot Manipulator Synthesizer with JSON Import/Export"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://kyntrix.org/#website",
+          "url": "https://kyntrix.org/",
+          "name": "KyntriX Robotics Simulation Platform",
+          "description": "Interactive browser-based 3D robotics kinematics and simulation laboratory.",
+          "publisher": {
+            "@type": "Organization",
+            "name": "KyntriX Robotics Engineering Group",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://kyntrix.org/logo.png",
+              "width": 512,
+              "height": 512
+            }
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://kyntrix.org/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is KyntriX Robotics Simulation Platform?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "KyntriX is an interactive, browser-based 3D robotics simulation laboratory designed for learning, analyzing, and designing serial robotic manipulators. It provides physics-grounded kinematic analysis, dynamic trajectory generation, and 3D CAD visualization matching industrial robotic standards without requiring desktop installations."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How does KyntriX calculate Denavit-Hartenberg (DH) parameters?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "KyntriX implements both Standard DH (Denavit & Hartenberg, 1955) and Modified DH (Craig, 1986) conventions. For Standard DH, transformation matrices are computed as A_i = Rot_Z(theta_i) * Trans_Z(d_i) * Trans_X(a_i) * Rot_X(alpha_i). For Modified Craig DH, transformations follow A_i = Rot_X(alpha_{i-1}) * Trans_X(a_{i-1}) * Rot_Z(theta_i) * Trans_Z(d_i)."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How does the Inverse Kinematics (IK) solver work in KyntriX?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "KyntriX employs a multi-strategy IK pipeline. For 6-DOF industrial robots with spherical wrists (axes 4, 5, and 6 intersecting at a common point), an analytical closed-form Pieper solver evaluates up to 8 distinct branches (Shoulder Left/Right x Elbow Up/Down x Wrist Normal/Flip). For general kinematic configurations or near singularities, an off-thread numerical Damped Least Squares (DLS / Levenberg-Marquardt) solver computes solutions with null-space projection. Every solution is strictly validated against forward kinematics and joint limits."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Which industrial robots are available in KyntriX?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "The platform contains 22 calibrated industrial robot models with binary STL meshes: ABB IRB 120, ABB IRB 1410, ABB IRB 2400, ABB IRB 4400, ABB IRB 6620, ABB IRB 6650, KUKA KR5, KUKA KR5 Sixx, KUKA KR5 IND, KUKA KR62, KUKA KR210 Ultra, Fanuc M-10iA, Fanuc M-410iB, Fanuc R-1000i, Fanuc R-2000i, Fanuc S-430, Unimate Puma 560, Stanford Arm, Epson C3, MTAB Aristo, MTAB Mini, and SmallArm. In addition, 20 educational skeleton kinematic chains (1-DOF to 7-DOF, SCARA, and SRS) are included, totaling 42 robots."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How are kinematic singularities and robot manipulability quantified?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "KyntriX computes the 6xN spatial geometric Jacobian matrix J(q) in real time. It monitors the Yoshikawa Manipulability Index w = sqrt(det(J * J^T)) and the matrix condition number kappa(J) = ||J|| * ||J^+||. When the robot nears a singular configuration where degrees of freedom are lost, real-time singularity alerts are displayed."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What trajectory planning interpolation profiles does KyntriX support?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "KyntriX supports Trapezoidal velocity profiles (constant acceleration and deceleration with cruise speed), Cubic polynomial splines (continuous position and velocity), and minimum-jerk Quintic polynomials (continuous position, velocity, and acceleration), with real-time telemetry plots for joint positions, velocities, accelerations, and Cartesian path tracing."
+              }
+            }
+          ]
+        },
+        {
+          "@type": "ItemList",
+          "@id": "https://kyntrix.org/#models-list",
+          "name": "Featured Industrial Robots",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Puma 560",
+              "url": "https://kyntrix.org/?robot=Puma560",
+              "description": "Classical 6-DOF articulated serial manipulator with spherical wrist"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "ABB IRB 120",
+              "url": "https://kyntrix.org/?robot=ABBIRB120",
+              "description": "Compact 6-DOF industrial articulated robot by ABB Robotics"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "KUKA KR5",
+              "url": "https://kyntrix.org/?robot=KukaKR5",
+              "description": "6-DOF high-precision industrial robot by KUKA"
+            },
+            {
+              "@type": "ListItem",
+              "position": 4,
+              "name": "Fanuc M-10iA",
+              "url": "https://kyntrix.org/?robot=FanucM10iA",
+              "description": "High-speed 6-axis articulated material handling robot by Fanuc"
+            },
+            {
+              "@type": "ListItem",
+              "position": 5,
+              "name": "Stanford Arm",
+              "url": "https://kyntrix.org/?robot=Stanford",
+              "description": "Historic 5R1P spherical coordinate manipulator with prismatic extension"
+            },
+            {
+              "@type": "ListItem",
+              "position": 6,
+              "name": "SCARA Manipulator",
+              "url": "https://kyntrix.org/?robot=skeleton_SCARA",
+              "description": "Selective Compliance Assembly Robot Arm (3R1P architecture)"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Accessible Skip Link for Screen Readers and Keyboard Users -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-amber-500 focus:text-white focus:font-bold focus:rounded-xl focus:shadow-lg focus:outline-none">
+      Skip to simulation laboratory
+    </a>
+
+    <!-- Root Application Container: Crawlable Semantic Prerender Content -->
+    <!-- When React mounts, createRoot replaces this initial markup seamlessly -->
+    <div id="root">
+      <header class="app-top-header" style="padding: 1rem 1.5rem; background: #f7f4ed; border-bottom: 1px solid #e7e5e4;">
+        <nav aria-label="Main Navigation" style="display: flex; align-items: center; justify-content: space-between; max-width: 1200px; margin: 0 auto;">
+          <a href="/" aria-label="KyntriX Home">
+            <picture>
+              <source srcset="/wordmark.webp" type="image/webp" />
+              <img src="/wordmark.png" alt="KyntriX 3D Robotics Kinematics &amp; Simulation Laboratory" width="180" height="40" style="height: 36px; width: auto;" fetchpriority="high" />
+            </picture>
+          </a>
+          <ul style="display: flex; gap: 1.5rem; list-style: none; font-size: 0.875rem; font-weight: 700;">
+            <li><a href="/?studio=dh" style="color: #292524; text-decoration: none;">DH Studio</a></li>
+            <li><a href="/?studio=ik" style="color: #292524; text-decoration: none;">Inverse Kinematics</a></li>
+            <li><a href="/?studio=trajectory" style="color: #292524; text-decoration: none;">Trajectory Studio</a></li>
+            <li><a href="/?studio=workspace" style="color: #292524; text-decoration: none;">Workspace 3D</a></li>
+            <li><a href="/?action=catalog" style="color: #292524; text-decoration: none;">Robot Catalog (42)</a></li>
+          </ul>
+        </nav>
+      </header>
+
+      <main id="main-content" style="max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; color: #1c1917;">
+        <section aria-labelledby="hero-heading" style="margin-bottom: 3rem;">
+          <h1 id="hero-heading" style="font-size: 2.25rem; font-weight: 900; line-height: 1.2; margin-bottom: 1rem; color: #0c0a09;">
+            KyntriX: Professional 3D Robotics Kinematics &amp; Simulation Laboratory
+          </h1>
+          <p style="font-size: 1.125rem; line-height: 1.7; color: #44403c; max-width: 900px; margin-bottom: 1.5rem;">
+            Welcome to <strong>KyntriX</strong>, an interactive web-native 3D robotics simulation platform designed for students, roboticists, and control engineers. Simulate <strong>42 industrial and educational serial manipulators</strong>, compute <strong>Denavit-Hartenberg (DH) parameters</strong>, solve forward and inverse kinematics in real time, and analyze dynamic trajectories with physics-grounded precision.
+          </p>
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <a href="/?studio=dh" style="display: inline-block; padding: 0.75rem 1.5rem; background: #ea580c; color: white; text-decoration: none; font-weight: 800; border-radius: 0.75rem;">Launch DH Table Studio</a>
+            <a href="/?studio=ik" style="display: inline-block; padding: 0.75rem 1.5rem; background: #ffffff; color: #1c1917; text-decoration: none; font-weight: 800; border-radius: 0.75rem; border: 1px solid #d6d3d1;">Open Inverse Kinematics</a>
+            <a href="/?action=catalog" style="display: inline-block; padding: 0.75rem 1.5rem; background: #ffffff; color: #1c1917; text-decoration: none; font-weight: 800; border-radius: 0.75rem; border: 1px solid #d6d3d1;">Explore 42 Robot Models</a>
+          </div>
+        </section>
+
+        <section aria-labelledby="features-heading" style="margin-bottom: 3rem;">
+          <h2 id="features-heading" style="font-size: 1.75rem; font-weight: 800; margin-bottom: 1.5rem; border-bottom: 2px solid #e7e5e4; padding-bottom: 0.5rem;">
+            Core Robotics Simulation Studios
+          </h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+            <article style="background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e7e5e4;">
+              <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem;"><a href="/?studio=dh" style="color: #0c0a09; text-decoration: none;">1. Denavit-Hartenberg (DH) Studio</a></h3>
+              <p style="font-size: 0.9375rem; line-height: 1.6; color: #57534e;">
+                Inspect, modify, and simulate joint DH parameters (&theta;, d, a, &alpha;). Switch seamlessly between Standard DH and Modified (Craig) DH conventions with instantaneous 3D joint coordinate triad updates.
+              </p>
+            </article>
+            <article style="background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e7e5e4;">
+              <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem;"><a href="/?studio=ik" style="color: #0c0a09; text-decoration: none;">2. Inverse Kinematics Multi-Solver</a></h3>
+              <p style="font-size: 0.9375rem; line-height: 1.6; color: #57534e;">
+                Analytical closed-form Pieper decoupling for 6-DOF spherical wrist robots and numerical Damped Least Squares (DLS / Levenberg-Marquardt) for arbitrary geometries, executed off-thread in Web Workers.
+              </p>
+            </article>
+            <article style="background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e7e5e4;">
+              <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem;"><a href="/?studio=trajectory" style="color: #0c0a09; text-decoration: none;">3. Trajectory Planning &amp; Scrubbing</a></h3>
+              <p style="font-size: 0.9375rem; line-height: 1.6; color: #57534e;">
+                Generate joint-space and Cartesian straight-line trajectories utilizing Trapezoidal, Cubic spline, and Quintic polynomial profiles. Includes continuous frame scrubbing and the signature 280-point THANKS trajectory.
+              </p>
+            </article>
+            <article style="background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e7e5e4;">
+              <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem;"><a href="/?studio=analysis" style="color: #0c0a09; text-decoration: none;">4. Dynamic Telemetry &amp; Plotting</a></h3>
+              <p style="font-size: 0.9375rem; line-height: 1.6; color: #57534e;">
+                Live ZedGraph-style time-series plotting of joint positions q(t), angular velocities dq/dt, accelerations d²q/dt², end-effector Cartesian positions [X, Y, Z], and Yoshikawa manipulability metrics.
+              </p>
+            </article>
+            <article style="background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e7e5e4;">
+              <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem;"><a href="/?studio=workspace" style="color: #0c0a09; text-decoration: none;">5. Reachable 3D Workspace Point Cloud</a></h3>
+              <p style="font-size: 0.9375rem; line-height: 1.6; color: #57534e;">
+                Off-thread Monte Carlo point cloud generation determining the complete reachable boundary and dexterous working volume of any serial manipulator arm.
+              </p>
+            </article>
+            <article style="background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e7e5e4;">
+              <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem;"><a href="/?studio=custom" style="color: #0c0a09; text-decoration: none;">6. Custom Robot Manipulator Synthesizer</a></h3>
+              <p style="font-size: 0.9375rem; line-height: 1.6; color: #57534e;">
+                Design arbitrary serial kinematic manipulators up to 8 DOF. Specify revolute or prismatic joints, link lengths, offsets, and twist angles with instant JSON schema validation and export.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section aria-labelledby="catalog-heading" style="margin-bottom: 3rem;">
+          <h2 id="catalog-heading" style="font-size: 1.75rem; font-weight: 800; margin-bottom: 1.5rem; border-bottom: 2px solid #e7e5e4; padding-bottom: 0.5rem;">
+            Featured Industrial Robots &amp; Kinematic Models
+          </h2>
+          <p style="font-size: 1rem; line-height: 1.6; color: #57534e; margin-bottom: 1.5rem;">
+            KyntriX comes pre-loaded with calibrated kinematics and 3D STL meshes for 22 real-world industrial manipulators and 20 educational skeleton primitives:
+          </p>
+          <div style="overflow-x: auto; background: white; border-radius: 1rem; border: 1px solid #e7e5e4; padding: 1rem;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9375rem;">
+              <thead>
+                <tr style="border-bottom: 2px solid #e7e5e4; color: #0c0a09;">
+                  <th style="padding: 0.75rem 1rem;">Robot Model</th>
+                  <th style="padding: 0.75rem 1rem;">Manufacturer</th>
+                  <th style="padding: 0.75rem 1rem;">DOF</th>
+                  <th style="padding: 0.75rem 1rem;">Kinematic Architecture</th>
+                  <th style="padding: 0.75rem 1rem;">Convention</th>
+                  <th style="padding: 0.75rem 1rem;">Simulation Link</th>
+                </tr>
+              </thead>
+              <tbody style="color: #44403c;">
+                <tr style="border-bottom: 1px solid #f5f5f4;">
+                  <td style="padding: 0.75rem 1rem; font-weight: 700;">Puma 560</td>
+                  <td style="padding: 0.75rem 1rem;">Unimate</td>
+                  <td style="padding: 0.75rem 1rem;">6</td>
+                  <td style="padding: 0.75rem 1rem;">Articulated 6R Spherical Wrist</td>
+                  <td style="padding: 0.75rem 1rem;">Standard DH</td>
+                  <td style="padding: 0.75rem 1rem;"><a href="/?robot=Puma560" style="color: #ea580c; font-weight: 700;">Simulate Puma 560</a></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #f5f5f4;">
+                  <td style="padding: 0.75rem 1rem; font-weight: 700;">ABB IRB 120</td>
+                  <td style="padding: 0.75rem 1rem;">ABB</td>
+                  <td style="padding: 0.75rem 1rem;">6</td>
+                  <td style="padding: 0.75rem 1rem;">Compact 6R Articulated Arm</td>
+                  <td style="padding: 0.75rem 1rem;">Standard DH</td>
+                  <td style="padding: 0.75rem 1rem;"><a href="/?robot=ABBIRB120" style="color: #ea580c; font-weight: 700;">Simulate ABB IRB 120</a></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #f5f5f4;">
+                  <td style="padding: 0.75rem 1rem; font-weight: 700;">KUKA KR5</td>
+                  <td style="padding: 0.75rem 1rem;">KUKA</td>
+                  <td style="padding: 0.75rem 1rem;">6</td>
+                  <td style="padding: 0.75rem 1rem;">High-Speed 6R Industrial Arm</td>
+                  <td style="padding: 0.75rem 1rem;">Standard DH</td>
+                  <td style="padding: 0.75rem 1rem;"><a href="/?robot=KukaKR5" style="color: #ea580c; font-weight: 700;">Simulate KUKA KR5</a></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #f5f5f4;">
+                  <td style="padding: 0.75rem 1rem; font-weight: 700;">Fanuc M-10iA</td>
+                  <td style="padding: 0.75rem 1rem;">Fanuc</td>
+                  <td style="padding: 0.75rem 1rem;">6</td>
+                  <td style="padding: 0.75rem 1rem;">Articulated Handling Robot</td>
+                  <td style="padding: 0.75rem 1rem;">Standard DH</td>
+                  <td style="padding: 0.75rem 1rem;"><a href="/?robot=FanucM10iA" style="color: #ea580c; font-weight: 700;">Simulate Fanuc M-10iA</a></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #f5f5f4;">
+                  <td style="padding: 0.75rem 1rem; font-weight: 700;">Stanford Arm</td>
+                  <td style="padding: 0.75rem 1rem;">Stanford University</td>
+                  <td style="padding: 0.75rem 1rem;">6</td>
+                  <td style="padding: 0.75rem 1rem;">Spherical 5R1P with Prismatic Joint</td>
+                  <td style="padding: 0.75rem 1rem;">Standard DH</td>
+                  <td style="padding: 0.75rem 1rem;"><a href="/?robot=Stanford" style="color: #ea580c; font-weight: 700;">Simulate Stanford Arm</a></td>
+                </tr>
+                <tr>
+                  <td style="padding: 0.75rem 1rem; font-weight: 700;">SCARA Arm</td>
+                  <td style="padding: 0.75rem 1rem;">Educational / Industrial</td>
+                  <td style="padding: 0.75rem 1rem;">4</td>
+                  <td style="padding: 0.75rem 1rem;">Selective Compliance 3R1P</td>
+                  <td style="padding: 0.75rem 1rem;">Standard DH</td>
+                  <td style="padding: 0.75rem 1rem;"><a href="/?robot=skeleton_SCARA" style="color: #ea580c; font-weight: 700;">Simulate SCARA</a></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section aria-labelledby="theory-heading" style="margin-bottom: 3rem;">
+          <h2 id="theory-heading" style="font-size: 1.75rem; font-weight: 800; margin-bottom: 1.5rem; border-bottom: 2px solid #e7e5e4; padding-bottom: 0.5rem;">
+            Theoretical Robotics Foundations &amp; Mathematical Rigor
+          </h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; font-size: 0.9375rem; line-height: 1.6; color: #44403c;">
+            <article style="background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e7e5e4;">
+              <h3 style="font-size: 1.125rem; font-weight: 800; color: #0c0a09; margin-bottom: 0.5rem;">Denavit-Hartenberg (DH) Matrix Conventions</h3>
+              <p>
+                <strong>Standard DH:</strong> Evaluates joint transformations along link coordinate frames where Z<sub>i-1</sub> is the joint axis, X<sub>i</sub> is the common normal, and the transformation matrix is computed as:
+              </p>
+              <pre style="background: #f5f5f4; padding: 0.75rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8125rem; overflow-x: auto; margin: 0.5rem 0;">A_i = Rot_Z(&theta;_i) &middot; Trans_Z(d_i) &middot; Trans_X(a_i) &middot; Rot_X(&alpha;_i)</pre>
+              <p>
+                <strong>Modified DH (Craig, 1986):</strong> Joint axis i aligns with Z<sub>i</sub>, common normal a<sub>i-1</sub> lies along X<sub>i-1</sub>, following the sequence Rot_X(&alpha;<sub>i-1</sub>) &middot; Trans_X(a<sub>i-1</sub>) &middot; Rot_Z(&theta;<sub>i</sub>) &middot; Trans_Z(d<sub>i</sub>).
+              </p>
+            </article>
+
+            <article style="background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e7e5e4;">
+              <h3 style="font-size: 1.125rem; font-weight: 800; color: #0c0a09; margin-bottom: 0.5rem;">Analytical 6R Inverse Kinematics (Pieper's Decoupling)</h3>
+              <p>
+                For manipulators with a spherical wrist, the wrist center position <strong>p<sub>w</sub></strong> is independent of wrist joint angles (&theta;<sub>4</sub>, &theta;<sub>5</sub>, &theta;<sub>6</sub>):
+              </p>
+              <pre style="background: #f5f5f4; padding: 0.75rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8125rem; overflow-x: auto; margin: 0.5rem 0;">p_w = p - d_6 &middot; R &middot; [0, 0, 1]^T</pre>
+              <p>
+                The position problem for joints 1, 2, and 3 is solved first geometrically. Next, the orientation problem R<sub>36</sub> = R<sub>03</sub><sup>T</sup> &middot; R is decomposed into Euler angle configurations, evaluating up to 8 branches across shoulder, elbow, and wrist flips.
+              </p>
+            </article>
+
+            <article style="background: white; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e7e5e4;">
+              <h3 style="font-size: 1.125rem; font-weight: 800; color: #0c0a09; margin-bottom: 0.5rem;">Jacobian &amp; Dexterity Metrics</h3>
+              <p>
+                The 6&times;N spatial geometric Jacobian matrix <strong>J(q)</strong> maps joint velocities to Cartesian linear and angular velocities. KyntriX calculates the <strong>Yoshikawa Manipulability Index</strong>:
+              </p>
+              <pre style="background: #f5f5f4; padding: 0.75rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8125rem; overflow-x: auto; margin: 0.5rem 0;">w = &radic;(det(J &middot; J^T))</pre>
+              <p>
+                Near kinematic singularities where degrees of freedom vanish, w &rarr; 0 and the matrix condition number &kappa;(J) &rarr; &infin;.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section aria-labelledby="faq-heading" style="margin-bottom: 3rem;">
+          <h2 id="faq-heading" style="font-size: 1.75rem; font-weight: 800; margin-bottom: 1.5rem; border-bottom: 2px solid #e7e5e4; padding-bottom: 0.5rem;">
+            Frequently Asked Questions (Robotics Engineering FAQ)
+          </h2>
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <details style="background: white; padding: 1rem 1.25rem; border-radius: 0.75rem; border: 1px solid #e7e5e4;" open>
+              <summary style="font-size: 1.0625rem; font-weight: 800; cursor: pointer; color: #0c0a09;">What is KyntriX Robotics Simulation Platform?</summary>
+              <p style="margin-top: 0.75rem; font-size: 0.9375rem; line-height: 1.6; color: #44403c;">
+                KyntriX is a next-generation, browser-based 3D robotics simulation platform designed for learning, analyzing, and synthesizing serial robotic manipulators. Inspired by the desktop RoboAnalyzer software developed at IIT Delhi, KyntriX provides authoritative kinematics, forward and inverse solvers, dynamic trajectory generation, and full CAD mesh visualization without requiring any native desktop installation.
+              </p>
+            </details>
+
+            <details style="background: white; padding: 1rem 1.25rem; border-radius: 0.75rem; border: 1px solid #e7e5e4;">
+              <summary style="font-size: 1.0625rem; font-weight: 800; cursor: pointer; color: #0c0a09;">How does KyntriX calculate Denavit-Hartenberg (DH) parameters?</summary>
+              <p style="margin-top: 0.75rem; font-size: 0.9375rem; line-height: 1.6; color: #44403c;">
+                KyntriX implements both Standard DH (Denavit &amp; Hartenberg, 1955) and Modified Craig DH (Craig, 1986). Users can switch between radians/meters and degrees/millimeters. The forward kinematics engine authoritatively evaluates 4&times;4 homogeneous transformation matrices A<sub>i</sub> and cumulative matrices T<sub>0i</sub> from base to end-effector.
+              </p>
+            </details>
+
+            <details style="background: white; padding: 1rem 1.25rem; border-radius: 0.75rem; border: 1px solid #e7e5e4;">
+              <summary style="font-size: 1.0625rem; font-weight: 800; cursor: pointer; color: #0c0a09;">How does the Inverse Kinematics (IK) multi-solver work?</summary>
+              <p style="margin-top: 0.75rem; font-size: 0.9375rem; line-height: 1.6; color: #44403c;">
+                KyntriX utilizes a hierarchical IK pipeline: closed-form geometric solvers for 3R planar and SCARA robots; closed-form 6R spherical wrist decoupling (Pieper's method) evaluating up to 8 branches; and numerical Damped Least Squares (DLS / Levenberg-Marquardt) with null-space optimization running in dedicated Web Workers. Every candidate solution is verified through forward kinematics to enforce position errors below 1.0 mm and orientation errors below 0.01 radians.
+              </p>
+            </details>
+
+            <details style="background: white; padding: 1rem 1.25rem; border-radius: 0.75rem; border: 1px solid #e7e5e4;">
+              <summary style="font-size: 1.0625rem; font-weight: 800; cursor: pointer; color: #0c0a09;">Can I simulate custom serial manipulators?</summary>
+              <p style="margin-top: 0.75rem; font-size: 0.9375rem; line-height: 1.6; color: #44403c;">
+                Yes. The Custom Robot Creator allows synthesis of arbitrary serial kinematic chains up to 8 DOF. You can configure revolute or prismatic joints, assign joint limits, edit DH parameters, validate through TypeScript schemas, and export or import custom robot definitions in JSON format.
+              </p>
+            </details>
+
+            <details style="background: white; padding: 1rem 1.25rem; border-radius: 0.75rem; border: 1px solid #e7e5e4;">
+              <summary style="font-size: 1.0625rem; font-weight: 800; cursor: pointer; color: #0c0a09;">What units and coordinate standards are used?</summary>
+              <p style="margin-top: 0.75rem; font-size: 0.9375rem; line-height: 1.6; color: #44403c;">
+                All internal calculations strictly adhere to SI units (meters for linear displacement and radians for angles). The 3D visualization operates in an authoritative Z-up right-handed Cartesian coordinate frame matching standard academic robotics conventions.
+              </p>
+            </details>
+          </div>
+        </section>
+
+        <section aria-labelledby="heritage-heading" style="padding: 1.5rem; background: #ffffff; border-radius: 1rem; border: 1px solid #e7e5e4; margin-bottom: 2rem;">
+          <h2 id="heritage-heading" style="font-size: 1.25rem; font-weight: 800; color: #0c0a09; margin-bottom: 0.5rem;">Academic Heritage &amp; Acknowledgments</h2>
+          <p style="font-size: 0.9375rem; line-height: 1.6; color: #57534e;">
+            KyntriX is inspired by and developed as the modern, web-native successor to the desktop <strong>RoboAnalyzer</strong> software created at IIT Delhi under the supervision of Prof. S.K. Saha. Developed for high-performance robotics education, kinematic research, and industrial automation analysis.
+          </p>
+        </section>
+      </main>
+
+      <footer style="background: #f7f4ed; border-top: 1px solid #e7e5e4; padding: 2rem 1.5rem; text-align: center; font-size: 0.875rem; color: #78716c;">
+        <p style="margin-bottom: 0.5rem;">&copy; 2026 KyntriX Robotics Simulation Platform. Built for open robotics education and research.</p>
+        <p>
+          <a href="/?studio=dh" style="color: #44403c; margin: 0 0.5rem;">DH Studio</a> &bull;
+          <a href="/?studio=ik" style="color: #44403c; margin: 0 0.5rem;">Inverse Kinematics</a> &bull;
+          <a href="/?action=catalog" style="color: #44403c; margin: 0 0.5rem;">42 Robot Models</a> &bull;
+          <a href="/sitemap.xml" style="color: #44403c; margin: 0 0.5rem;">XML Sitemap</a> &bull;
+          <a href="/robots.txt" style="color: #44403c; margin: 0 0.5rem;">Robots.txt</a> &bull;
+          <a href="/llms.txt" style="color: #44403c; margin: 0 0.5rem;">LLMs.txt (AI Search)</a>
+        </p>
+      </footer>
+    </div>
+
+    <!-- Noscript Fallback for Search Crawlers and Non-JS Browsers -->
+    <noscript>
+      <div style="padding: 2rem; background: #fff3cd; color: #856404; text-align: center; font-family: sans-serif;">
+        <h2>JavaScript Required for Interactive 3D WebGL Simulation</h2>
+        <p>
+          You are viewing the static documentation version of KyntriX. Please enable JavaScript in your browser to experience the real-time 3D Three.js WebGL simulation canvas, interactive joint sliders, and dynamic trajectory playback.
+        </p>
+      </div>
+    </noscript>
+
+    <!-- Application Entrypoint -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

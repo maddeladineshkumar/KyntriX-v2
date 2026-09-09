@@ -26,6 +26,7 @@ const RobotCatalogModal = lazy(() =>
 const WorkspaceStudio = lazy(() =>
   import('./features/workspace/WorkspaceStudio').then((m) => ({ default: m.WorkspaceStudio }))
 );
+import { useSEOMeta } from './features/seo/useSEOMeta';
 
 const StudioLoadingFallback: React.FC<{ label?: string }> = ({ label = 'Loading studio module...' }) => (
   <div
@@ -113,6 +114,13 @@ export function App() {
   const [showJointDrawer, setShowJointDrawer] = useState(false);
   const [showIKDrawer, setShowIKDrawer] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+
+  // Dynamic SEO metadata & URL parameter sync
+  useSEOMeta({
+    catalogOpen,
+    setCatalogOpen,
+    activeModal,
+  });
 
   const lastTriggerRef = useRef<HTMLElement | null>(null);
   const prevDialogOpenRef = useRef(false);
@@ -351,7 +359,9 @@ export function App() {
             <source srcSet="/wordmark.webp" type="image/webp" />
             <img
               src="/wordmark.png"
-              alt="KyntriX"
+              alt="KyntriX Robotics Laboratory"
+              width="120"
+              height="24"
               className="h-6 w-auto object-contain cursor-default"
               draggable={false}
             />
@@ -400,7 +410,9 @@ export function App() {
             <source srcSet="/wordmark.webp" type="image/webp" />
             <img
               src="/wordmark.png"
-              alt="KyntriX"
+              alt="KyntriX — 3D Robotics Simulation Platform"
+              width="180"
+              height="40"
               className="h-7 sm:h-9 md:h-10 lg:h-11 w-auto object-contain cursor-default"
               draggable={false}
             />

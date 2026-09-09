@@ -130,7 +130,10 @@ export const RobotCatalogModal: React.FC<RobotCatalogModalProps> = ({ isOpen, on
         <div className="catalog-header flex items-center justify-between px-3.5 py-2 sm:px-6 sm:py-3 border-b border-stone-200/80 bg-white/80 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-50 border border-amber-200 shadow-xs flex items-center justify-center p-1 shrink-0">
-              <img src="/logo.png" alt="KYNTRIX Logo" className="w-full h-full object-contain" />
+              <picture>
+                <source srcSet="/logo.webp" type="image/webp" />
+                <img src="/logo.png" alt="KyntriX Robotics Laboratory Insignia" width="40" height="40" loading="lazy" className="w-full h-full object-contain" />
+              </picture>
             </div>
             <div className="min-w-0">
               <h2 id="catalog-modal-title" className="text-xs sm:text-base font-black text-black tracking-tight truncate">

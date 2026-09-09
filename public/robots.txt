@@ -1,0 +1,41 @@
+﻿# ==============================================================================
+# KyntriX Robotics Simulation Platform — Search Engine Robots Configuration
+# Authoritative URL: https://kyntrix.org
+# Description: Web-native 3D robotics simulation, kinematics, and DH analysis
+# ==============================================================================
+
+User-agent: *
+Allow: /
+Allow: /assets/
+Allow: /models/
+Allow: /icons/
+Allow: /favicon.svg
+Allow: /favicon.ico
+Allow: /manifest.json
+Allow: /wordmark.webp
+Allow: /wordmark.png
+Allow: /logo.webp
+Allow: /logo.png
+
+# Disallow internal temporary directories or map files
+Disallow: /tmp/
+Disallow: /*.map$
+
+# Explicit allowances for search AI and generative answer engines
+User-agent: Google-Extended
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Reference production XML sitemap
+Sitemap: https://kyntrix.org/sitemap.xml

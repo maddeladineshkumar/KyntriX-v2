@@ -1,0 +1,57 @@
+# KyntriX — Web-Native 3D Robotics Kinematics & Simulation Laboratory
+> Authoritative documentation for AI Search, LLMs, and Robotics Researchers.
+> Website: https://kyntrix.org
+> Repository: https://github.com/maddeladineshkumar/Robo
+
+## 1. Project Overview
+KyntriX is a production-grade, browser-based 3D robotics simulation platform designed for learning, analyzing, and synthesizing serial robotic manipulators. Inspired by the desktop RoboAnalyzer software developed at IIT Delhi, KyntriX operates natively in modern web browsers without plugins or desktop installation.
+
+All internal computations strictly adhere to Standard International (SI) units: meters (m) for linear displacement and radians (rad) for angular orientation. The 3D visualization operates in an authoritative Z-up right-handed Cartesian coordinate frame.
+
+## 2. Core Kinematics Engine
+
+### Forward Kinematics (FK)
+Unified implementation of Denavit-Hartenberg (DH) forward kinematics supporting both standard and modified conventions:
+- **Standard DH (Denavit & Hartenberg, 1955)**:
+  A_i = Rot_Z(theta_i) * Trans_Z(d_i) * Trans_X(a_i) * Rot_X(alpha_i)
+- **Modified DH (Craig, 1986)**:
+  A_i = Rot_X(alpha_{i-1}) * Trans_X(a_{i-1}) * Rot_Z(theta_i) * Trans_Z(d_i)
+
+### Inverse Kinematics (IK) Multi-Strategy Pipeline
+1. **Analytical 3R Planar Solver**: Geometric closed-form solver for 3-DOF planar manipulators.
+2. **Analytical SCARA Solver**: Closed-form solver for SCARA architectures (e.g. 3R1P).
+3. **Analytical 6R Spherical Wrist Solver**: Closed-form Pieper decoupling method for 6-DOF industrial manipulators with intersecting wrist axes (p_w = p - d_6 * R * [0, 0, 1]^T), solving up to 8 distinct branches (Shoulder Left/Right x Elbow Up/Down x Wrist Normal/Flip).
+4. **Numerical Damped Least Squares (DLS / Levenberg-Marquardt)**: Adaptive damping parameter lambda with null-space secondary projection to prevent joint limit violations and singular explosion. Runs off-thread via dedicated Web Workers.
+5. **Mandatory Verification**: Every candidate solution is verified through forward kinematics to enforce position error <= 1.0 mm and rotation error <= 0.01 rad.
+
+### Differential Kinematics & Dexterity Metrics
+- **Spatial Jacobian Matrix**: 6 x N matrix J(q) mapping joint velocities to end-effector Cartesian linear and angular velocities.
+- **Yoshikawa Manipulability Index**: w = sqrt(det(J * J^T)). Measures distance from kinematic singularities.
+- **Matrix Condition Number**: kappa(J) = ||J|| * ||J^+|| >= 1. Measures directional velocity uniformity.
+
+## 3. Robot Model Catalog (42 Manipulators)
+
+### Industrial Robot Models (22 High-Fidelity Binary STL Geometry):
+- **ABB**: IRB 120 (6R), IRB 1410 (6R), IRB 2400 (6R), IRB 4400 (6R), IRB 6620 (6R), IRB 6650 (6R)
+- **KUKA**: KR5 (6R), KR5 Sixx (6R), KR5 IND (6R), KR62 (6R), KR210 Ultra (6R)
+- **FANUC**: M-10iA (6R), M-410iB (4R palletizer), R-1000i (6R), R-2000i (6R), S-430 (6R)
+- **Standard Research & Industrial Arms**: Puma 560 (Unimate 6R), Stanford Arm (5R1P spherical), Epson C3 (6R compact), MTAB Aristo (6R educational), MTAB Mini (5R educational), SmallArm (6R desktop)
+
+### Kinematic Skeleton Primitives (20 Educational Chains):
+- 1R, 1P, 2R, 2P, 3R, 3P, 4R, 5R, 6R, SCARA (3R1P), SRS (7-DOF redundant spherical-revolute-spherical)
+- Hybrid chains: PPPRR, PPR, PR, PRP, PRR, RP, RPP, RPR, RRP
+
+## 4. Trajectory Generation & Dynamic Telemetry
+- **Profiles**: Trapezoidal velocity profiles (constant acceleration), Cubic splines, and minimum-jerk Quintic polynomials.
+- **Scrubbing & Playback**: Continuous linear interpolation (LERP) across waypoints with 0.1x to 5.0x variable speed control.
+- **Signature Trajectory**: 280-waypoint pre-computed Cartesian THANKS trajectory validating complex 6-DOF coordinated motion.
+- **Telemetry Visualizations**: Synchronized time-series plotting of joint angles q(t), velocities q_dot(t), accelerations q_ddot(t), end-effector Cartesian coordinates [X(t), Y(t), Z(t)], and manipulability w(t).
+
+## 5. Reachable Workspace Synthesis
+- Off-thread Monte Carlo and boundary point cloud generator calculating the 3D reachable and dexterous workspace volume of any loaded or custom serial manipulator.
+
+## 6. Technical Stack
+- Frontend: React 19, TypeScript, Tailwind CSS v4, Zustand 5, Three.js (WebGL)
+- Build System: Vite 8, VitePWA (offline progressive web application)
+- Code Quality: Strict mathematical testing with Vitest (197 passing unit and integration tests across 35 test suites)
+- Attribution: Inspired by RoboAnalyzer developed at IIT Delhi under Prof. S.K. Saha.

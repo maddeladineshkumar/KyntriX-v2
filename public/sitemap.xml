@@ -3,17 +3,17 @@
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <!-- Core Homepage & Primary Simulation Laboratory -->
   <url>
-    <loc>https://kyntrix.org/</loc>
+    <loc>https://kyntrix.in.net/</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>KyntriX 3D Robotics Kinematics &amp; Simulation Laboratory</image:title>
       <image:caption>Interactive 3D serial manipulator kinematics, DH parameter calculation, and physics simulation</image:caption>
     </image:image>
     <image:image>
-      <image:loc>https://kyntrix.org/logo.png</image:loc>
+      <image:loc>https://kyntrix.in.net/logo.png</image:loc>
       <image:title>KyntriX Robotics Laboratory Logo</image:title>
       <image:caption>KyntriX robotics laboratory insignia</image:caption>
     </image:image>
@@ -21,79 +21,79 @@
 
   <!-- Interactive Robotics Studios -->
   <url>
-    <loc>https://kyntrix.org/?studio=dh</loc>
+    <loc>https://kyntrix.in.net/?studio=dh</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Denavit-Hartenberg (DH) Parameter Studio — KyntriX</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?studio=ik</loc>
+    <loc>https://kyntrix.in.net/?studio=ik</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Inverse Kinematics 6R Analytical and Numerical DLS Solver Studio — KyntriX</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?studio=transform</loc>
+    <loc>https://kyntrix.in.net/?studio=transform</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Homogeneous Transformation Matrix Studio — KyntriX</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?studio=trajectory</loc>
+    <loc>https://kyntrix.in.net/?studio=trajectory</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Robot Trajectory Planning and Dynamic Simulation Studio — KyntriX</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?studio=analysis</loc>
+    <loc>https://kyntrix.in.net/?studio=analysis</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Kinematic Telemetry and Time-Series Plots Studio — KyntriX</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?studio=workspace</loc>
+    <loc>https://kyntrix.in.net/?studio=workspace</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>3D Reachable Workspace Point Cloud Generator — KyntriX</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?studio=custom</loc>
+    <loc>https://kyntrix.in.net/?studio=custom</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Custom Robot Manipulator Architecture Synthesizer — KyntriX</image:title>
     </image:image>
   </url>
 
   <!-- Full Robot Model Catalog -->
   <url>
-    <loc>https://kyntrix.org/?action=catalog</loc>
+    <loc>https://kyntrix.in.net/?action=catalog</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
@@ -101,422 +101,422 @@
 
   <!-- Individual 42 Robot Kinematic Model Environments -->
   <url>
-    <loc>https://kyntrix.org/?robot=ABBIRB120</loc>
+    <loc>https://kyntrix.in.net/?robot=ABBIRB120</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>ABBIRB120 (6-DOF ABB) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=ABBIRB1410</loc>
+    <loc>https://kyntrix.in.net/?robot=ABBIRB1410</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>ABBIRB1410 (6-DOF ABB) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=ABBIRB2400</loc>
+    <loc>https://kyntrix.in.net/?robot=ABBIRB2400</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>ABBIRB2400 (6-DOF ABB) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=ABBIRB4400L30</loc>
+    <loc>https://kyntrix.in.net/?robot=ABBIRB4400L30</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>ABBIRB4400L30 (6-DOF ABB) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=ABBIRB6620</loc>
+    <loc>https://kyntrix.in.net/?robot=ABBIRB6620</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>ABBIRB6620 (6-DOF ABB) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=ABBIRB6650</loc>
+    <loc>https://kyntrix.in.net/?robot=ABBIRB6650</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>ABBIRB6650 (6-DOF ABB) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=EpsonC3A60CT</loc>
+    <loc>https://kyntrix.in.net/?robot=EpsonC3A60CT</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>EpsonC3A60CT (6-DOF Epson) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=FanucM10iA</loc>
+    <loc>https://kyntrix.in.net/?robot=FanucM10iA</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>FanucM10iA (6-DOF Fanuc) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=FanucM410iB</loc>
+    <loc>https://kyntrix.in.net/?robot=FanucM410iB</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>FanucM410iB (5-DOF Fanuc) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=FanucR1000i</loc>
+    <loc>https://kyntrix.in.net/?robot=FanucR1000i</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>FanucR1000i (6-DOF Fanuc) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=FanucR2000i</loc>
+    <loc>https://kyntrix.in.net/?robot=FanucR2000i</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>FanucR2000i (6-DOF Fanuc) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=FanucS430</loc>
+    <loc>https://kyntrix.in.net/?robot=FanucS430</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>FanucS430i (6-DOF Fanuc) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=KukaKR210Ultra</loc>
+    <loc>https://kyntrix.in.net/?robot=KukaKR210Ultra</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>KukaKR210 Ultra (6-DOF Kuka) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=KukaKR5</loc>
+    <loc>https://kyntrix.in.net/?robot=KukaKR5</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>KukaKR5 (6-DOF Kuka) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=KukaKR5Sixx</loc>
+    <loc>https://kyntrix.in.net/?robot=KukaKR5Sixx</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>KukaKR5Sixx (6-DOF Kuka) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=KukaKR5_IND</loc>
+    <loc>https://kyntrix.in.net/?robot=KukaKR5_IND</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>KukaKR5 (6-DOF Kuka) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=KukaKR62</loc>
+    <loc>https://kyntrix.in.net/?robot=KukaKR62</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>KukaKR62 (6-DOF Kuka) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=MTAB_ARISTO</loc>
+    <loc>https://kyntrix.in.net/?robot=MTAB_ARISTO</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>ARISTO (6-DOF MTAB) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=MTAB_Mini</loc>
+    <loc>https://kyntrix.in.net/?robot=MTAB_Mini</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>MTAB Minirobot (5-DOF MTAB) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=Puma560</loc>
+    <loc>https://kyntrix.in.net/?robot=Puma560</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Puma560 (6-DOF Unimation) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=SmallArm</loc>
+    <loc>https://kyntrix.in.net/?robot=SmallArm</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>SmallArm (6-DOF Small) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=Stanford</loc>
+    <loc>https://kyntrix.in.net/?robot=Stanford</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Stanford Arm (6-DOF Stanford) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_1P</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_1P</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton 1P (1-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_1R</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_1R</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton 1R (1-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_2P</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_2P</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton 2P (2-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_2R</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_2R</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton 2R (2-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_PR</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_PR</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton PR (2-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_RP</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_RP</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton RP (2-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_3P</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_3P</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton 3P (3-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_3R</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_3R</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton 3R (3-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_PPR</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_PPR</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton PPR (3-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_PRP</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_PRP</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton PRP (3-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_PRR</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_PRR</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton PRR (3-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_RPP</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_RPP</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton RPP (3-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_RPR</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_RPR</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton RPR (3-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_RRP</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_RRP</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton RRP (3-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_4R</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_4R</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton 4R (4-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_SCARA</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_SCARA</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton SCARA (4-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_5R</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_5R</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton 5R (5-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_PPPRR</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_PPPRR</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton PPPRR (5-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_6R</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_6R</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton 6R (6-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://kyntrix.org/?robot=skeleton_SRS</loc>
+    <loc>https://kyntrix.in.net/?robot=skeleton_SRS</loc>
     <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://kyntrix.org/wordmark.png</image:loc>
+      <image:loc>https://kyntrix.in.net/wordmark.png</image:loc>
       <image:title>Skeleton SRS (7-DOF Generic) 3D Robotics Kinematics &amp; DH Simulation</image:title>
     </image:image>
   </url>

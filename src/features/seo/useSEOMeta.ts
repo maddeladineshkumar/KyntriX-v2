@@ -131,7 +131,7 @@ export function useSEOMeta(options?: {
 
     const queryStr = newParams.toString();
     const newRelativeUrl = queryStr ? `${window.location.pathname}?${queryStr}` : window.location.pathname;
-    const fullCanonicalUrl = `https://kyntrix.org${newRelativeUrl}`;
+    const fullCanonicalUrl = `https://kyntrix.in.net${newRelativeUrl}`;
 
     try {
       window.history.replaceState(null, '', newRelativeUrl);

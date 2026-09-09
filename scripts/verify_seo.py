@@ -26,7 +26,7 @@ def test_all():
     assert len(urls) >= 45, f"Expected at least 45 URLs, found {len(urls)}"
     for u in urls:
         loc = u.find("{http://www.sitemaps.org/schemas/sitemap/0.9}loc").text
-        assert loc.startswith("https://kyntrix.org"), f"Invalid loc: {loc}"
+        assert loc.startswith("https://kyntrix.in.net"), f"Invalid loc: {loc}"
     print(f"[PASS] Sitemap XML valid with {len(urls)} URLs adhering to schema.")
 
     # 3. Robots.txt
@@ -34,7 +34,7 @@ def test_all():
     assert robots_path.exists(), "robots.txt missing"
     robots_txt = robots_path.read_text(encoding="utf-8")
     assert "User-agent: *" in robots_txt, "robots.txt missing wildcard user-agent"
-    assert "Sitemap: https://kyntrix.org/sitemap.xml" in robots_txt, "robots.txt missing sitemap link"
+    assert "Sitemap: https://kyntrix.in.net/sitemap.xml" in robots_txt, "robots.txt missing sitemap link"
     assert "Allow: /" in robots_txt, "robots.txt missing root allow"
     assert "Disallow: /tmp/" in robots_txt, "robots.txt missing disallow"
     print(f"[PASS] Robots.txt valid with explicit crawl directives and sitemap reference.")
@@ -64,7 +64,7 @@ def test_all():
     assert '<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />' in html
     assert '<title>' in html and '</title>' in html
     assert '<meta name="description"' in html
-    assert '<link rel="canonical" href="https://kyntrix.org/" />' in html
+    assert '<link rel="canonical" href="https://kyntrix.in.net/" />' in html
     assert '<meta property="og:title"' in html
     assert '<meta property="og:image"' in html
     assert '<meta name="twitter:card"' in html

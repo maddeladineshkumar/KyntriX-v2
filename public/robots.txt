@@ -1,6 +1,6 @@
-﻿# ==============================================================================
+# ==============================================================================
 # KyntriX Robotics Simulation Platform — Search Engine Robots Configuration
-# Authoritative URL: https://kyntrix.org
+# Authoritative URL: https://kyntrix.in.net
 # Description: Web-native 3D robotics simulation, kinematics, and DH analysis
 # ==============================================================================
 
@@ -38,4 +38,4 @@ User-agent: Applebot-Extended
 Allow: /
 
 # Reference production XML sitemap
-Sitemap: https://kyntrix.org/sitemap.xml
+Sitemap: https://kyntrix.in.net/sitemap.xml

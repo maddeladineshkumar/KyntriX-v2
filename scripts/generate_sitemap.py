@@ -7,7 +7,7 @@ catalog_path = Path('src/data/robots/robotsCatalog.json')
 with open(catalog_path, 'r', encoding='utf-8') as f:
     catalog = json.load(f)
 
-BASE_URL = 'https://kyntrix.org'
+BASE_URL = 'https://kyntrix.in.net'
 TODAY = '2026-09-09'
 
 studios = [

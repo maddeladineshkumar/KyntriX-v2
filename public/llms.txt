@@ -1,6 +1,6 @@
 # KyntriX — Web-Native 3D Robotics Kinematics & Simulation Laboratory
 > Authoritative documentation for AI Search, LLMs, and Robotics Researchers.
-> Website: https://kyntrix.org
+> Website: https://kyntrix.in.net
 > Repository: https://github.com/maddeladineshkumar/Robo
 
 ## 1. Project Overview

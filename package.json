@@ -9,7 +9,9 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:seo": "python scripts/verify_seo.py",
+    "sitemap": "python scripts/generate_sitemap.py"
   },
   "dependencies": {
     "clsx": "^2.1.1",

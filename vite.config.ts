@@ -12,7 +12,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'favicon.svg', 'favicon-*.png', 'apple-touch-icon.png', 'logo.*', 'wordmark.*', 'icons/*.png', 'models/**/*.stl', 'models/**/*.json'],
+      includeAssets: ['favicon.ico', 'favicon.svg', 'favicon-*.png', 'apple-touch-icon.png', 'logo.*', 'wordmark.*', 'icons/*.png', 'models/**/*.stl', 'models/**/*.json', 'robots.txt', 'sitemap.xml', 'llms.txt'],
       manifest: {
         name: 'KyntriX',
         short_name: 'KyntriX',
@@ -35,6 +35,16 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [
+          /^\/robots\.txt$/,
+          /^\/sitemap\.xml$/,
+          /^\/llms\.txt$/,
+          /.*\.xml$/,
+          /.*\.txt$/,
+          /.*\.stl$/,
+          /.*\.json$/,
+        ],
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname.includes('/models/') || url.pathname.endsWith('.stl') || url.pathname.endsWith('.json'),

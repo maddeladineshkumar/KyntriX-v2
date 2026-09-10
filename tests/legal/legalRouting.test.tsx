@@ -96,6 +96,7 @@ describe('Legal Routing and Demo Button Removal Suite', () => {
       expect(content).toContain('User Conduct & Academic Integrity');
       expect(content).toContain('Disclaimer of Warranties & Limitation of Liability');
       expect(content).toContain('Modifications & Governing Law');
+      expect(content).not.toContain('kyntrix.edu / KyntriX-v2');
 
       act(() => {
         root.unmount();

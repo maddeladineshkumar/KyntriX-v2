@@ -20,8 +20,7 @@ export const TermsOfServiceView: React.FC = () => {
           </div>
         </div>
         <p className="text-sm text-stone-700 leading-relaxed pt-2">
-          Welcome to KyntriX Robotics (<span className="font-mono text-xs font-bold text-orange-950">kyntrix.edu / KyntriX-v2</span>). 
-          These Terms of Service govern your access to and use of our web-native 3D robotics simulation platform, 
+          Welcome to KyntriX Robotics. These Terms of Service govern your access to and use of our web-native 3D robotics simulation platform, 
           deterministic kinematic solvers, custom arm builders, classroom environments, and problem arena challenge modules.
         </p>
       </div>

@@ -53,8 +53,8 @@ export const LeetCodeStatsCard: React.FC<LeetCodeStatsCardProps> = ({
   className = '',
   defaultMode = 'live',
 }) => {
-  // Mode toggle: 'live' (synced with actual Arena & Badges) by default, or 'reference' (exact screenshot)
-  const [viewMode, setViewMode] = useState<'live' | 'reference'>(defaultMode);
+  // Mode: 'live' (synced with actual Arena & Badges) by default
+  const [viewMode] = useState<'live' | 'reference'>(defaultMode);
   const [showLockedModal, setShowLockedModal] = useState<boolean>(false);
   const [hoveredDay, setHoveredDay] = useState<{
     day: CalendarDay;
@@ -413,30 +413,9 @@ export const LeetCodeStatsCard: React.FC<LeetCodeStatsCardProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 bg-[#2a2a2a] p-1 rounded-xl border border-stone-700/60 text-[11px] font-bold">
-          <button
-            type="button"
-            onClick={() => setViewMode('live')}
-            className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-              viewMode === 'live'
-                ? 'bg-stone-800 text-teal-400 shadow-xs border border-teal-500/30'
-                : 'text-stone-400 hover:text-stone-200'
-            }`}
-          >
-            <RefreshCw className="w-3 h-3" />
-            <span>Arena Synced</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('reference')}
-            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-              viewMode === 'reference'
-                ? 'bg-stone-800 text-amber-400 shadow-xs border border-amber-500/30'
-                : 'text-stone-400 hover:text-stone-200'
-            }`}
-          >
-            Exact Showcase
-          </button>
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#282828] border border-teal-500/30 text-[11px] font-bold text-teal-400 shadow-xs">
+          <RefreshCw className="w-3 h-3 text-teal-400" />
+          <span>Arena Synced</span>
         </div>
       </div>
 

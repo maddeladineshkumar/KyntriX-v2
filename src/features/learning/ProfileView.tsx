@@ -12,7 +12,6 @@ import {
   Edit3,
   LogOut,
   LogIn,
-  Shield,
   Lock,
   Layers,
 } from 'lucide-react';
@@ -115,20 +114,12 @@ export const ProfileView: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => setAuthModalOpen(true)}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-200 text-xs font-bold transition-all active:scale-95 cursor-pointer"
-                >
-                  <Shield className="w-3.5 h-3.5" />
-                  <span>Switch Account</span>
-                </button>
-
-                <button
-                  type="button"
                   onClick={logout}
-                  className="p-2 rounded-xl border border-stone-300 text-stone-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-stone-300 text-stone-600 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 text-xs font-bold transition-all active:scale-95 cursor-pointer"
                   title="Sign Out"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Log Out</span>
                 </button>
               </>
             ) : (

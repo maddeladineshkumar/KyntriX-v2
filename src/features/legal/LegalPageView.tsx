@@ -1,5 +1,5 @@
-import React from 'react';
-import { ArrowLeft, ShieldCheck, FileCheck, Bot, Printer } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { ArrowLeft, ShieldCheck, FileCheck, Bot, Printer, ArrowUp } from 'lucide-react';
 import { PrivacyPolicyView } from './PrivacyPolicyView';
 import { TermsOfServiceView } from './TermsOfServiceView';
 
@@ -12,8 +12,10 @@ export const LegalPageView: React.FC<LegalPageViewProps> = ({
   initialTab = 'privacy',
   onBack,
 }) => {
-  const [activeTab, setActiveTab] = React.useState<'privacy' | 'terms'>(initialTab);
-  const [prevInitialTab, setPrevInitialTab] = React.useState(initialTab);
+  const [activeTab, setActiveTab] = useState<'privacy' | 'terms'>(initialTab);
+  const [prevInitialTab, setPrevInitialTab] = useState(initialTab);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   if (prevInitialTab !== initialTab) {
     setPrevInitialTab(initialTab);
@@ -26,6 +28,27 @@ export const LegalPageView: React.FC<LegalPageViewProps> = ({
     if (window.location.pathname !== newPath) {
       window.history.pushState({}, '', newPath);
     }
+    if (scrollContainerRef.current) {
+      if (typeof scrollContainerRef.current.scrollTo === 'function') {
+        scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        scrollContainerRef.current.scrollTop = 0;
+      }
+    }
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setShowScrollTop(e.currentTarget.scrollTop > 350);
+  };
+
+  const scrollToTop = () => {
+    if (scrollContainerRef.current) {
+      if (typeof scrollContainerRef.current.scrollTo === 'function') {
+        scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        scrollContainerRef.current.scrollTop = 0;
+      }
+    }
   };
 
   const handlePrint = () => {
@@ -33,9 +56,14 @@ export const LegalPageView: React.FC<LegalPageViewProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f4ed] text-stone-900 font-sans flex flex-col">
+    <div
+      ref={scrollContainerRef}
+      onScroll={handleScroll}
+      tabIndex={-1}
+      className="fixed inset-0 z-50 w-full h-full h-[100dvh] bg-[#f7f4ed] text-stone-900 font-sans flex flex-col overflow-y-auto overflow-x-hidden overscroll-contain touch-pan-y scroll-smooth print:static print:h-auto print:overflow-visible focus:outline-none"
+    >
       {/* Top Sticky Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-stone-300 shadow-xs">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-stone-300 shadow-xs shrink-0">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
           {/* Left: Back to Simulator & Brand */}
           <div className="flex items-center gap-3">
@@ -112,7 +140,7 @@ export const LegalPageView: React.FC<LegalPageViewProps> = ({
       </main>
 
       {/* Footer */}
-      <footer className="py-6 border-t border-stone-300 bg-white/50 text-center text-xs text-stone-500 space-y-1">
+      <footer className="py-6 border-t border-stone-300 bg-white/50 text-center text-xs text-stone-500 space-y-1 shrink-0">
         <p className="font-semibold text-stone-700">
           KyntriX Robotics & Deterministic Kinematics Laboratory
         </p>
@@ -120,6 +148,20 @@ export const LegalPageView: React.FC<LegalPageViewProps> = ({
           All algorithms, 3D assets, and educational problem sets are strictly governed by our Terms of Service.
         </p>
       </footer>
+
+      {/* Floating Scroll to Top Button */}
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={scrollToTop}
+          title="Scroll back to top"
+          aria-label="Scroll back to top"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-lg transition-all active:scale-95 cursor-pointer animate-in fade-in duration-200"
+        >
+          <ArrowUp className="w-4 h-4" />
+          <span>Top</span>
+        </button>
+      )}
     </div>
   );
 };

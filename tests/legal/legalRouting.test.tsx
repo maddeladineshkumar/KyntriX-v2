@@ -191,6 +191,33 @@ describe('Legal Routing and Demo Button Removal Suite', () => {
         root.unmount();
       });
     });
+
+    it('has an active scrollable viewport container with overflow-y-auto', async () => {
+      const root = createRoot(container);
+      await act(async () => {
+        root.render(<LegalPageView initialTab="privacy" onBack={() => {}} />);
+      });
+
+      const scrollContainer = container.firstElementChild as HTMLDivElement;
+      expect(scrollContainer).not.toBeNull();
+      expect(scrollContainer.className).toContain('overflow-y-auto');
+      expect(scrollContainer.className).toContain('fixed');
+      expect(scrollContainer.className).toContain('inset-0');
+      expect(scrollContainer.className).toContain('touch-pan-y');
+
+      // Verify scroll event triggers scroll-to-top button appearance
+      await act(async () => {
+        Object.defineProperty(scrollContainer, 'scrollTop', { value: 500, configurable: true });
+        scrollContainer.dispatchEvent(new Event('scroll'));
+      });
+
+      const topButton = container.querySelector('button[title*="back to top"]');
+      expect(topButton).not.toBeNull();
+
+      act(() => {
+        root.unmount();
+      });
+    });
   });
 
   describe('Route Path Matching Logic', () => {

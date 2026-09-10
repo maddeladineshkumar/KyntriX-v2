@@ -278,12 +278,14 @@ export const DHTableStudio: React.FC = () => {
   const [ikSolving, setIkSolving] = useState(false);
 
   // Cleanly reset IK state when active robot changes
-  useEffect(() => {
+  const [prevIKRobotId, setPrevIKRobotId] = useState(robot.id);
+  if (robot.id !== prevIKRobotId) {
+    setPrevIKRobotId(robot.id);
     setCustomIKTarget(null);
     setIkSolution(null);
     setIkBranches([]);
     setIkResultStats(null);
-  }, [robot.id]);
+  }
 
   // File import ref
   const fileInputRef = useRef<HTMLInputElement>(null);

@@ -17,8 +17,11 @@ dist
 dist-ssr
 
 # Environment and local files
+.env
+.env.local
+.env.*.local
 *.local
-.env*.local
+!.env.example
 
 # Legacy desktop reference archive (kept locally, excluded from web deployment)
 RoboAnalyzer_7_5_20190623/

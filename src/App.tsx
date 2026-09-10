@@ -26,7 +26,14 @@ const RobotCatalogModal = lazy(() =>
 const WorkspaceStudio = lazy(() =>
   import('./features/workspace/WorkspaceStudio').then((m) => ({ default: m.WorkspaceStudio }))
 );
+const LearningWorkspace = lazy(() =>
+  import('./features/learning/LearningWorkspace').then((m) => ({ default: m.LearningWorkspace }))
+);
+import { LegalPageView } from './features/legal/LegalPageView';
 import { useSEOMeta } from './features/seo/useSEOMeta';
+import { Matrix4 } from './robotics/math/Matrix4';
+import { Vector3 } from './robotics/math/Vector3';
+import { Euler } from './robotics/math/Euler';
 
 const StudioLoadingFallback: React.FC<{ label?: string }> = ({ label = 'Loading studio module...' }) => (
   <div
@@ -109,11 +116,68 @@ export function App() {
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [statusAnnouncement, setStatusAnnouncement] = useState<string>('');
-  const [topTab, setTopTab] = useState<'simulate' | 'trajectory'>('simulate');
+  const [topTab, setTopTab] = useState<'simulate' | 'trajectory' | 'learning'>('simulate');
   const [activeModal, setActiveModal] = useState<StudioModal>(null);
   const [showJointDrawer, setShowJointDrawer] = useState(false);
   const [showIKDrawer, setShowIKDrawer] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+
+  // URL Path & Hash Legal Routing (/privacypolicy, /terms, etc.)
+  const [legalPage, setLegalPage] = useState<'privacy' | 'terms' | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const path = window.location.pathname.toLowerCase();
+    const hash = window.location.hash.toLowerCase();
+    if (
+      path === '/privacypolicy' ||
+      path === '/privacy' ||
+      path === '/privacy-policy' ||
+      hash.includes('privacypolicy') ||
+      hash.includes('privacy')
+    ) {
+      return 'privacy';
+    }
+    if (
+      path === '/terms' ||
+      path === '/termsofservice' ||
+      path === '/terms-of-service' ||
+      hash.includes('terms')
+    ) {
+      return 'terms';
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      if (
+        path === '/privacypolicy' ||
+        path === '/privacy' ||
+        path === '/privacy-policy' ||
+        hash.includes('privacypolicy') ||
+        hash.includes('privacy')
+      ) {
+        setLegalPage('privacy');
+      } else if (
+        path === '/terms' ||
+        path === '/termsofservice' ||
+        path === '/terms-of-service' ||
+        hash.includes('terms')
+      ) {
+        setLegalPage('terms');
+      } else {
+        setLegalPage(null);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handlePopState);
+    };
+  }, []);
 
   // Dynamic SEO metadata & URL parameter sync
   useSEOMeta({
@@ -320,15 +384,63 @@ export function App() {
     };
   }, []);
 
-  const handleSelectTopTab = (tab: 'simulate' | 'trajectory') => {
+  const handleSelectTopTab = (tab: 'simulate' | 'trajectory' | 'learning') => {
     setTopTab(tab);
     // When switching top mode, close any open modal from previous mode if not applicable
     if (tab === 'simulate' && (activeModal === 'trajectory' || activeModal === 'analysis')) {
       closeModal();
     } else if (tab === 'trajectory' && activeModal !== 'trajectory' && activeModal !== 'analysis') {
       closeModal();
+    } else if (tab === 'learning') {
+      closeModal();
+      setShowJointDrawer(false);
+      setShowIKDrawer(false);
     }
   };
+
+  const handleOpenSimulatorFromLearning = useCallback(
+    async (robotId?: string, targetPose?: any) => {
+      if (robotId && robot.id !== robotId) {
+        try {
+          await useRobotStore.getState().selectRobot(robotId);
+        } catch (err) {
+          console.error('Failed to switch robot for challenge:', err);
+        }
+      }
+
+      if (targetPose) {
+        try {
+          if (targetPose.position && targetPose.orientationEuler) {
+            const euler = new Euler(
+              targetPose.orientationEuler[0],
+              targetPose.orientationEuler[1],
+              targetPose.orientationEuler[2],
+              'XYZ'
+            );
+            const rot3 = euler.toRotationMatrix();
+            const targetMat = Matrix4.fromRotationTranslation(
+              rot3,
+              new Vector3(targetPose.position[0], targetPose.position[1], targetPose.position[2])
+            );
+            useRobotStore.getState().setTargetPose(targetMat, true);
+          }
+        } catch (err) {
+          console.error('Failed to set target pose from challenge:', err);
+        }
+        setShowIKDrawer(true);
+        setShowJointDrawer(false);
+        setActiveTab('ik');
+      } else {
+        setShowJointDrawer(true);
+        setShowIKDrawer(false);
+        setActiveTab('fk');
+      }
+
+      setTopTab('simulate');
+      setStatusAnnouncement('Switched to 3D simulation environment.');
+    },
+    [robot.id, setActiveTab]
+  );
 
   const handleToggleModal = (modal: StudioModal) => {
     if (activeModal === modal) {
@@ -340,6 +452,20 @@ export function App() {
       }
     }
   };
+
+  if (legalPage) {
+    return (
+      <LegalPageView
+        initialTab={legalPage}
+        onBack={() => {
+          setLegalPage(null);
+          if (typeof window !== 'undefined' && window.location.pathname !== '/' && window.location.pathname !== '') {
+            window.history.pushState({}, '', '/');
+          }
+        }}
+      />
+    );
+  }
 
   return (
     <div className="app-root-container flex flex-col w-full h-full h-[100dvh] min-h-full min-h-[100dvh] max-h-full max-h-[100dvh] bg-[#f7f4ed] text-stone-900 overflow-hidden font-sans antialiased">
@@ -482,13 +608,30 @@ export function App() {
             <Activity className={`w-4 h-4 ${topTab === 'trajectory' ? 'text-white' : 'text-stone-700'}`} />
             <span>Trajectory Analysis</span>
           </button>
+
+          {/* Button 3: AI & Learning */}
+          <button
+            type="button"
+            onClick={() => handleSelectTopTab('learning')}
+            aria-label="AI & Learning Mode"
+            aria-pressed={topTab === 'learning'}
+            className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-8 py-2 sm:py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 ${
+              topTab === 'learning'
+                ? 'bg-gradient-to-r from-stone-800 via-stone-900 to-black text-white shadow-lg shadow-stone-900/25 scale-[1.02]'
+                : 'text-stone-700 hover:text-black hover:bg-stone-100/90'
+            }`}
+          >
+            <Bot className={`w-4 h-4 ${topTab === 'learning' ? 'text-white' : 'text-stone-700'}`} />
+            <span>AI & Learning</span>
+          </button>
         </nav>
 
         {/* Revealing Feature Toolbar */}
-        <nav
-          aria-label="Feature Studio Tools"
-          className="flex items-center gap-2 mt-2 pt-1.5 border-t border-stone-200/70 overflow-x-auto max-w-full pb-0.5"
-        >
+        {topTab !== 'learning' && (
+          <nav
+            aria-label="Feature Studio Tools"
+            className="flex items-center gap-2 mt-2 pt-1.5 border-t border-stone-200/70 overflow-x-auto max-w-full pb-0.5"
+          >
           {topTab === 'simulate' && (
             <>
               {/* FK Joint Jogger Toggle */}
@@ -624,14 +767,15 @@ export function App() {
             </>
           )}
         </nav>
+      )}
       </header>
 
       {/* 2. Main Expansive 3D Simulation Canvas - Semantic Landmark */}
       <main className="flex-1 w-full h-full relative overflow-hidden bg-[#f7f4ed]">
-        <Viewport3D isPaused={!!activeModal} />
+        <Viewport3D isPaused={topTab === 'learning' || !!activeModal} />
 
         {/* Floating Tactile Joint Jogger Drawer (Responsive across mobile, tablet & desktop) */}
-        {showJointDrawer && (
+        {topTab !== 'learning' && showJointDrawer && (
           <div
             role="dialog"
             aria-label="Joint Actuation Panel"
@@ -677,7 +821,7 @@ export function App() {
         )}
 
         {/* Floating Tactile IK Target Solver Drawer (Responsive right drawer) */}
-        {showIKDrawer && (
+        {topTab !== 'learning' && showIKDrawer && (
           <div
             role="dialog"
             aria-label="Inverse Kinematics Target Solver"
@@ -732,79 +876,90 @@ export function App() {
         )}
 
         {/* Sleek Floating Glassmorphic Dock in 3D Viewport - Single row horizontal non-wrapping across mobile and desktop */}
-        <div
-          style={{ bottom: 'max(0.625rem, calc(0.5rem + env(safe-area-inset-bottom, 0px)))' }}
-          className="absolute left-1/2 -translate-x-1/2 z-20 flex flex-nowrap items-center justify-start sm:justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-white/95 backdrop-blur-2xl border-2 border-stone-300/80 rounded-2xl shadow-xl max-w-[calc(100vw-16px)] overflow-x-auto scrollbar-none"
-        >
-          {/* Robot Model Selector Pill */}
-          <button
-            type="button"
-            onClick={() => setCatalogOpen(true)}
-            title="Click to change robot model or view catalog"
-            aria-label={`Current robot model: ${robot.name} (${robot.dof} DOF). Click to change model.`}
-            className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 min-h-[44px] bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl transition-all cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
+        {topTab !== 'learning' && (
+          <div
+            style={{ bottom: 'max(0.625rem, calc(0.5rem + env(safe-area-inset-bottom, 0px)))' }}
+            className="absolute left-1/2 -translate-x-1/2 z-20 flex flex-nowrap items-center justify-start sm:justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-white/95 backdrop-blur-2xl border-2 border-stone-300/80 rounded-2xl shadow-xl max-w-[calc(100vw-16px)] overflow-x-auto scrollbar-none"
           >
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-200 animate-pulse shrink-0" />
-            <div className="flex items-center gap-1 sm:gap-1.5">
-              <Bot className="w-3.5 h-3.5 text-black shrink-0" />
-              <span className="text-xs font-black text-black">{robot.name}</span>
-              <span className="text-[10px] text-stone-600 font-bold">({robot.dof} DOF)</span>
-            </div>
-            <span className="text-[10px] font-black text-black bg-white px-1.5 sm:px-2 py-0.5 rounded border border-stone-300 ml-0.5 sm:ml-1 shrink-0">
-              Change ▾
-            </span>
-          </button>
+            {/* Robot Model Selector Pill */}
+            <button
+              type="button"
+              onClick={() => setCatalogOpen(true)}
+              title="Click to change robot model or view catalog"
+              aria-label={`Current robot model: ${robot.name} (${robot.dof} DOF). Click to change model.`}
+              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 min-h-[44px] bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl transition-all cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
+            >
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-200 animate-pulse shrink-0" />
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <Bot className="w-3.5 h-3.5 text-black shrink-0" />
+                <span className="text-xs font-black text-black">{robot.name}</span>
+                <span className="text-[10px] text-stone-600 font-bold">({robot.dof} DOF)</span>
+              </div>
+              <span className="text-[10px] font-black text-black bg-white px-1.5 sm:px-2 py-0.5 rounded border border-stone-300 ml-0.5 sm:ml-1 shrink-0">
+                Change ▾
+              </span>
+            </button>
 
-          {/* Emergency Stop Button */}
-          <button
-            type="button"
-            onClick={isEStopped ? resetEStop : emergencyStop}
-            title={isEStopped ? 'Emergency Stop active: Click to Reset/Resume' : 'Emergency Stop: Halt simulation immediately'}
-            aria-label={isEStopped ? 'Emergency Stop is active. Click to reset.' : 'Emergency Stop Simulation'}
-            aria-pressed={isEStopped}
-            className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 min-h-[44px] rounded-xl font-black text-xs transition-all cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 ${
-              isEStopped
-                ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-500/40 animate-pulse ring-2 ring-rose-400'
-                : activeTrajectory && isPlaying
-                ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-500/30 animate-pulse'
-                : 'bg-rose-100 hover:bg-rose-200 text-rose-950 border border-rose-300'
-            }`}
-          >
-            <Square className={`w-3.5 h-3.5 ${isEStopped || (activeTrajectory && isPlaying) ? 'fill-white' : 'fill-rose-950'}`} />
-            <span>{isEStopped ? '■ E-STOP (Reset)' : '■ STOP'}</span>
-          </button>
+            {/* Emergency Stop Button */}
+            <button
+              type="button"
+              onClick={isEStopped ? resetEStop : emergencyStop}
+              title={isEStopped ? 'Emergency Stop active: Click to Reset/Resume' : 'Emergency Stop: Halt simulation immediately'}
+              aria-label={isEStopped ? 'Emergency Stop is active. Click to reset.' : 'Emergency Stop Simulation'}
+              aria-pressed={isEStopped}
+              className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 min-h-[44px] rounded-xl font-black text-xs transition-all cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 ${
+                isEStopped
+                  ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-500/40 animate-pulse ring-2 ring-rose-400'
+                  : activeTrajectory && isPlaying
+                  ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-500/30 animate-pulse'
+                  : 'bg-rose-100 hover:bg-rose-200 text-rose-950 border border-rose-300'
+              }`}
+            >
+              <Square className={`w-3.5 h-3.5 ${isEStopped || (activeTrajectory && isPlaying) ? 'fill-white' : 'fill-rose-950'}`} />
+              <span>{isEStopped ? '■ E-STOP (Reset)' : '■ STOP'}</span>
+            </button>
 
-          {/* Singularity / Feasibility Telemetry Badge */}
-          <KinematicFeasibilityBadge />
+            {/* Singularity / Feasibility Telemetry Badge */}
+            <KinematicFeasibilityBadge />
 
-          {/* Reset to Home Button */}
-          <button
-            type="button"
-            onClick={resetToHome}
-            title="Reset Robot Pose to Calibrated Home Pose (Shortcut: H)"
-            aria-label="Reset to Home Pose"
-            className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 min-h-[44px] rounded-xl font-black text-xs bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-800 transition-all cursor-pointer shrink-0 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-black" />
-            <span>Home</span>
-          </button>
+            {/* Reset to Home Button */}
+            <button
+              type="button"
+              onClick={resetToHome}
+              title="Reset Robot Pose to Calibrated Home Pose (Shortcut: H)"
+              aria-label="Reset to Home Pose"
+              className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 min-h-[44px] rounded-xl font-black text-xs bg-stone-100 hover:bg-stone-200 border border-stone-300 text-stone-800 transition-all cursor-pointer shrink-0 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-black" />
+              <span>Home</span>
+            </button>
 
-          {/* Quick Joint Controls Drawer Toggle */}
-          <button
-            type="button"
-            onClick={() => setShowJointDrawer((prev) => !prev)}
-            title="Toggle Joint Controls Panel"
-            aria-label="Toggle Joint Controls Drawer"
-            aria-expanded={showJointDrawer}
-            className={`p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border transition-all cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 ${
-              showJointDrawer
-                ? 'bg-black text-white border-black'
-                : 'bg-stone-100 text-black border-stone-300 hover:bg-stone-200'
-            }`}
-          >
-            <Sliders className="w-4 h-4" />
-          </button>
-        </div>
+            {/* Quick Joint Controls Drawer Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowJointDrawer((prev) => !prev)}
+              title="Toggle Joint Controls Panel"
+              aria-label="Toggle Joint Controls Drawer"
+              aria-expanded={showJointDrawer}
+              className={`p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border transition-all cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 ${
+                showJointDrawer
+                  ? 'bg-black text-white border-black'
+                  : 'bg-stone-100 text-black border-stone-300 hover:bg-stone-200'
+              }`}
+            >
+              <Sliders className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* AI & Learning Integrated Workspace */}
+        {topTab === 'learning' && (
+          <div className="absolute inset-0 z-20 bg-[#f7f4ed] overflow-y-auto">
+            <Suspense fallback={<StudioLoadingFallback label="Loading AI & Learning Environment..." />}>
+              <LearningWorkspace onOpenSimulator={handleOpenSimulatorFromLearning} />
+            </Suspense>
+          </div>
+        )}
       </main>
 
       {/* 3. Revealing Application Pop-up Studios (Spacious, Zero-Overflow) */}
@@ -992,6 +1147,44 @@ export function App() {
                   <div><kbd className="px-1.5 py-0.5 bg-stone-100 border rounded">H</kbd> Reset robot to Home</div>
                   <div><kbd className="px-1.5 py-0.5 bg-stone-100 border rounded">Space</kbd> Play / Pause trajectory</div>
                   <div><kbd className="px-1.5 py-0.5 bg-stone-100 border rounded">?</kbd> Open this guide</div>
+                </div>
+              </section>
+
+              <section className="space-y-1.5 pt-2 border-t border-stone-200">
+                <h3 className="font-black text-black text-sm">Legal & Compliance</h3>
+                <p className="text-[11px] text-stone-600">
+                  Review our data privacy architecture and industrial robotics terms of use:
+                </p>
+                <div className="flex flex-wrap items-center gap-3 pt-1">
+                  <a
+                    href="/privacypolicy"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setHelpOpen(false);
+                      setLegalPage('privacy');
+                      if (typeof window !== 'undefined') {
+                        window.history.pushState({}, '', '/privacypolicy');
+                      }
+                    }}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 hover:text-amber-900 underline underline-offset-2"
+                  >
+                    Privacy Policy (/privacypolicy)
+                  </a>
+                  <span className="text-stone-300">•</span>
+                  <a
+                    href="/terms"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setHelpOpen(false);
+                      setLegalPage('terms');
+                      if (typeof window !== 'undefined') {
+                        window.history.pushState({}, '', '/terms');
+                      }
+                    }}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 hover:text-amber-900 underline underline-offset-2"
+                  >
+                    Terms of Service (/terms)
+                  </a>
                 </div>
               </section>
             </div>

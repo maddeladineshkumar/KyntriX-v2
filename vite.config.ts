@@ -8,6 +8,41 @@ import path from 'path'
 export default defineConfig({
   base: process.env.BASE_URL || './',
   plugins: [
+    {
+      name: 'kyntrix-api-plugin',
+      configureServer(server) {
+        server.middlewares.use(async (req, res, next) => {
+          if (req.url && req.url.startsWith('/api')) {
+            try {
+              const { handleApiRequest } = await server.ssrLoadModule('./src/server/apiRouter.ts');
+              await handleApiRequest(req, res, next);
+            } catch (err) {
+              console.error('API middleware error:', err);
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: 'Internal API server error' }));
+            }
+          } else {
+            next();
+          }
+        });
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(async (req, res, next) => {
+          if (req.url && req.url.startsWith('/api')) {
+            try {
+              const { handleApiRequest } = await import('./src/server/apiRouter.ts');
+              await handleApiRequest(req, res, next);
+            } catch (err) {
+              console.error('API preview error:', err);
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: 'Internal API server error' }));
+            }
+          } else {
+            next();
+          }
+        });
+      },
+    },
     react(),
     tailwindcss(),
     VitePWA({
@@ -37,6 +72,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [
+          /^\/api\/.*$/,
           /^\/robots\.txt$/,
           /^\/sitemap\.xml$/,
           /^\/llms\.txt$/,
@@ -88,5 +124,3 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
   },
 })
-
-

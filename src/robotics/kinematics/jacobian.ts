@@ -105,7 +105,7 @@ export function computeGeometricJacobian(
 /**
  * Classical Jacobi rotation method for computing eigenvalues of symmetric matrix.
  */
-function computeSymmetricEigenvalues(A_orig: number[][], size: number): number[] {
+export function computeSymmetricEigenvalues(A_orig: number[][], size: number): number[] {
   const A = A_orig.map((row) => [...row]);
   const maxIter = Math.max(100, size * size * 10);
 

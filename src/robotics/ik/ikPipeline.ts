@@ -253,7 +253,7 @@ export function solveIK(
     branchCount = 1;
 
     // Multi-branch exploration if requested or if primary failed
-    const exploreBranches = options.returnAllBranches ?? (!primarySol.converged && robot.dof >= 3);
+    const exploreBranches = options.returnAllBranches ?? (!primarySol.converged && robot.dof >= 1);
 
     if (exploreBranches) {
       const seeds = generateBranchSeeds(robot, defaultInitial);

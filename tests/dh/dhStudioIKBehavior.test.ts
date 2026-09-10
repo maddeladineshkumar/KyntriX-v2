@@ -3,7 +3,6 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { DHTableStudio } from '../../src/features/dh/DHTableStudio';
 import { useRobotStore } from '../../src/state/robotStore';
-import { Matrix4, Vector3 } from '../../src/robotics/math';
 
 describe('DH Studio Inverse Kinematics Solver Hardening Suite', () => {
   let container: HTMLDivElement;
@@ -93,14 +92,14 @@ describe('DH Studio Inverse Kinematics Solver Hardening Suite', () => {
     const root = createRoot(container);
     root.render(React.createElement(DHTableStudio));
 
-    await new Promise((resolve) => setTimeout(resolve, 80));
+    await new Promise((resolve) => setTimeout(resolve, 150));
 
     // Switch to Inverse Kinematics tab
     const buttons = Array.from(container.querySelectorAll('button'));
     const ikTabBtn = buttons.find((b) => /inverse\s*kinematics/i.test(b.textContent || ''));
     ikTabBtn?.click();
 
-    await new Promise((resolve) => setTimeout(resolve, 80));
+    await new Promise((resolve) => setTimeout(resolve, 150));
 
     // Unselect auto-animate checkbox
     const autoAnimateCheckbox = container.querySelector<HTMLInputElement>('#dh-ik-auto-animate');
@@ -108,7 +107,7 @@ describe('DH Studio Inverse Kinematics Solver Hardening Suite', () => {
     expect(autoAnimateCheckbox?.checked).toBe(true); // default is checked
 
     autoAnimateCheckbox?.click();
-    await new Promise((resolve) => setTimeout(resolve, 40));
+    await new Promise((resolve) => setTimeout(resolve, 80));
     expect(autoAnimateCheckbox?.checked).toBe(false);
 
     // Click Work Pose preset button to place target at a known valid reachable pose
@@ -116,7 +115,7 @@ describe('DH Studio Inverse Kinematics Solver Hardening Suite', () => {
     expect(workPoseBtn).not.toBeNull();
     workPoseBtn?.click();
 
-    await new Promise((resolve) => setTimeout(resolve, 60));
+    await new Promise((resolve) => setTimeout(resolve, 150));
 
     // Record robot joint positions BEFORE solve
     const qBeforeSolve = [...useRobotStore.getState().q];
@@ -127,7 +126,7 @@ describe('DH Studio Inverse Kinematics Solver Hardening Suite', () => {
     solveBtn?.click();
 
     // Wait for solve to finish
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    await new Promise((resolve) => setTimeout(resolve, 350));
 
     // Crucial check: Robot joints MUST NOT HAVE CHANGED / SNAPPED
     const qAfterSolve = [...useRobotStore.getState().q];

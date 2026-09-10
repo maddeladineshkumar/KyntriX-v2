@@ -14,7 +14,9 @@
     "sitemap": "python scripts/generate_sitemap.py"
   },
   "dependencies": {
+    "@types/katex": "^0.16.8",
     "clsx": "^2.1.1",
+    "katex": "^0.18.7",
     "lucide-react": "^1.41.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

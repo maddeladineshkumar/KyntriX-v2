@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRobotStore } from '../../state/robotStore';
 import { Matrix4 } from '../../robotics/math/Matrix4';
 import { Vector3 } from '../../robotics/math/Vector3';
@@ -18,6 +18,9 @@ import {
   Eye,
   Undo2,
   ArrowLeftRight,
+  Bug,
+  Crosshair,
+  ShieldCheck,
 } from 'lucide-react';
 
 export const IKStudio: React.FC = () => {
@@ -28,6 +31,7 @@ export const IKStudio: React.FC = () => {
     targetPose,
     ikResult,
     ikSolving,
+    activeTrajectory,
     setJoints,
     setTargetPose,
     triggerSolveIK,
@@ -45,6 +49,8 @@ export const IKStudio: React.FC = () => {
   const [inputYaw, setInputYaw] = useState((currentEuler.z * RAD_TO_DEG).toFixed(1));
   const [nudgeStepMm, setNudgeStepMm] = useState<number>(10);
   const [autoAnimate, setAutoAnimate] = useState<boolean>(true);
+  const [positionOnly, setPositionOnly] = useState<boolean>(false);
+  const [showDebugMode, setShowDebugMode] = useState<boolean>(false);
   const [activeSolIdx, setActiveSolIdx] = useState<number | null>(null);
 
   // PRD §26: 3D Preview, Restore, and Compare States
@@ -102,8 +108,69 @@ export const IKStudio: React.FC = () => {
     const newTarget = Matrix4.fromRotationTranslation(rot, pos);
     setTargetPose(newTarget, false);
     if (shouldSolve) {
-      triggerSolveIK(autoAnimate, true);
+      triggerSolveIK(autoAnimate, true, positionOnly);
     }
+  };
+
+  // Trajectory proximity & correlation telemetry
+  const nearestTrajectoryInfo = useMemo(() => {
+    if (!activeTrajectory || !activeTrajectory.endEffectorPositions || activeTrajectory.endEffectorPositions.length === 0) {
+      return null;
+    }
+    const targetPos = targetPose.getPosition();
+    let minDist = Infinity;
+    let minIdx = -1;
+    let minPoint: Vector3 | null = null;
+    let minEuler: Euler | null = null;
+
+    for (let i = 0; i < activeTrajectory.endEffectorPositions.length; i++) {
+      const p = activeTrajectory.endEffectorPositions[i];
+      const dist = targetPos.distanceTo(p);
+      if (dist < minDist) {
+        minDist = dist;
+        minIdx = i;
+        minPoint = p;
+        minEuler = activeTrajectory.endEffectorOrientations[i] ?? null;
+      }
+    }
+
+    if (!minPoint) return null;
+
+    const isOnTrajectory = minDist <= 0.005; // within 5mm
+
+    let orientationDiffDeg = 0;
+    if (minEuler) {
+      const R_target = targetPose.getRotation();
+      const R_traj = minEuler.toRotationMatrix();
+      const rotErrRad = R_target.rotationError(R_traj).norm();
+      orientationDiffDeg = rotErrRad * RAD_TO_DEG;
+    }
+
+    return {
+      nearestIdx: minIdx,
+      nearestPoint: minPoint,
+      nearestEuler: minEuler,
+      distanceMeters: minDist,
+      distanceMm: minDist * 1000,
+      isOnTrajectory,
+      orientationDiffDeg,
+      totalTrajectoryPoints: activeTrajectory.endEffectorPositions.length,
+    };
+  }, [activeTrajectory, targetPose]);
+
+  const handleSnapToTrajectoryPose = () => {
+    if (!nearestTrajectoryInfo || !nearestTrajectoryInfo.nearestPoint || !nearestTrajectoryInfo.nearestEuler) return;
+    const p = nearestTrajectoryInfo.nearestPoint;
+    const e = nearestTrajectoryInfo.nearestEuler;
+    applyPoseValues(
+      p.x,
+      p.y,
+      p.z,
+      e.x * RAD_TO_DEG,
+      e.y * RAD_TO_DEG,
+      e.z * RAD_TO_DEG,
+      true
+    );
   };
 
   const handleUpdateTarget = () => {
@@ -566,6 +633,29 @@ export const IKStudio: React.FC = () => {
             <span className="text-[10px] text-stone-500 font-medium">Quintic profile</span>
           </div>
 
+          <div className="flex items-center justify-between px-1">
+            <label
+              className="flex items-center gap-2 cursor-pointer"
+              title="Solve 3-DOF position only, ignoring tool orientation constraints"
+            >
+              <input
+                type="checkbox"
+                id="ik-position-only"
+                checked={positionOnly}
+                onChange={(e) => {
+                  const val = e.target.checked;
+                  setPositionOnly(val);
+                  triggerSolveIK(autoAnimate, true, val);
+                }}
+                className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 cursor-pointer accent-amber-500"
+              />
+              <span className="text-xs font-black text-stone-800">
+                Position Only (Free Orientation)
+              </span>
+            </label>
+            <span className="text-[10px] text-stone-500 font-medium">3-DOF Reach</span>
+          </div>
+
           <button
             type="button"
             id="ik-solve-btn"
@@ -603,6 +693,42 @@ export const IKStudio: React.FC = () => {
           </div>
         )}
 
+        {/* Banner when Target is ON active trajectory */}
+        {nearestTrajectoryInfo?.isOnTrajectory && (
+          <div className="p-3.5 bg-cyan-50 border-2 border-cyan-400 rounded-2xl text-xs text-cyan-950 font-sans shadow-xs space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 font-black text-cyan-950">
+                <Crosshair className="w-4 h-4 text-cyan-700 shrink-0" />
+                <span className="uppercase tracking-wider">Target lies ON Active TCP Trajectory</span>
+              </div>
+              <span className="text-[10px] font-mono bg-cyan-200 text-cyan-900 px-2 py-0.5 rounded font-black">
+                {nearestTrajectoryInfo.distanceMm.toFixed(2)} mm to Trace
+              </span>
+            </div>
+            <p className="text-[11px] text-cyan-900 font-medium leading-relaxed">
+              This Cartesian point is mathematically verified to be visited by the robot during motion.
+              {nearestTrajectoryInfo.orientationDiffDeg > 1.0 ? (
+                <span>
+                  {' '}However, your target orientation differs from the trajectory tool orientation by{' '}
+                  <strong>{nearestTrajectoryInfo.orientationDiffDeg.toFixed(1)}°</strong>, which may exceed wrist limits.
+                </span>
+              ) : (
+                <span> Both position and orientation align with the trajectory waypoint.</span>
+              )}
+            </p>
+            {nearestTrajectoryInfo.orientationDiffDeg > 1.0 && (
+              <button
+                type="button"
+                onClick={handleSnapToTrajectoryPose}
+                className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white font-black text-xs rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 active:scale-95"
+              >
+                <Crosshair className="w-3.5 h-3.5" />
+                <span>Align Target with Trajectory Orientation (Solve 100%)</span>
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h3 className="text-xs font-black text-black uppercase tracking-wider">
@@ -623,6 +749,19 @@ export const IKStudio: React.FC = () => {
                 <span>{compareMode ? 'Exit Compare' : 'Compare Solutions'}</span>
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => setShowDebugMode(!showDebugMode)}
+              aria-label="Toggle Kinematic Debug Telemetry"
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer shadow-2xs ${
+                showDebugMode
+                  ? 'bg-purple-600 text-white border border-purple-700 shadow-xs'
+                  : 'bg-white hover:bg-stone-100 text-black border border-stone-300'
+              }`}
+            >
+              <Bug className="w-3 h-3" />
+              <span>{showDebugMode ? 'Hide Debug' : 'Debug Telemetry'}</span>
+            </button>
           </div>
           {ikResult && (
             <div className="flex items-center gap-2 text-[11px] font-mono font-bold">
@@ -631,15 +770,246 @@ export const IKStudio: React.FC = () => {
               <span
                 className={
                   ikResult.converged
-                    ? 'px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-950 border border-emerald-300 font-black'
+                    ? (ikResult.isSingular
+                        ? 'px-1.5 py-0.5 rounded bg-amber-100 text-amber-950 border border-amber-300 font-black'
+                        : 'px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-950 border border-emerald-300 font-black')
+                    : ikResult.isPositionReachable
+                    ? 'px-1.5 py-0.5 rounded bg-amber-100 text-amber-950 border border-amber-300 font-black'
                     : 'px-1.5 py-0.5 rounded bg-rose-100 text-rose-950 border border-rose-300 font-black'
                 }
               >
-                {ikResult.converged ? '✓ IK OK (Reachable)' : '✗ IK Failed (Unreachable)'}
+                {ikResult.converged
+                  ? (positionOnly
+                      ? '✓ Pos OK (Reachable)'
+                      : (ikResult.isSingular
+                          ? '⚠ Reachable (Near Singularity)'
+                          : '✓ Pose OK (Dexterous)'))
+                  : ikResult.isPositionReachable
+                  ? '⚠ Pos OK (Ori Exceeds Limits)'
+                  : '✗ IK Failed (Unreachable)'}
               </span>
             </div>
           )}
         </div>
+
+        {/* Section 18: Kinematic & Trajectory Debug Inspector */}
+        {showDebugMode && (
+          <div className="p-4 bg-purple-50/70 border-2 border-purple-300 rounded-2xl text-black text-xs space-y-3.5 shadow-sm font-sans">
+            <div className="flex items-center justify-between border-b border-purple-200 pb-2">
+              <div className="flex items-center gap-2 font-black text-purple-950">
+                <Bug className="w-4 h-4 text-purple-700 shrink-0" />
+                <span className="uppercase tracking-wider">Kinematic & Trajectory Diagnostic Telemetry</span>
+              </div>
+              <span className="text-[10px] font-mono bg-purple-200 text-purple-900 px-2 py-0.5 rounded font-black">
+                DEBUG MODE
+              </span>
+            </div>
+
+            {/* Target Coordinates */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase text-stone-600 tracking-wider">
+                1. Target Coordinates & Pose
+              </span>
+              <div className="grid grid-cols-2 gap-2 bg-white p-2.5 rounded-xl border border-purple-200 font-mono text-[11px]">
+                <div>
+                  <span className="text-stone-500 font-sans font-bold block text-[10px]">Position (m):</span>
+                  <span>X: {currentPos.x.toFixed(4)}, Y: {currentPos.y.toFixed(4)}, Z: {currentPos.z.toFixed(4)}</span>
+                </div>
+                <div>
+                  <span className="text-stone-500 font-sans font-bold block text-[10px]">Orientation (deg):</span>
+                  <span>R: {(currentEuler.x * RAD_TO_DEG).toFixed(1)}°, P: {(currentEuler.y * RAD_TO_DEG).toFixed(1)}°, Y: {(currentEuler.z * RAD_TO_DEG).toFixed(1)}°</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Trajectory Proximity Correlation */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase text-stone-600 tracking-wider">
+                2. Trajectory Proximity Correlation (Blue Trace)
+              </span>
+              <div className="bg-white p-2.5 rounded-xl border border-purple-200 space-y-2">
+                {nearestTrajectoryInfo ? (
+                  <>
+                    <div className="flex items-center justify-between font-mono text-[11px]">
+                      <div>
+                        <span className="text-stone-500 font-sans font-bold text-[10px] block">Distance to Trajectory:</span>
+                        <span className={nearestTrajectoryInfo.isOnTrajectory ? 'text-emerald-700 font-black' : 'text-stone-800'}>
+                          {nearestTrajectoryInfo.distanceMm.toFixed(2)} mm {nearestTrajectoryInfo.isOnTrajectory ? '(ON TRAJECTORY)' : ''}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-stone-500 font-sans font-bold text-[10px] block">Nearest Waypoint:</span>
+                        <span>#{nearestTrajectoryInfo.nearestIdx + 1} of {nearestTrajectoryInfo.totalTrajectoryPoints}</span>
+                      </div>
+                    </div>
+
+                    <div className="text-[11px] font-mono text-stone-700">
+                      <div>Waypoint XYZ: [{nearestTrajectoryInfo.nearestPoint.x.toFixed(4)}, {nearestTrajectoryInfo.nearestPoint.y.toFixed(4)}, {nearestTrajectoryInfo.nearestPoint.z.toFixed(4)}] m</div>
+                      {nearestTrajectoryInfo.nearestEuler && (
+                        <div>Waypoint RPY: [{(nearestTrajectoryInfo.nearestEuler.x * RAD_TO_DEG).toFixed(1)}°, {(nearestTrajectoryInfo.nearestEuler.y * RAD_TO_DEG).toFixed(1)}°, {(nearestTrajectoryInfo.nearestEuler.z * RAD_TO_DEG).toFixed(1)}°]</div>
+                      )}
+                      <div>Orientation Difference: {nearestTrajectoryInfo.orientationDiffDeg.toFixed(2)}°</div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={handleSnapToTrajectoryPose}
+                        className="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white font-black text-[11px] rounded-lg shadow-2xs transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+                      >
+                        <Crosshair className="w-3 h-3" />
+                        <span>Snap Target to Trajectory Pose (Guaranteed Reachable)</span>
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-[11px] text-stone-600 font-medium">
+                    No planned trajectory dataset is currently active. The blue line in 3D reflects the real-time forward kinematics end-effector history. Generate a trajectory in Trajectory Studio to enable waypoint-by-waypoint correlation.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Reachability & Feasibility Status */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase text-stone-600 tracking-wider">
+                3. Kinematic Feasibility Verdict
+              </span>
+              <div className="bg-white p-2.5 rounded-xl border border-purple-200 space-y-1.5 text-[11px]">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-stone-700">Verdict:</span>
+                  <span className="font-black px-2 py-0.5 rounded bg-stone-100 text-black">
+                    {ikResult?.converged
+                      ? (ikResult.isSingular ? 'Reachable (Near Singularity)' : 'Reachable (Dexterous)')
+                      : ikResult?.isPositionReachable
+                      ? 'Position Reachable Only (Orientation Outside Limits)'
+                      : (ikResult?.failureReason?.includes('outside') ? 'Outside Reachable Envelope' : 'Kinematically Unreachable')}
+                  </span>
+                </div>
+                <p className="text-stone-600 font-medium leading-relaxed">
+                  {ikResult?.failureReason ??
+                    (ikResult?.converged
+                      ? 'Target pose is mathematically confirmed reachable and satisfies all joint limits.'
+                      : 'Inverse kinematics did not converge to a valid joint solution.')}
+                </p>
+              </div>
+            </div>
+
+            {/* Selected Solution Kinematics & Manipulability */}
+            {ikResult?.bestSolution && (
+              <div className="space-y-1">
+                <span className="text-[10px] font-black uppercase text-stone-600 tracking-wider">
+                  4. Solution Kinematic Quality & Jacobian Metrics
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-white p-2.5 rounded-xl border border-purple-200 font-mono text-[11px]">
+                  <div>
+                    <span className="text-stone-500 font-sans font-bold text-[10px] block">Solver:</span>
+                    <span>{ikResult.bestSolution.solverType}</span>
+                  </div>
+                  <div>
+                    <span className="text-stone-500 font-sans font-bold text-[10px] block">Pos Error:</span>
+                    <span>{(ikResult.bestSolution.positionError * 1000).toFixed(4)} mm</span>
+                  </div>
+                  <div>
+                    <span className="text-stone-500 font-sans font-bold text-[10px] block">Ori Error:</span>
+                    <span>{(ikResult.bestSolution.orientationError * RAD_TO_DEG).toFixed(3)}°</span>
+                  </div>
+                  <div>
+                    <span className="text-stone-500 font-sans font-bold text-[10px] block">Manipulability w:</span>
+                    <span>{ikResult.bestSolution.manipulability.toFixed(4)}</span>
+                  </div>
+                  <div>
+                    <span className="text-stone-500 font-sans font-bold text-[10px] block">Condition κ:</span>
+                    <span>{Number.isFinite(ikResult.bestSolution.conditionNumber) ? ikResult.bestSolution.conditionNumber.toFixed(1) : '∞'}</span>
+                  </div>
+                  <div>
+                    <span className="text-stone-500 font-sans font-bold text-[10px] block">Singularity:</span>
+                    <span className={ikResult.bestSolution.isSingular ? 'text-amber-700 font-black' : 'text-emerald-700 font-black'}>
+                      {ikResult.bestSolution.isSingular ? 'Near Singular' : 'Dexterous'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-stone-500 font-sans font-bold text-[10px] block">Iterations:</span>
+                    <span>{ikResult.bestSolution.iterations}</span>
+                  </div>
+                  <div>
+                    <span className="text-stone-500 font-sans font-bold text-[10px] block">Time:</span>
+                    <span>{ikResult.computationTimeMs.toFixed(1)} ms</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Joint Limits Status Table */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase text-stone-600 tracking-wider">
+                5. Joint Limits Status ({robot.name})
+              </span>
+              <div className="overflow-x-auto bg-white rounded-xl border border-purple-200">
+                <table className="w-full text-[10px] text-left font-mono">
+                  <thead>
+                    <tr className="bg-purple-100/60 border-b border-purple-200 text-black font-sans font-black">
+                      <th className="py-1 px-2">Joint</th>
+                      <th className="py-1 px-2 text-right">Target Angle</th>
+                      <th className="py-1 px-2 text-right">Min Limit</th>
+                      <th className="py-1 px-2 text-right">Max Limit</th>
+                      <th className="py-1 px-2 text-right">Limit Margin</th>
+                      <th className="py-1 px-2 text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-200">
+                    {robot.joints.map((j, idx) => {
+                      const angleRad = ikResult?.bestSolution ? ikResult.bestSolution.q[idx] : q[idx];
+                      const isRev = j.type === 'revolute';
+                      const angleDeg = isRev ? angleRad * RAD_TO_DEG : angleRad * 1000;
+                      const minDeg = isRev ? j.min * RAD_TO_DEG : j.min * 1000;
+                      const maxDeg = isRev ? j.max * RAD_TO_DEG : j.max * 1000;
+                      const unit = isRev ? '°' : ' mm';
+                      const distToMin = Math.abs(angleRad - j.min);
+                      const distToMax = Math.abs(angleRad - j.max);
+                      const marginRad = Math.min(distToMin, distToMax);
+                      const marginDeg = isRev ? marginRad * RAD_TO_DEG : marginRad * 1000;
+                      const isViolated = angleRad < j.min - 1e-4 || angleRad > j.max + 1e-4;
+
+                      return (
+                        <tr key={j.id} className={isViolated ? 'bg-rose-50/80 text-rose-900 font-bold' : ''}>
+                          <td className="py-1 px-2 font-bold font-sans">{j.name}</td>
+                          <td className="py-1 px-2 text-right">{angleDeg.toFixed(1)}{unit}</td>
+                          <td className="py-1 px-2 text-right">{minDeg.toFixed(1)}{unit}</td>
+                          <td className="py-1 px-2 text-right">{maxDeg.toFixed(1)}{unit}</td>
+                          <td className="py-1 px-2 text-right">{marginDeg.toFixed(1)}{unit}</td>
+                          <td className="py-1 px-2 text-center">
+                            <span className={`px-1.5 py-0.2 rounded text-[9px] font-black ${
+                              isViolated ? 'bg-rose-200 text-rose-950' : 'bg-emerald-100 text-emerald-950'
+                            }`}>
+                              {isViolated ? 'VIOLATED' : 'OK'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Collision & Environmental Clearance Status */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase text-stone-600 tracking-wider">
+                6. Collision & Environmental Clearance
+              </span>
+              <div className="bg-white p-2.5 rounded-xl border border-purple-200 flex items-start gap-2 text-[11px] text-stone-700">
+                <ShieldCheck className="w-4 h-4 text-stone-500 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold text-black">Collision Checking: Kinematic Simulation Only</span>
+                  <p className="text-[10px] text-stone-500 mt-0.5 leading-relaxed">
+                    Environment obstacle collisions and link-link self-collision meshes are currently disabled. Kinematic feasibility verifies mathematical reachability and joint angle limits only.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Temporary Preview Restore Banner */}
         {prePreviewQ !== null && (
@@ -751,16 +1121,41 @@ export const IKStudio: React.FC = () => {
 
         {/* Failure Message Display */}
         {ikResult && (!ikResult.converged || ikResult.solutions.length === 0) && (
-          <div className="p-3.5 bg-rose-50 border-2 border-rose-200 rounded-2xl text-black text-xs leading-relaxed shadow-2xs">
-            <div className="flex items-center gap-2 font-black mb-1 text-rose-900">
-              <AlertTriangle className="w-4 h-4 text-rose-700 shrink-0" />
-              <span className="uppercase tracking-wide">Target Outside Workspace</span>
+          ikResult.isPositionReachable ? (
+            <div className="p-3.5 bg-amber-50 border-2 border-amber-300 rounded-2xl text-black text-xs leading-relaxed shadow-2xs">
+              <div className="flex items-center gap-2 font-black mb-1 text-amber-900">
+                <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0" />
+                <span className="uppercase tracking-wide">Position Reachable — Orientation Outside Limits</span>
+              </div>
+              <p className="text-[11px] text-stone-700 font-medium mb-2.5">
+                {ikResult.failureReason ??
+                  `Target position is reachable by ${robot.name}, but the requested tool orientation cannot be achieved within physical joint limits.`}
+              </p>
+              <button
+                type="button"
+                id="ik-solve-pos-only-btn"
+                onClick={() => {
+                  setPositionOnly(true);
+                  triggerSolveIK(autoAnimate, true, true);
+                }}
+                className="px-3 py-1.5 bg-amber-400 hover:bg-amber-500 active:scale-95 text-black font-black text-xs rounded-xl border border-stone-900 shadow-xs cursor-pointer flex items-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Solve Position Only (Free Orientation)</span>
+              </button>
             </div>
-            <p className="text-[11px] text-stone-700 font-medium">
-              {ikResult.failureReason ??
-                `The specified target position is out of reach for ${robot.name}. Try adjusting coordinates or using the nudge buttons to bring it closer to the arm.`}
-            </p>
-          </div>
+          ) : (
+            <div className="p-3.5 bg-rose-50 border-2 border-rose-200 rounded-2xl text-black text-xs leading-relaxed shadow-2xs">
+              <div className="flex items-center gap-2 font-black mb-1 text-rose-900">
+                <AlertTriangle className="w-4 h-4 text-rose-700 shrink-0" />
+                <span className="uppercase tracking-wide">Target Outside Reachable Workspace</span>
+              </div>
+              <p className="text-[11px] text-stone-700 font-medium">
+                {ikResult.failureReason ??
+                  `The specified target position is out of reach for ${robot.name}. Try adjusting coordinates or using the nudge buttons to bring it closer to the arm.`}
+              </p>
+            </div>
+          )
         )}
 
         {/* Candidate Solutions List (Responsive Cards for Right-Side Panel) */}

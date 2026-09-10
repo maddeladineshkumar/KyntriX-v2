@@ -30,6 +30,8 @@ const LearningWorkspace = lazy(() =>
   import('./features/learning/LearningWorkspace').then((m) => ({ default: m.LearningWorkspace }))
 );
 import { LegalPageView } from './features/legal/LegalPageView';
+import { AuthModal } from './features/learning/AuthModal';
+import { useLearningStore } from './features/learning/useLearningStore';
 import { useSEOMeta } from './features/seo/useSEOMeta';
 import { Matrix4 } from './robotics/math/Matrix4';
 import { Vector3 } from './robotics/math/Vector3';
@@ -80,6 +82,11 @@ const KinematicFeasibilityBadge: React.FC = () => {
 
   return (
     <div
+      title={
+        isSingular
+          ? 'Kinematic Singularity: Joint velocities may become unbounded.'
+          : `Yoshikawa Manipulability Measure w = √(det(J·Jᵀ)) = ${manipulability.toFixed(4)}. Indicates local dexterity of current joint configuration.`
+      }
       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-black shrink-0 ${
         isSingular
           ? 'bg-amber-100 text-amber-950 border-amber-300'
@@ -89,12 +96,12 @@ const KinematicFeasibilityBadge: React.FC = () => {
       {isSingular ? (
         <>
           <AlertTriangle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-          <span>Singularity</span>
+          <span>Singular Pose</span>
         </>
       ) : (
         <>
           <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0" />
-          <span>Feasible (w={manipulability.toFixed(3)})</span>
+          <span>Dexterous (w={manipulability.toFixed(3)})</span>
         </>
       )}
     </div>
@@ -176,6 +183,29 @@ export function App() {
     return () => {
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('hashchange', handlePopState);
+    };
+  }, []);
+
+  // Global Supabase Auth Initialization & Password Recovery Route Listener
+  useEffect(() => {
+    useLearningStore.getState().initializeAuth();
+
+    const handleRecoveryRoute = () => {
+      if (typeof window === 'undefined') return;
+      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      if (path === '/reset-password' || hash.includes('type=recovery') || hash.includes('reset-password')) {
+        const store = useLearningStore.getState();
+        store.setAuthMode('reset-password');
+        store.setAuthModalOpen(true);
+      }
+    };
+    handleRecoveryRoute();
+    window.addEventListener('popstate', handleRecoveryRoute);
+    window.addEventListener('hashchange', handleRecoveryRoute);
+    return () => {
+      window.removeEventListener('popstate', handleRecoveryRoute);
+      window.removeEventListener('hashchange', handleRecoveryRoute);
     };
   }, []);
 
@@ -1191,6 +1221,9 @@ export function App() {
           </div>
         </div>
       )}
+
+      {/* Global KyntriX Authentication & Password Reset Modal */}
+      <AuthModal />
     </div>
   );
 }

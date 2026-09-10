@@ -1,6 +1,6 @@
 import type { RobotDefinition } from '../../data/schema/robotSchema';
 import { Matrix4 } from '../math/Matrix4';
-import type { IKOptions, IKPipelineResult, IKSingleSolution } from './types';
+import type { IKOptions, IKPipelineResult, IKSingleSolution, ReachabilityStatus } from './types';
 import { solve3RPlanar } from './analytical3R';
 import { hasSphericalWrist, solve6RSpherical } from './analytical6R';
 import { isSCARARobot, solveSCARA } from './analyticalSCARA';
@@ -136,6 +136,10 @@ export function solveIK(
         computationTimeMs: 0,
         allTestedBranches: 0,
         failureReason: 'Target matrix contains non-finite values (NaN or Infinity).',
+        isPositionReachable: false,
+        isOrientationReachable: false,
+        reachabilityStatus: 'outside-workspace',
+        isSingular: false,
       };
     }
   }
@@ -191,43 +195,51 @@ export function solveIK(
       computationTimeMs: performance.now() - startTime,
       allTestedBranches: 0,
       failureReason: 'Target unreachable: outside maximum physical workspace reach.',
+      isPositionReachable: false,
+      isOrientationReachable: false,
+      reachabilityStatus: 'outside-workspace',
+      isSingular: false,
     };
   }
 
   const allCandidateSolutions: IKSingleSolution[] = [];
   let analyticalFound = false;
 
-  // 1. Try Analytical 3R Planar Solver if applicable
-  if (is3RPlanar(robot)) {
-    const planarSolutions = solve3RPlanar(robot, target, options.currentJoints);
-    if (planarSolutions.length > 0) {
-      analyticalFound = true;
-      for (const sol of planarSolutions) {
-        allCandidateSolutions.push(sol);
+  // Analytical solvers enforce strict orientation matching. When positionOnly is requested,
+  // we bypass orientation-locked analytical solvers and solve position reachability via numerical DLS.
+  if (!options.positionOnly) {
+    // 1. Try Analytical 3R Planar Solver if applicable
+    if (is3RPlanar(robot)) {
+      const planarSolutions = solve3RPlanar(robot, target, options.currentJoints);
+      if (planarSolutions.length > 0) {
+        analyticalFound = true;
+        for (const sol of planarSolutions) {
+          allCandidateSolutions.push(sol);
+        }
       }
     }
-  }
 
-  // 2. Try Analytical SCARA (4-DOF) Solver if applicable
-  if (isSCARARobot(robot)) {
-    const scaraSolutions = solveSCARA(robot, target, options.currentJoints);
-    if (scaraSolutions.length > 0) {
-      analyticalFound = true;
-      for (const sol of scaraSolutions) {
-        allCandidateSolutions.push(sol);
+    // 2. Try Analytical SCARA (4-DOF) Solver if applicable
+    if (isSCARARobot(robot)) {
+      const scaraSolutions = solveSCARA(robot, target, options.currentJoints);
+      if (scaraSolutions.length > 0) {
+        analyticalFound = true;
+        for (const sol of scaraSolutions) {
+          allCandidateSolutions.push(sol);
+        }
       }
     }
-  }
 
-  // 3. Try Analytical 6R Spherical Wrist Solver if applicable
-  if (hasSphericalWrist(robot)) {
-    const sphericalSolutions = solve6RSpherical(robot, target, options.currentJoints);
-    for (const sol of sphericalSolutions) {
-      allCandidateSolutions.push(sol);
-    }
-    // Only suppress numerical DLS fallback if at least one analytical spherical solution is converged and within limits
-    if (sphericalSolutions.some((s) => s.converged && s.withinLimits)) {
-      analyticalFound = true;
+    // 3. Try Analytical 6R Spherical Wrist Solver if applicable
+    if (hasSphericalWrist(robot)) {
+      const sphericalSolutions = solve6RSpherical(robot, target, options.currentJoints);
+      for (const sol of sphericalSolutions) {
+        allCandidateSolutions.push(sol);
+      }
+      // Only suppress numerical DLS fallback if at least one analytical spherical solution is converged and within limits
+      if (sphericalSolutions.some((s) => s.converged && s.withinLimits)) {
+        analyticalFound = true;
+      }
     }
   }
 
@@ -283,12 +295,35 @@ export function solveIK(
     }
   }
 
-  // Filter and deduplicate
+  // Filter and deduplicate: preserve the highest quality solution when configurations are equivalent
   const uniqueSolutions: IKSingleSolution[] = [];
+  const isPosOnly = options.positionOnly === true;
+
   for (const sol of allCandidateSolutions) {
-    const exists = uniqueSolutions.some((u) => areSolutionsEqual(u.q, sol.q));
-    if (!exists) {
+    const existingIdx = uniqueSolutions.findIndex((u) => areSolutionsEqual(u.q, sol.q));
+    if (existingIdx === -1) {
       uniqueSolutions.push(sol);
+    } else {
+      const existing = uniqueSolutions[existingIdx];
+      if (sol.converged && !existing.converged) {
+        uniqueSolutions[existingIdx] = sol;
+      } else if (sol.converged && existing.converged) {
+        if (sol.withinLimits && !existing.withinLimits) {
+          uniqueSolutions[existingIdx] = sol;
+        } else if (sol.withinLimits === existing.withinLimits) {
+          const errSol = isPosOnly ? sol.positionError : sol.positionError + sol.orientationError;
+          const errExisting = isPosOnly ? existing.positionError : existing.positionError + existing.orientationError;
+          if (errSol < errExisting) {
+            uniqueSolutions[existingIdx] = sol;
+          }
+        }
+      } else if (!sol.converged && !existing.converged) {
+        const errSol = isPosOnly ? sol.positionError : sol.positionError + sol.orientationError;
+        const errExisting = isPosOnly ? existing.positionError : existing.positionError + existing.orientationError;
+        if (errSol < errExisting) {
+          uniqueSolutions[existingIdx] = sol;
+        }
+      }
     }
   }
 
@@ -296,6 +331,87 @@ export function solveIK(
   uniqueSolutions.sort((a, b) => a.cost - b.cost);
 
   const bestSolution = uniqueSolutions.find((s) => s.converged && s.withinLimits) ?? null;
+  const isConverged = bestSolution !== null && bestSolution.converged;
+
+  let isPositionReachable = isConverged;
+  let isOrientationReachable = isConverged;
+  let failureReason: string | undefined = undefined;
+
+  if (isConverged) {
+    isPositionReachable = true;
+    isOrientationReachable = true;
+  } else {
+    // If not converged for full pose, test position-only reachability to provide exact diagnostic
+    const posTol = options.positionTolerance ?? 1e-4;
+    const reachedPosition = uniqueSolutions.some(
+      (s) => s.withinLimits && s.positionError <= posTol
+    );
+
+    if (reachedPosition) {
+      isPositionReachable = true;
+      isOrientationReachable = false;
+      failureReason =
+        'Target position is reachable, but requested orientation cannot be achieved within joint limits.';
+    } else if (!options.positionOnly) {
+      // Multi-seed position check across diverse configurations (avoids false negative from bad initial guess)
+      const testSeeds = [
+        defaultInitial,
+        robot.joints.map((j) => (j.home !== undefined ? j.home : (j.min + j.max) / 2)),
+      ];
+      const extraSeeds = generateBranchSeeds(robot, defaultInitial);
+      for (let i = 0; i < Math.min(extraSeeds.length, 6); i++) {
+        testSeeds.push(extraSeeds[i]);
+      }
+
+      let foundPosSol: IKSingleSolution | null = null;
+      for (const seed of testSeeds) {
+        const quickPosSol = solveNumericalIK(robot, target, {
+          ...options,
+          positionOnly: true,
+          maxIterations: 45,
+          initialGuess: seed,
+        });
+        if (quickPosSol.converged && quickPosSol.withinLimits) {
+          foundPosSol = quickPosSol;
+          break;
+        }
+      }
+
+      if (foundPosSol) {
+        isPositionReachable = true;
+        isOrientationReachable = false;
+        failureReason =
+          'Target position is reachable, but requested orientation cannot be achieved within joint limits.';
+      } else {
+        isPositionReachable = false;
+        isOrientationReachable = false;
+        failureReason =
+          targetPos.norm() > maxTheoreticalReach
+            ? 'Target position is outside maximum physical reach envelope.'
+            : 'Target is kinematically unreachable within joint limits.';
+      }
+    } else {
+      isPositionReachable = false;
+      isOrientationReachable = false;
+      failureReason =
+        targetPos.norm() > maxTheoreticalReach
+          ? 'Target position is outside maximum physical reach envelope.'
+          : 'Target position is kinematically unreachable within joint limits.';
+    }
+  }
+
+  const isSingular = bestSolution ? !!bestSolution.isSingular : false;
+  let reachabilityStatus: ReachabilityStatus;
+
+  if (isConverged) {
+    reachabilityStatus = isSingular ? 'reachable-singular' : 'reachable-dexterous';
+  } else if (isPositionReachable) {
+    reachabilityStatus = 'position-only-reachable';
+  } else if (targetPos.norm() > maxTheoreticalReach) {
+    reachabilityStatus = 'outside-workspace';
+  } else {
+    reachabilityStatus = 'unreachable-joint-limits';
+  }
 
   const totalTime = performance.now() - startTime;
 
@@ -303,8 +419,13 @@ export function solveIK(
     target,
     solutions: uniqueSolutions,
     bestSolution,
-    converged: bestSolution !== null && bestSolution.converged,
+    converged: isConverged,
     computationTimeMs: totalTime,
     allTestedBranches: branchCount,
+    failureReason,
+    isPositionReachable,
+    isOrientationReachable,
+    reachabilityStatus,
+    isSingular,
   };
 }

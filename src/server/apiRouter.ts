@@ -33,7 +33,44 @@ async function dispatchApi(
   const authHeader = (headers['authorization'] as string) || (headers['Authorization'] as string) || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
   const session = token ? db.getSession(token) : undefined;
-  const currentUserId = session ? session.userId : undefined;
+  let currentUserId = session ? session.userId : undefined;
+
+  // Support Supabase JWT tokens
+  if (!currentUserId && token && token.includes('.')) {
+    try {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const jsonStr = typeof Buffer !== 'undefined'
+          ? Buffer.from(base64, 'base64').toString('utf8')
+          : atob(base64);
+        const payload = JSON.parse(jsonStr);
+        if (payload && payload.sub) {
+          const subId = String(payload.sub);
+          currentUserId = subId;
+          if (!db.getUserById(subId)) {
+            const email = payload.email || '';
+            const meta = payload.user_metadata || {};
+            db.createUser({
+              id: subId,
+              email,
+              name: meta.full_name || meta.name || email.split('@')[0] || 'Engineer',
+              username: meta.username || email.split('@')[0] || 'engineer',
+              role: (meta.role || 'student').toLowerCase(),
+              institution: meta.institution || undefined,
+              avatarUrl: meta.avatar_url || meta.picture || undefined,
+              passwordHash: '',
+              salt: '',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            });
+          }
+        }
+      }
+    } catch {
+      // ignore invalid token formats
+    }
+  }
 
   try {
     // 1. Auth routes

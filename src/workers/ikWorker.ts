@@ -18,6 +18,10 @@ export interface SerializedIKResult {
   computationTimeMs: number;
   allTestedBranches: number;
   failureReason?: string;
+  isPositionReachable?: boolean;
+  isOrientationReachable?: boolean;
+  reachabilityStatus?: string;
+  isSingular?: boolean;
 }
 
 export interface IKWorkerResponse {
@@ -56,6 +60,10 @@ self.onmessage = (e: MessageEvent<IKWorkerRequest>) => {
         computationTimeMs: result.computationTimeMs,
         allTestedBranches: result.allTestedBranches,
         failureReason: result.failureReason,
+        isPositionReachable: result.isPositionReachable,
+        isOrientationReachable: result.isOrientationReachable,
+        reachabilityStatus: result.reachabilityStatus,
+        isSingular: result.isSingular,
       },
     };
 

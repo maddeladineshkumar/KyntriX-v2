@@ -87,7 +87,7 @@ export interface RobotState {
   setJointValue: (index: number, val: number) => void;
   resetToHome: () => void;
   setTargetPose: (pose: Matrix4, autoSolve?: boolean) => void;
-  triggerSolveIK: (autoAnimate?: boolean, applySolution?: boolean) => void;
+  triggerSolveIK: (autoAnimate?: boolean, applySolution?: boolean, positionOnly?: boolean) => void;
   applyIKSolution: (sol: IKSingleSolution, animate?: boolean) => void;
 
   // Trajectory Actions
@@ -301,7 +301,7 @@ export const useRobotStore = create<RobotState>((set, get) => ({
     }
   },
 
-  triggerSolveIK: (autoAnimate: boolean = false, applySolution: boolean = true) => {
+  triggerSolveIK: (autoAnimate: boolean = false, applySolution: boolean = true, positionOnly: boolean = false) => {
     const { robot, targetPose, q } = get();
     set({ ikSolving: true, statusAnnouncement: 'Solving inverse kinematics...' });
 
@@ -358,6 +358,10 @@ export const useRobotStore = create<RobotState>((set, get) => ({
           computationTimeMs: res.computationTimeMs,
           allTestedBranches: res.allTestedBranches,
           failureReason: res.failureReason,
+          isPositionReachable: res.isPositionReachable,
+          isOrientationReachable: res.isOrientationReachable,
+          reachabilityStatus: res.reachabilityStatus as any,
+          isSingular: res.isSingular,
         };
         const statusMsg = pipelineResult.converged && pipelineResult.bestSolution
           ? `IK solved successfully in ${pipelineResult.computationTimeMs.toFixed(0)}ms (error: ${(pipelineResult.bestSolution.positionError * 1000).toFixed(1)}mm).`
@@ -377,6 +381,7 @@ export const useRobotStore = create<RobotState>((set, get) => ({
           initialGuess: q,
           currentJoints: q,
           returnAllBranches: true,
+          positionOnly,
         },
       };
       worker.postMessage(req);
@@ -387,6 +392,7 @@ export const useRobotStore = create<RobotState>((set, get) => ({
           initialGuess: q,
           currentJoints: q,
           returnAllBranches: true,
+          positionOnly,
         });
         if (ikTimeoutTimer) {
           clearTimeout(ikTimeoutTimer);

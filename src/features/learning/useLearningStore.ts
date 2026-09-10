@@ -1,13 +1,34 @@
 import { create } from 'zustand';
 import { ApiClient } from './apiClient';
+import { supabase } from '../../lib/supabase';
+import { AuthService } from '../../lib/authService';
 import type {
   User,
+  UserRole,
   UserProfile,
   Problem,
   ProblemAttempt,
   SimulationChallenge,
   Classroom,
 } from '../../server/db/types';
+
+let authListenerSubscribed = false;
+
+function buildUserFromSupabase(supabaseUser: any, profile: any): User {
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email || '',
+    name: profile?.full_name || supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'KyntriX Engineer',
+    username: profile?.username || supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || 'engineer',
+    role: ((profile?.role?.toLowerCase() as UserRole) || (supabaseUser.user_metadata?.role?.toLowerCase() as UserRole) || 'student'),
+    institution: profile?.institution || supabaseUser.user_metadata?.institution || undefined,
+    avatarUrl: profile?.avatar_url || supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || undefined,
+    passwordHash: '',
+    salt: '',
+    createdAt: profile?.created_at || supabaseUser.created_at || new Date().toISOString(),
+    updatedAt: profile?.updated_at || new Date().toISOString(),
+  };
+}
 
 export type LearningSubtab =
   | 'dashboard'
@@ -24,6 +45,13 @@ export interface LearningState {
   isAuthenticated: boolean;
   authLoading: boolean;
   authError: string | null;
+  authSuccess: string | null;
+  authMode: 'signin' | 'register' | 'forgot-password' | 'reset-password';
+  setAuthMode: (mode: 'signin' | 'register' | 'forgot-password' | 'reset-password') => void;
+  setAuthSuccess: (msg: string | null) => void;
+  loginWithGoogle: () => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<boolean>;
+  updatePassword: (newPass: string) => Promise<boolean>;
 
   // Subtab
   activeSubtab: LearningSubtab;
@@ -79,7 +107,7 @@ export interface LearningState {
   login: (email: string, pass: string) => Promise<boolean>;
   register: (data: { name: string; username: string; email: string; password: string; role?: string; institution?: string }) => Promise<boolean>;
   logout: () => Promise<void>;
-  updateProfile: (data: { name?: string; institution?: string; avatarUrl?: string }) => Promise<void>;
+  updateProfile: (data: { name?: string; institution?: string; avatarUrl?: string; role?: string }) => Promise<void>;
 
   setCategoryFilter: (cat: string) => void;
   setDifficultyFilter: (diff: string) => void;
@@ -115,6 +143,10 @@ export const useLearningStore = create<LearningState>((set, get) => ({
   isAuthenticated: false,
   authLoading: true,
   authError: null,
+  authSuccess: null,
+  authMode: 'signin',
+  setAuthMode: (mode) => set({ authMode: mode, authError: null, authSuccess: null }),
+  setAuthSuccess: (msg) => set({ authSuccess: msg }),
 
   activeSubtab: 'dashboard',
   setActiveSubtab: (tab) => set({ activeSubtab: tab }),
@@ -154,101 +186,113 @@ export const useLearningStore = create<LearningState>((set, get) => ({
   classroomAnalytics: null,
 
   authModalOpen: false,
-  setAuthModalOpen: (open) => set({ authModalOpen: open }),
+  setAuthModalOpen: (open) => set({ authModalOpen: open, authError: null, authSuccess: null }),
 
   // --- Auth Actions ---
   initializeAuth: async () => {
-    const isExplicitLogout = typeof window !== 'undefined' && localStorage.getItem('kyntrix_explicit_logout') === 'true';
-    const token = ApiClient.getToken();
-    if (!token) {
-      if (isExplicitLogout) {
-        set({
-          user: null,
-          profile: null,
-          isAuthenticated: false,
-          authLoading: false,
-          badges: [],
-          analyticsData: null,
-        });
-        return;
-      }
-      // Auto-login default demo student Dinesh Kumar on initial first-time visit
-      const loginRes = await ApiClient.login({
-        email: 'student@kyntrix.edu',
-        password: 'KyntriX2025!',
+    // Only subscribe to auth state changes once across store lifecycles
+    if (!authListenerSubscribed) {
+      authListenerSubscribed = true;
+      supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_OUT') {
+          ApiClient.setToken(null);
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            authLoading: false,
+            badges: [],
+            analyticsData: null,
+          });
+        } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
+          if (session?.user) {
+            const token = session.access_token;
+            ApiClient.setToken(token);
+            const prof = await AuthService.getProfile(session.user.id);
+            const dbUser = buildUserFromSupabase(session.user, prof);
+            set({
+              user: dbUser,
+              token,
+              isAuthenticated: true,
+              authLoading: false,
+            });
+            get().fetchBadges();
+            get().fetchAnalytics();
+          }
+        } else if (event === 'PASSWORD_RECOVERY') {
+          set({
+            authModalOpen: true,
+            authMode: 'reset-password',
+            authError: null,
+            authSuccess: null,
+          });
+        }
       });
-      if (loginRes.data && loginRes.data.token) {
-        ApiClient.setToken(loginRes.data.token);
-        set({
-          token: loginRes.data.token,
-          user: loginRes.data.user,
-          profile: loginRes.data.profile,
-          isAuthenticated: true,
-          authLoading: false,
-        });
-        get().fetchBadges();
-        get().fetchAnalytics();
-        return;
-      }
-      set({ authLoading: false });
-      return;
     }
 
     set({ authLoading: true });
-    const res = await ApiClient.getMe();
-    if (res.data && res.data.user) {
-      set({
-        user: res.data.user,
-        profile: res.data.profile,
-        isAuthenticated: true,
-        authLoading: false,
-      });
-      get().fetchBadges();
-      get().fetchAnalytics();
-    } else if (res.status === 401 || res.status === 403) {
-      if (isExplicitLogout) {
-        ApiClient.setToken(null);
-        set({ user: null, profile: null, isAuthenticated: false, authLoading: false, badges: [], analyticsData: null });
-        return;
-      }
-      // Token expired, fallback to student demo
-      const loginRes = await ApiClient.login({
-        email: 'student@kyntrix.edu',
-        password: 'KyntriX2025!',
-      });
-      if (loginRes.data && loginRes.data.token) {
-        ApiClient.setToken(loginRes.data.token);
+    try {
+      const session = await AuthService.getSession();
+      if (session?.user) {
+        const token = session.access_token;
+        ApiClient.setToken(token);
+        const prof = await AuthService.getProfile(session.user.id);
+        const dbUser = buildUserFromSupabase(session.user, prof);
         set({
-          token: loginRes.data.token,
-          user: loginRes.data.user,
-          profile: loginRes.data.profile,
+          user: dbUser,
+          token,
           isAuthenticated: true,
           authLoading: false,
         });
         get().fetchBadges();
         get().fetchAnalytics();
       } else {
-        ApiClient.setToken(null);
-        set({ user: null, profile: null, isAuthenticated: false, authLoading: false, badges: [], analyticsData: null });
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          authLoading: false,
+        });
       }
-    } else {
-      // Offline mode / temporary network failure (status 0): preserve existing session state
+    } catch {
       set({ authLoading: false });
     }
   },
 
   login: async (email, password) => {
-    try {
-      localStorage.removeItem('kyntrix_explicit_logout');
-    } catch {}
-    set({ authLoading: true, authError: null, badges: [], analyticsData: null });
-    const res = await ApiClient.login({ email, password });
-    if (res.data && res.data.token) {
-      ApiClient.setToken(res.data.token);
+    set({ authLoading: true, authError: null, authSuccess: null });
+    const res = await AuthService.signIn({ email, password });
+    if (res.error) {
+      // Fallback for offline or static hosting environments (e.g. GitHub Pages / tests)
+      const clientRes = await ApiClient.login({ email, password });
+      if (clientRes.data && clientRes.data.token) {
+        ApiClient.setToken(clientRes.data.token);
+        set({
+          token: clientRes.data.token,
+          user: clientRes.data.user,
+          profile: clientRes.data.profile,
+          isAuthenticated: true,
+          authLoading: false,
+          authModalOpen: false,
+        });
+        await Promise.all([
+          get().fetchBadges(),
+          get().fetchAnalytics(),
+          get().fetchProblems(),
+        ]);
+        return true;
+      }
+      set({ authError: res.error, authLoading: false });
+      return false;
+    }
+    if (res.session && res.user) {
+      const token = res.session.access_token;
+      ApiClient.setToken(token);
+      const prof = await AuthService.getProfile(res.user.id);
+      const dbUser = buildUserFromSupabase(res.user, prof);
       set({
-        token: res.data.token,
-        user: res.data.user,
-        profile: res.data.profile,
+        token,
+        user: dbUser,
         isAuthenticated: true,
         authLoading: false,
         authModalOpen: false,
@@ -259,24 +303,59 @@ export const useLearningStore = create<LearningState>((set, get) => ({
         get().fetchProblems(),
       ]);
       return true;
-    } else {
-      set({ authError: res.error || 'Login failed', authLoading: false });
-      return false;
     }
+    set({ authLoading: false });
+    return false;
   },
 
   register: async (data) => {
-    try {
-      localStorage.removeItem('kyntrix_explicit_logout');
-    } catch {}
-    set({ authLoading: true, authError: null, badges: [], analyticsData: null });
-    const res = await ApiClient.register(data);
-    if (res.data && res.data.token) {
-      ApiClient.setToken(res.data.token);
+    set({ authLoading: true, authError: null, authSuccess: null });
+    const res = await AuthService.signUp({
+      email: data.email,
+      password: data.password,
+      fullName: data.name,
+      username: data.username,
+      role: data.role,
+      institution: data.institution,
+    });
+    if (res.error) {
+      // Fallback for offline or static hosting environments (e.g. GitHub Pages / tests)
+      const clientRes = await ApiClient.register(data);
+      if (clientRes.data && clientRes.data.token) {
+        ApiClient.setToken(clientRes.data.token);
+        set({
+          token: clientRes.data.token,
+          user: clientRes.data.user,
+          profile: clientRes.data.profile,
+          isAuthenticated: true,
+          authLoading: false,
+          authModalOpen: false,
+        });
+        await Promise.all([
+          get().fetchBadges(),
+          get().fetchAnalytics(),
+          get().fetchProblems(),
+        ]);
+        return true;
+      }
+      set({ authError: res.error, authLoading: false });
+      return false;
+    }
+    if (res.needsEmailConfirmation) {
       set({
-        token: res.data.token,
-        user: res.data.user,
-        profile: res.data.profile,
+        authSuccess: 'Account created successfully. Please check your email to verify your KyntriX account.',
+        authLoading: false,
+      });
+      return true;
+    }
+    if (res.session && res.user) {
+      const token = res.session.access_token;
+      ApiClient.setToken(token);
+      const prof = await AuthService.getProfile(res.user.id);
+      const dbUser = buildUserFromSupabase(res.user, prof);
+      set({
+        token,
+        user: dbUser,
         isAuthenticated: true,
         authLoading: false,
         authModalOpen: false,
@@ -287,17 +366,54 @@ export const useLearningStore = create<LearningState>((set, get) => ({
         get().fetchProblems(),
       ]);
       return true;
-    } else {
-      set({ authError: res.error || 'Registration failed', authLoading: false });
+    }
+    set({ authLoading: false });
+    return true;
+  },
+
+  loginWithGoogle: async () => {
+    set({ authLoading: true, authError: null, authSuccess: null });
+    const res = await AuthService.signInWithGoogle();
+    if (res.error) {
+      set({ authError: res.error, authLoading: false });
+    }
+  },
+
+  sendPasswordReset: async (email) => {
+    set({ authLoading: true, authError: null, authSuccess: null });
+    const res = await AuthService.sendPasswordResetEmail(email);
+    if (res.error) {
+      set({ authError: res.error, authLoading: false });
       return false;
     }
+    set({
+      authSuccess: 'Password reset link sent! Please check your email inbox.',
+      authLoading: false,
+    });
+    return true;
+  },
+
+  updatePassword: async (newPass) => {
+    set({ authLoading: true, authError: null, authSuccess: null });
+    const res = await AuthService.updatePassword(newPass);
+    if (res.error) {
+      set({ authError: res.error, authLoading: false });
+      return false;
+    }
+    set({
+      authSuccess: 'Password updated successfully!',
+      authLoading: false,
+      authModalOpen: false,
+      authMode: 'signin',
+    });
+    return true;
   },
 
   logout: async () => {
     try {
-      localStorage.setItem('kyntrix_explicit_logout', 'true');
+      await AuthService.signOut();
     } catch {}
-    await ApiClient.logout();
+    ApiClient.setToken(null);
     set({
       user: null,
       profile: null,
@@ -312,11 +428,23 @@ export const useLearningStore = create<LearningState>((set, get) => ({
   },
 
   updateProfile: async (data) => {
-    const res = await ApiClient.updateProfile(data);
+    const currentUser = get().user;
+    if (!currentUser) return;
+    const res = await AuthService.updateProfile(currentUser.id, {
+      full_name: data.name,
+      institution: data.institution,
+      avatar_url: data.avatarUrl,
+      role: data.role,
+    });
     if (res.data) {
       set({
-        user: res.data.user,
-        profile: res.data.profile,
+        user: {
+          ...currentUser,
+          name: res.data.full_name || currentUser.name,
+          institution: res.data.institution || currentUser.institution,
+          avatarUrl: res.data.avatar_url || currentUser.avatarUrl,
+          role: (res.data.role?.toLowerCase() as UserRole) || currentUser.role,
+        },
       });
     }
   },

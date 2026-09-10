@@ -9,6 +9,7 @@ export interface IKOptions {
   enableNullSpace?: boolean; // secondary joint centering
   returnAllBranches?: boolean; // whether to explore multi-seed branches
   currentJoints?: number[]; // for proximity ranking
+  positionOnly?: boolean; // solve position reachability regardless of orientation
 }
 
 export interface IKSingleSolution {
@@ -26,6 +27,14 @@ export interface IKSingleSolution {
   solverType: 'analytical-3r' | 'analytical-6r' | 'analytical-scara' | 'numerical-dls';
 }
 
+export type ReachabilityStatus =
+  | 'reachable-dexterous'
+  | 'reachable-singular'
+  | 'position-only-reachable'
+  | 'outside-workspace'
+  | 'unreachable-joint-limits'
+  | 'convergence-failed';
+
 export interface IKPipelineResult {
   target: Matrix4;
   solutions: IKSingleSolution[];
@@ -34,4 +43,8 @@ export interface IKPipelineResult {
   computationTimeMs: number;
   allTestedBranches: number;
   failureReason?: string;
+  isPositionReachable?: boolean;
+  isOrientationReachable?: boolean;
+  reachabilityStatus?: ReachabilityStatus;
+  isSingular?: boolean;
 }

@@ -35,6 +35,7 @@ export const ProfileView: React.FC = () => {
   const [name, setName] = useState(user?.name || '');
   const [institution, setInstitution] = useState(user?.institution || '');
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '');
+  const [role, setRole] = useState(user?.role || 'student');
 
   useEffect(() => {
     fetchBadges();
@@ -44,7 +45,7 @@ export const ProfileView: React.FC = () => {
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateProfile({ name, institution, avatarUrl });
+    await updateProfile({ name, institution, avatarUrl, role });
     setEditOpen(false);
   };
 
@@ -104,6 +105,7 @@ export const ProfileView: React.FC = () => {
                     setName(user.name);
                     setInstitution(user.institution || '');
                     setAvatarUrl(user.avatarUrl || '');
+                    setRole(user.role || 'student');
                     setEditOpen(true);
                   }}
                   className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold transition-all active:scale-95 cursor-pointer"
@@ -304,6 +306,18 @@ export const ProfileView: React.FC = () => {
                   onChange={(e) => setName(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white"
                 />
+              </div>
+
+              <div>
+                <label className="block font-bold text-stone-700 mb-1">Role</label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as any)}
+                  className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white"
+                >
+                  <option value="student">Student</option>
+                  <option value="teacher">Teacher</option>
+                </select>
               </div>
 
               <div>

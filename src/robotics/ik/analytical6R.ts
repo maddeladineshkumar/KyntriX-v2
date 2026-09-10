@@ -126,7 +126,11 @@ export function solve6RSpherical(
       : robot.joints.slice(0, 3).map((j) => (j.home !== undefined ? j.home : (j.min + j.max) / 2));
 
   const t1_base = Math.atan2(pw.y, pw.x);
-  const armSeeds: [number, number, number][] = [
+  const armSeeds: [number, number, number][] = [];
+  if (currentJoints && currentJoints.length >= 3) {
+    armSeeds.push([baseGuess[0], baseGuess[1], baseGuess[2]]);
+  }
+  armSeeds.push(
     // Branch 1: Shoulder Front, Elbow Up
     [t1_base, baseGuess[1], baseGuess[2]],
     // Branch 2: Shoulder Front, Elbow Down
@@ -134,8 +138,8 @@ export function solve6RSpherical(
     // Branch 3: Shoulder Back, Elbow Up
     [Math.atan2(-pw.y, -pw.x), -baseGuess[1], baseGuess[2]],
     // Branch 4: Shoulder Back, Elbow Down
-    [Math.atan2(-pw.y, -pw.x), -baseGuess[1], -baseGuess[2]],
-  ];
+    [Math.atan2(-pw.y, -pw.x), -baseGuess[1], -baseGuess[2]]
+  );
 
   const solvedArmBranches: [number, number, number][] = [];
 
@@ -144,7 +148,7 @@ export function solve6RSpherical(
     let qArm = [...seed];
     let converged = false;
 
-    for (let iter = 0; iter < 20; iter++) {
+    for (let iter = 0; iter < 35; iter++) {
       const fk = computeFK(chainRobot, [qArm[0], qArm[1], qArm[2], 0, 0, 0]);
       // Frame 4 origin is the wrist center
       const currentPw = fk.origins[4];
@@ -238,7 +242,7 @@ export function solve6RSpherical(
       let q = [t1, t2, t3, w4, w5, w6];
 
       // Refine wrist orientation
-      for (let iter = 0; iter < 15; iter++) {
+      for (let iter = 0; iter < 30; iter++) {
         const fkCur = computeFK(chainRobot, q);
         const rotErr = fkCur.endEffectorTransform.getRotation().rotationError(chainTargetRot);
         if (rotErr.norm() < 1e-5) break;

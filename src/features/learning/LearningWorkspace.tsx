@@ -5,7 +5,6 @@ import { ArenaView } from './ArenaView';
 import { ChallengesView } from './ChallengesView';
 import { AnalyticsView } from './AnalyticsView';
 import { ProfileView } from './ProfileView';
-import { AuthModal } from './AuthModal';
 import { ErrorBoundary } from './ErrorBoundary';
 import {
   LayoutDashboard,
@@ -125,9 +124,6 @@ export const LearningWorkspace: React.FC<LearningWorkspaceProps> = ({ onOpenSimu
           {activeSubtab === 'profile' && <ProfileView />}
         </ErrorBoundary>
       </main>
-
-      {/* Auth Modal */}
-      <AuthModal />
     </div>
   );
 };

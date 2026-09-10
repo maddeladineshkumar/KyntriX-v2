@@ -70,7 +70,8 @@ export function solveNumericalIK(
   const posTol = options.positionTolerance ?? POSITION_TOLERANCE;
   const oriTol = options.orientationTolerance ?? ORIENTATION_TOLERANCE;
   const initialDamping = options.damping ?? 0.05;
-  const use6DOF = robot.dof >= 6;
+  const isPosOnly = options.positionOnly === true;
+  const use6DOF = isPosOnly ? false : robot.dof >= 6;
 
   // Initialize q
   let q: number[];

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Lock, Database, EyeOff, Award, FileText, Mail, Globe } from 'lucide-react';
+import { ShieldCheck, Lock, Database, EyeOff, Award, FileText, Mail } from 'lucide-react';
 
 export const PrivacyPolicyView: React.FC = () => {
   return (
@@ -20,8 +20,7 @@ export const PrivacyPolicyView: React.FC = () => {
           </div>
         </div>
         <p className="text-sm text-stone-700 leading-relaxed pt-2">
-          At KyntriX Robotics (<span className="font-mono text-xs font-bold text-amber-950">kyntrix.edu / KyntriX-v2</span>), 
-          we are dedicated to empowering robotics engineers, students, and academic researchers with transparent, 
+          At KyntriX Robotics, we are dedicated to empowering robotics engineers, students, and academic researchers with transparent, 
           privacy-respecting simulation and deterministic kinematics tools. This Privacy Policy details the exact types 
           of information we collect, how it is processed, and your complete rights under global data protection frameworks 
           (including GDPR and CCPA).
@@ -180,23 +179,22 @@ export const PrivacyPolicyView: React.FC = () => {
       {/* Section 6 */}
       <section className="space-y-3">
         <h2 className="text-base sm:text-lg font-black text-stone-900 flex items-center gap-2 border-b border-stone-200 pb-2">
-          <Globe className="w-5 h-5 text-blue-600" />
+          <Mail className="w-5 h-5 text-amber-600" />
           <span>6. Contact & Data Protection Officer</span>
         </h2>
         <div className="p-4 bg-stone-100/90 border border-stone-200 rounded-2xl space-y-2 text-sm text-stone-700">
           <p>
             If you have questions, feedback, or requests regarding this Privacy Policy or wish to exercise your data rights, 
-            please reach out to our team:
+            please reach out to:
           </p>
           <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-stone-800 pt-1">
-            <div className="flex items-center gap-1.5">
+            <a
+              href="mailto:maddeladineshkumar504@gmail.com"
+              className="flex items-center gap-1.5 text-amber-800 hover:text-amber-950 underline"
+            >
               <Mail className="w-4 h-4 text-amber-600" />
-              <span>privacy@kyntrix.edu</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Globe className="w-4 h-4 text-teal-600" />
-              <span>https://github.com/maddeladineshkumar/KyntriX-v2</span>
-            </div>
+              <span>maddeladineshkumar504@gmail.com</span>
+            </a>
           </div>
         </div>
       </section>

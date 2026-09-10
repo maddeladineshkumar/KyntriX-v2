@@ -71,8 +71,9 @@ describe('Legal Routing and Demo Button Removal Suite', () => {
       expect(content).toContain('FERPA / Student Privacy');
       expect(content).toContain('Your Data Rights (GDPR & CCPA)');
       expect(content).toContain('No Data Monetization');
-      expect(content).toContain('privacy@kyntrix.edu');
-      expect(content).toContain('https://github.com/maddeladineshkumar/KyntriX-v2');
+      expect(content).toContain('maddeladineshkumar504@gmail.com');
+      expect(content).not.toContain('privacy@kyntrix.edu');
+      expect(content).not.toContain('kyntrix.edu / KyntriX-v2');
 
       act(() => {
         root.unmount();

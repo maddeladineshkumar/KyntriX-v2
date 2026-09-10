@@ -38,13 +38,44 @@
       "salt": "kyntrix_secure_salt_2025",
       "createdAt": "2025-01-01T00:00:00.000Z",
       "updatedAt": "2025-01-01T00:00:00.000Z"
+    },
+    "user_1789032056807_imj5e": {
+      "id": "user_1789032056807_imj5e",
+      "name": "Alice Wonder",
+      "username": "alice_1789032056805",
+      "email": "alice_1789032056805@domain.edu",
+      "role": "student",
+      "institution": "MIT",
+      "passwordHash": "641b7af1034238fb13e22a74c1a695e5f1702bba7779e6a9a139d3eee43c1386",
+      "salt": "80d69e6121eb23f059cc32ced0a79250",
+      "createdAt": "2026-09-10T09:20:56.807Z",
+      "updatedAt": "2026-09-10T09:20:56.807Z"
     }
   },
-  "sessions": {},
+  "sessions": {
+    "tok_75f3cad52ca299a7d9e271349ba2221d2c8b905789c719405bc8abc0ee849de9": {
+      "id": "tok_75f3cad52ca299a7d9e271349ba2221d2c8b905789c719405bc8abc0ee849de9",
+      "userId": "user_student_1",
+      "expiresAt": "2026-09-17T09:20:56.573Z",
+      "createdAt": "2026-09-10T09:20:56.573Z"
+    },
+    "tok_efe93180a8ed16c62e35d480f73aa67b41db743c2463ac0ce2c3e42e76bf8606": {
+      "id": "tok_efe93180a8ed16c62e35d480f73aa67b41db743c2463ac0ce2c3e42e76bf8606",
+      "userId": "user_teacher_1",
+      "expiresAt": "2026-09-17T09:20:56.680Z",
+      "createdAt": "2026-09-10T09:20:56.680Z"
+    },
+    "tok_2661ccedd69386b2cdfcc05262a812a8b086f2e0d85c3b03795dd665558f032d": {
+      "id": "tok_2661ccedd69386b2cdfcc05262a812a8b086f2e0d85c3b03795dd665558f032d",
+      "userId": "user_1789032056807_imj5e",
+      "expiresAt": "2026-09-17T09:20:56.821Z",
+      "createdAt": "2026-09-10T09:20:56.821Z"
+    }
+  },
   "profiles": {
     "user_student_1": {
       "userId": "user_student_1",
-      "xp": 1420,
+      "xp": 1700,
       "rating": 1540,
       "rank": 4,
       "streak": {
@@ -99,7 +130,7 @@
     },
     "user_teacher_1": {
       "userId": "user_teacher_1",
-      "xp": 5800,
+      "xp": 7350,
       "rating": 2280,
       "rank": 1,
       "streak": {
@@ -169,6 +200,31 @@
         "totalTimeSpentMs": 25000000,
         "challengesCompleted": 20,
         "categoryStats": {}
+      }
+    },
+    "user_1789032056807_imj5e": {
+      "userId": "user_1789032056807_imj5e",
+      "xp": 38,
+      "rating": 1212,
+      "rank": 4,
+      "streak": {
+        "currentStreak": 1,
+        "longestStreak": 1,
+        "lastActivityDate": "2026-09-10"
+      },
+      "stats": {
+        "problemsSolved": 1,
+        "totalAttempts": 1,
+        "correctFirstAttempt": 1,
+        "totalTimeSpentMs": 30000,
+        "challengesCompleted": 0,
+        "categoryStats": {
+          "transforms": {
+            "attempted": 1,
+            "solved": 1,
+            "hintsTotal": 0
+          }
+        }
       }
     }
   },
@@ -12701,7 +12757,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-10T08:47:37.513Z"
+      "createdAt": "2026-09-10T09:20:56.555Z"
     },
     "att_seed_2": {
       "id": "att_seed_2",
@@ -12714,7 +12770,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-10T08:47:37.513Z"
+      "createdAt": "2026-09-10T09:20:56.555Z"
     },
     "att_seed_3": {
       "id": "att_seed_3",
@@ -12727,7 +12783,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-09T08:47:37.513Z"
+      "createdAt": "2026-09-09T09:20:56.555Z"
     },
     "att_seed_4": {
       "id": "att_seed_4",
@@ -12740,7 +12796,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-09T08:47:37.513Z"
+      "createdAt": "2026-09-09T09:20:56.555Z"
     },
     "att_seed_5": {
       "id": "att_seed_5",
@@ -12753,7 +12809,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-09T08:47:37.513Z"
+      "createdAt": "2026-09-09T09:20:56.555Z"
     },
     "att_seed_6": {
       "id": "att_seed_6",
@@ -12766,7 +12822,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-08T08:47:37.513Z"
+      "createdAt": "2026-09-08T09:20:56.555Z"
     },
     "att_seed_7": {
       "id": "att_seed_7",
@@ -12779,7 +12835,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-08T08:47:37.513Z"
+      "createdAt": "2026-09-08T09:20:56.555Z"
     },
     "att_seed_8": {
       "id": "att_seed_8",
@@ -12792,7 +12848,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-07T08:47:37.513Z"
+      "createdAt": "2026-09-07T09:20:56.555Z"
     },
     "att_seed_9": {
       "id": "att_seed_9",
@@ -12805,7 +12861,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-07T08:47:37.513Z"
+      "createdAt": "2026-09-07T09:20:56.555Z"
     },
     "att_seed_10": {
       "id": "att_seed_10",
@@ -12818,7 +12874,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-07T08:47:37.513Z"
+      "createdAt": "2026-09-07T09:20:56.555Z"
     },
     "att_seed_11": {
       "id": "att_seed_11",
@@ -12831,7 +12887,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-06T08:47:37.513Z"
+      "createdAt": "2026-09-06T09:20:56.555Z"
     },
     "att_seed_12": {
       "id": "att_seed_12",
@@ -12844,7 +12900,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-06T08:47:37.513Z"
+      "createdAt": "2026-09-06T09:20:56.555Z"
     },
     "att_seed_13": {
       "id": "att_seed_13",
@@ -12857,7 +12913,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-08-31T08:47:37.513Z"
+      "createdAt": "2026-08-31T09:20:56.555Z"
     },
     "att_seed_14": {
       "id": "att_seed_14",
@@ -12870,7 +12926,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-08-31T08:47:37.513Z"
+      "createdAt": "2026-08-31T09:20:56.555Z"
     },
     "att_seed_15": {
       "id": "att_seed_15",
@@ -12883,7 +12939,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-08-30T08:47:37.513Z"
+      "createdAt": "2026-08-30T09:20:56.555Z"
     },
     "att_seed_16": {
       "id": "att_seed_16",
@@ -12896,7 +12952,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-08-30T08:47:37.513Z"
+      "createdAt": "2026-08-30T09:20:56.555Z"
     },
     "att_seed_17": {
       "id": "att_seed_17",
@@ -12909,7 +12965,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-08-26T08:47:37.513Z"
+      "createdAt": "2026-08-26T09:20:56.555Z"
     },
     "att_seed_18": {
       "id": "att_seed_18",
@@ -12922,7 +12978,7 @@
       "solveTimeMs": 45000,
       "feedback": "Verified correct answer.",
       "attemptNumber": 1,
-      "createdAt": "2026-08-26T08:47:37.513Z"
+      "createdAt": "2026-08-26T09:20:56.555Z"
     },
     "att_seed_inc_1": {
       "id": "att_seed_inc_1",
@@ -12935,7 +12991,7 @@
       "solveTimeMs": 60000,
       "feedback": "Value mismatch.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-10T08:47:37.513Z"
+      "createdAt": "2026-09-10T09:20:56.555Z"
     },
     "att_seed_inc_2": {
       "id": "att_seed_inc_2",
@@ -12948,7 +13004,7 @@
       "solveTimeMs": 60000,
       "feedback": "Value mismatch.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-09T08:47:37.513Z"
+      "createdAt": "2026-09-09T09:20:56.555Z"
     },
     "att_seed_inc_3": {
       "id": "att_seed_inc_3",
@@ -12961,7 +13017,7 @@
       "solveTimeMs": 60000,
       "feedback": "Value mismatch.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-08T08:47:37.513Z"
+      "createdAt": "2026-09-08T09:20:56.555Z"
     },
     "att_seed_inc_4": {
       "id": "att_seed_inc_4",
@@ -12974,7 +13030,7 @@
       "solveTimeMs": 60000,
       "feedback": "Value mismatch.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-07T08:47:37.513Z"
+      "createdAt": "2026-09-07T09:20:56.555Z"
     },
     "att_seed_inc_5": {
       "id": "att_seed_inc_5",
@@ -12987,7 +13043,7 @@
       "solveTimeMs": 60000,
       "feedback": "Value mismatch.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-06T08:47:37.513Z"
+      "createdAt": "2026-09-06T09:20:56.555Z"
     },
     "att_seed_inc_6": {
       "id": "att_seed_inc_6",
@@ -13000,7 +13056,1715 @@
       "solveTimeMs": 60000,
       "feedback": "Value mismatch.",
       "attemptNumber": 1,
-      "createdAt": "2026-09-10T08:47:37.513Z"
+      "createdAt": "2026-09-10T09:20:56.555Z"
+    },
+    "att_teacher_1": {
+      "id": "att_teacher_1",
+      "userId": "user_teacher_1",
+      "problemId": "prob_dh_01",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-10T09:20:56.555Z"
+    },
+    "att_teacher_2": {
+      "id": "att_teacher_2",
+      "userId": "user_teacher_1",
+      "problemId": "prob_dh_02",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-09T09:20:56.555Z"
+    },
+    "att_teacher_3": {
+      "id": "att_teacher_3",
+      "userId": "user_teacher_1",
+      "problemId": "prob_dh_03",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-08T09:20:56.555Z"
+    },
+    "att_teacher_4": {
+      "id": "att_teacher_4",
+      "userId": "user_teacher_1",
+      "problemId": "prob_dh_04",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-07T09:20:56.555Z"
+    },
+    "att_teacher_5": {
+      "id": "att_teacher_5",
+      "userId": "user_teacher_1",
+      "problemId": "prob_dh_05",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-06T09:20:56.555Z"
+    },
+    "att_teacher_6": {
+      "id": "att_teacher_6",
+      "userId": "user_teacher_1",
+      "problemId": "prob_dh_06",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-05T09:20:56.555Z"
+    },
+    "att_teacher_7": {
+      "id": "att_teacher_7",
+      "userId": "user_teacher_1",
+      "problemId": "prob_dh_07",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-04T09:20:56.555Z"
+    },
+    "att_teacher_8": {
+      "id": "att_teacher_8",
+      "userId": "user_teacher_1",
+      "problemId": "prob_dh_08",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-03T09:20:56.555Z"
+    },
+    "att_teacher_9": {
+      "id": "att_teacher_9",
+      "userId": "user_teacher_1",
+      "problemId": "prob_dh_09",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-02T09:20:56.555Z"
+    },
+    "att_teacher_10": {
+      "id": "att_teacher_10",
+      "userId": "user_teacher_1",
+      "problemId": "prob_dh_10",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-01T09:20:56.555Z"
+    },
+    "att_teacher_11": {
+      "id": "att_teacher_11",
+      "userId": "user_teacher_1",
+      "problemId": "prob_trans_01",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-31T09:20:56.555Z"
+    },
+    "att_teacher_12": {
+      "id": "att_teacher_12",
+      "userId": "user_teacher_1",
+      "problemId": "prob_trans_02",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-30T09:20:56.555Z"
+    },
+    "att_teacher_13": {
+      "id": "att_teacher_13",
+      "userId": "user_teacher_1",
+      "problemId": "prob_trans_03",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-29T09:20:56.555Z"
+    },
+    "att_teacher_14": {
+      "id": "att_teacher_14",
+      "userId": "user_teacher_1",
+      "problemId": "prob_trans_04",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-28T09:20:56.555Z"
+    },
+    "att_teacher_15": {
+      "id": "att_teacher_15",
+      "userId": "user_teacher_1",
+      "problemId": "prob_trans_05",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-27T09:20:56.555Z"
+    },
+    "att_teacher_16": {
+      "id": "att_teacher_16",
+      "userId": "user_teacher_1",
+      "problemId": "prob_trans_06",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-26T09:20:56.555Z"
+    },
+    "att_teacher_17": {
+      "id": "att_teacher_17",
+      "userId": "user_teacher_1",
+      "problemId": "prob_trans_07",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-25T09:20:56.555Z"
+    },
+    "att_teacher_18": {
+      "id": "att_teacher_18",
+      "userId": "user_teacher_1",
+      "problemId": "prob_trans_08",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-24T09:20:56.555Z"
+    },
+    "att_teacher_19": {
+      "id": "att_teacher_19",
+      "userId": "user_teacher_1",
+      "problemId": "prob_trans_09",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-23T09:20:56.555Z"
+    },
+    "att_teacher_20": {
+      "id": "att_teacher_20",
+      "userId": "user_teacher_1",
+      "problemId": "prob_trans_10",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-22T09:20:56.555Z"
+    },
+    "att_teacher_21": {
+      "id": "att_teacher_21",
+      "userId": "user_teacher_1",
+      "problemId": "prob_fk_01",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-21T09:20:56.555Z"
+    },
+    "att_teacher_22": {
+      "id": "att_teacher_22",
+      "userId": "user_teacher_1",
+      "problemId": "prob_fk_02",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-20T09:20:56.555Z"
+    },
+    "att_teacher_23": {
+      "id": "att_teacher_23",
+      "userId": "user_teacher_1",
+      "problemId": "prob_fk_03",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-19T09:20:56.555Z"
+    },
+    "att_teacher_24": {
+      "id": "att_teacher_24",
+      "userId": "user_teacher_1",
+      "problemId": "prob_fk_04",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-18T09:20:56.555Z"
+    },
+    "att_teacher_25": {
+      "id": "att_teacher_25",
+      "userId": "user_teacher_1",
+      "problemId": "prob_fk_05",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-17T09:20:56.555Z"
+    },
+    "att_teacher_26": {
+      "id": "att_teacher_26",
+      "userId": "user_teacher_1",
+      "problemId": "prob_fk_06",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-16T09:20:56.555Z"
+    },
+    "att_teacher_27": {
+      "id": "att_teacher_27",
+      "userId": "user_teacher_1",
+      "problemId": "prob_fk_07",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-15T09:20:56.555Z"
+    },
+    "att_teacher_28": {
+      "id": "att_teacher_28",
+      "userId": "user_teacher_1",
+      "problemId": "prob_fk_08",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-14T09:20:56.555Z"
+    },
+    "att_teacher_29": {
+      "id": "att_teacher_29",
+      "userId": "user_teacher_1",
+      "problemId": "prob_fk_09",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-13T09:20:56.555Z"
+    },
+    "att_teacher_30": {
+      "id": "att_teacher_30",
+      "userId": "user_teacher_1",
+      "problemId": "prob_fk_10",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-12T09:20:56.555Z"
+    },
+    "att_teacher_31": {
+      "id": "att_teacher_31",
+      "userId": "user_teacher_1",
+      "problemId": "prob_ik_01",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-21T09:20:56.555Z"
+    },
+    "att_teacher_32": {
+      "id": "att_teacher_32",
+      "userId": "user_teacher_1",
+      "problemId": "prob_ik_02",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-20T09:20:56.555Z"
+    },
+    "att_teacher_33": {
+      "id": "att_teacher_33",
+      "userId": "user_teacher_1",
+      "problemId": "prob_ik_03",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-19T09:20:56.555Z"
+    },
+    "att_teacher_34": {
+      "id": "att_teacher_34",
+      "userId": "user_teacher_1",
+      "problemId": "prob_ik_04",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-18T09:20:56.555Z"
+    },
+    "att_teacher_35": {
+      "id": "att_teacher_35",
+      "userId": "user_teacher_1",
+      "problemId": "prob_ik_05",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-17T09:20:56.555Z"
+    },
+    "att_teacher_36": {
+      "id": "att_teacher_36",
+      "userId": "user_teacher_1",
+      "problemId": "prob_ik_06",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-16T09:20:56.555Z"
+    },
+    "att_teacher_37": {
+      "id": "att_teacher_37",
+      "userId": "user_teacher_1",
+      "problemId": "prob_ik_07",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-15T09:20:56.555Z"
+    },
+    "att_teacher_38": {
+      "id": "att_teacher_38",
+      "userId": "user_teacher_1",
+      "problemId": "prob_ik_08",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-14T09:20:56.555Z"
+    },
+    "att_teacher_39": {
+      "id": "att_teacher_39",
+      "userId": "user_teacher_1",
+      "problemId": "prob_ik_09",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-13T09:20:56.555Z"
+    },
+    "att_teacher_40": {
+      "id": "att_teacher_40",
+      "userId": "user_teacher_1",
+      "problemId": "prob_ik_10",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-12T09:20:56.555Z"
+    },
+    "att_teacher_41": {
+      "id": "att_teacher_41",
+      "userId": "user_teacher_1",
+      "problemId": "prob_jac_01",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-21T09:20:56.555Z"
+    },
+    "att_teacher_42": {
+      "id": "att_teacher_42",
+      "userId": "user_teacher_1",
+      "problemId": "prob_jac_02",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-20T09:20:56.555Z"
+    },
+    "att_teacher_43": {
+      "id": "att_teacher_43",
+      "userId": "user_teacher_1",
+      "problemId": "prob_jac_03",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-19T09:20:56.555Z"
+    },
+    "att_teacher_44": {
+      "id": "att_teacher_44",
+      "userId": "user_teacher_1",
+      "problemId": "prob_jac_04",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-18T09:20:56.555Z"
+    },
+    "att_teacher_45": {
+      "id": "att_teacher_45",
+      "userId": "user_teacher_1",
+      "problemId": "prob_traj_01",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-17T09:20:56.555Z"
+    },
+    "att_teacher_46": {
+      "id": "att_teacher_46",
+      "userId": "user_teacher_1",
+      "problemId": "prob_traj_02",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-16T09:20:56.555Z"
+    },
+    "att_teacher_47": {
+      "id": "att_teacher_47",
+      "userId": "user_teacher_1",
+      "problemId": "prob_work_01",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-15T09:20:56.555Z"
+    },
+    "att_teacher_48": {
+      "id": "att_teacher_48",
+      "userId": "user_teacher_1",
+      "problemId": "prob_work_02",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-14T09:20:56.555Z"
+    },
+    "att_teacher_inc_1": {
+      "id": "att_teacher_inc_1",
+      "userId": "user_teacher_1",
+      "problemId": "prob_jac_05",
+      "submittedAnswer": 0,
+      "isCorrect": false,
+      "score": 0,
+      "hintsUsed": 0,
+      "solveTimeMs": 40000,
+      "feedback": "Value mismatch.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-09T09:20:56.555Z"
+    },
+    "att_teacher_inc_2": {
+      "id": "att_teacher_inc_2",
+      "userId": "user_teacher_1",
+      "problemId": "prob_work_03",
+      "submittedAnswer": 0,
+      "isCorrect": false,
+      "score": 0,
+      "hintsUsed": 0,
+      "solveTimeMs": 40000,
+      "feedback": "Value mismatch.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-08T09:20:56.555Z"
+    },
+    "att_admin_1": {
+      "id": "att_admin_1",
+      "userId": "user_admin_1",
+      "problemId": "prob_dh_01",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-10T09:20:56.555Z"
+    },
+    "att_admin_2": {
+      "id": "att_admin_2",
+      "userId": "user_admin_1",
+      "problemId": "prob_dh_02",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-09T09:20:56.555Z"
+    },
+    "att_admin_3": {
+      "id": "att_admin_3",
+      "userId": "user_admin_1",
+      "problemId": "prob_dh_03",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-08T09:20:56.555Z"
+    },
+    "att_admin_4": {
+      "id": "att_admin_4",
+      "userId": "user_admin_1",
+      "problemId": "prob_dh_04",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-07T09:20:56.555Z"
+    },
+    "att_admin_5": {
+      "id": "att_admin_5",
+      "userId": "user_admin_1",
+      "problemId": "prob_dh_05",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-06T09:20:56.555Z"
+    },
+    "att_admin_6": {
+      "id": "att_admin_6",
+      "userId": "user_admin_1",
+      "problemId": "prob_dh_06",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-05T09:20:56.555Z"
+    },
+    "att_admin_7": {
+      "id": "att_admin_7",
+      "userId": "user_admin_1",
+      "problemId": "prob_dh_07",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-04T09:20:56.555Z"
+    },
+    "att_admin_8": {
+      "id": "att_admin_8",
+      "userId": "user_admin_1",
+      "problemId": "prob_dh_08",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-03T09:20:56.555Z"
+    },
+    "att_admin_9": {
+      "id": "att_admin_9",
+      "userId": "user_admin_1",
+      "problemId": "prob_dh_09",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-02T09:20:56.555Z"
+    },
+    "att_admin_10": {
+      "id": "att_admin_10",
+      "userId": "user_admin_1",
+      "problemId": "prob_dh_10",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-09-01T09:20:56.555Z"
+    },
+    "att_admin_11": {
+      "id": "att_admin_11",
+      "userId": "user_admin_1",
+      "problemId": "prob_trans_01",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-31T09:20:56.555Z"
+    },
+    "att_admin_12": {
+      "id": "att_admin_12",
+      "userId": "user_admin_1",
+      "problemId": "prob_trans_02",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-30T09:20:56.555Z"
+    },
+    "att_admin_13": {
+      "id": "att_admin_13",
+      "userId": "user_admin_1",
+      "problemId": "prob_trans_03",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-29T09:20:56.555Z"
+    },
+    "att_admin_14": {
+      "id": "att_admin_14",
+      "userId": "user_admin_1",
+      "problemId": "prob_trans_04",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-28T09:20:56.555Z"
+    },
+    "att_admin_15": {
+      "id": "att_admin_15",
+      "userId": "user_admin_1",
+      "problemId": "prob_trans_05",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-27T09:20:56.555Z"
+    },
+    "att_admin_16": {
+      "id": "att_admin_16",
+      "userId": "user_admin_1",
+      "problemId": "prob_trans_06",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-26T09:20:56.555Z"
+    },
+    "att_admin_17": {
+      "id": "att_admin_17",
+      "userId": "user_admin_1",
+      "problemId": "prob_trans_07",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-25T09:20:56.555Z"
+    },
+    "att_admin_18": {
+      "id": "att_admin_18",
+      "userId": "user_admin_1",
+      "problemId": "prob_trans_08",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-24T09:20:56.555Z"
+    },
+    "att_admin_19": {
+      "id": "att_admin_19",
+      "userId": "user_admin_1",
+      "problemId": "prob_trans_09",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-23T09:20:56.555Z"
+    },
+    "att_admin_20": {
+      "id": "att_admin_20",
+      "userId": "user_admin_1",
+      "problemId": "prob_trans_10",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-22T09:20:56.555Z"
+    },
+    "att_admin_21": {
+      "id": "att_admin_21",
+      "userId": "user_admin_1",
+      "problemId": "prob_fk_01",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-21T09:20:56.555Z"
+    },
+    "att_admin_22": {
+      "id": "att_admin_22",
+      "userId": "user_admin_1",
+      "problemId": "prob_fk_02",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-20T09:20:56.555Z"
+    },
+    "att_admin_23": {
+      "id": "att_admin_23",
+      "userId": "user_admin_1",
+      "problemId": "prob_fk_03",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-19T09:20:56.555Z"
+    },
+    "att_admin_24": {
+      "id": "att_admin_24",
+      "userId": "user_admin_1",
+      "problemId": "prob_fk_04",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-18T09:20:56.555Z"
+    },
+    "att_admin_25": {
+      "id": "att_admin_25",
+      "userId": "user_admin_1",
+      "problemId": "prob_fk_05",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-17T09:20:56.555Z"
+    },
+    "att_admin_26": {
+      "id": "att_admin_26",
+      "userId": "user_admin_1",
+      "problemId": "prob_fk_06",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-16T09:20:56.555Z"
+    },
+    "att_admin_27": {
+      "id": "att_admin_27",
+      "userId": "user_admin_1",
+      "problemId": "prob_fk_07",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-15T09:20:56.555Z"
+    },
+    "att_admin_28": {
+      "id": "att_admin_28",
+      "userId": "user_admin_1",
+      "problemId": "prob_fk_08",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-14T09:20:56.555Z"
+    },
+    "att_admin_29": {
+      "id": "att_admin_29",
+      "userId": "user_admin_1",
+      "problemId": "prob_fk_09",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-13T09:20:56.555Z"
+    },
+    "att_admin_30": {
+      "id": "att_admin_30",
+      "userId": "user_admin_1",
+      "problemId": "prob_fk_10",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-12T09:20:56.555Z"
+    },
+    "att_admin_31": {
+      "id": "att_admin_31",
+      "userId": "user_admin_1",
+      "problemId": "prob_ik_01",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-11T09:20:56.555Z"
+    },
+    "att_admin_32": {
+      "id": "att_admin_32",
+      "userId": "user_admin_1",
+      "problemId": "prob_ik_02",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-10T09:20:56.555Z"
+    },
+    "att_admin_33": {
+      "id": "att_admin_33",
+      "userId": "user_admin_1",
+      "problemId": "prob_ik_03",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-09T09:20:56.555Z"
+    },
+    "att_admin_34": {
+      "id": "att_admin_34",
+      "userId": "user_admin_1",
+      "problemId": "prob_ik_04",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-08T09:20:56.555Z"
+    },
+    "att_admin_35": {
+      "id": "att_admin_35",
+      "userId": "user_admin_1",
+      "problemId": "prob_ik_05",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-07T09:20:56.555Z"
+    },
+    "att_admin_36": {
+      "id": "att_admin_36",
+      "userId": "user_admin_1",
+      "problemId": "prob_ik_06",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-06T09:20:56.555Z"
+    },
+    "att_admin_37": {
+      "id": "att_admin_37",
+      "userId": "user_admin_1",
+      "problemId": "prob_ik_07",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-05T09:20:56.555Z"
+    },
+    "att_admin_38": {
+      "id": "att_admin_38",
+      "userId": "user_admin_1",
+      "problemId": "prob_ik_08",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-04T09:20:56.555Z"
+    },
+    "att_admin_39": {
+      "id": "att_admin_39",
+      "userId": "user_admin_1",
+      "problemId": "prob_ik_09",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-03T09:20:56.555Z"
+    },
+    "att_admin_40": {
+      "id": "att_admin_40",
+      "userId": "user_admin_1",
+      "problemId": "prob_ik_10",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-02T09:20:56.555Z"
+    },
+    "att_admin_41": {
+      "id": "att_admin_41",
+      "userId": "user_admin_1",
+      "problemId": "prob_jac_01",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-08-01T09:20:56.555Z"
+    },
+    "att_admin_42": {
+      "id": "att_admin_42",
+      "userId": "user_admin_1",
+      "problemId": "prob_jac_02",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-31T09:20:56.555Z"
+    },
+    "att_admin_43": {
+      "id": "att_admin_43",
+      "userId": "user_admin_1",
+      "problemId": "prob_jac_03",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-30T09:20:56.555Z"
+    },
+    "att_admin_44": {
+      "id": "att_admin_44",
+      "userId": "user_admin_1",
+      "problemId": "prob_jac_04",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-29T09:20:56.555Z"
+    },
+    "att_admin_45": {
+      "id": "att_admin_45",
+      "userId": "user_admin_1",
+      "problemId": "prob_traj_01",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-28T09:20:56.555Z"
+    },
+    "att_admin_46": {
+      "id": "att_admin_46",
+      "userId": "user_admin_1",
+      "problemId": "prob_traj_02",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-27T09:20:56.555Z"
+    },
+    "att_admin_47": {
+      "id": "att_admin_47",
+      "userId": "user_admin_1",
+      "problemId": "prob_work_01",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-26T09:20:56.555Z"
+    },
+    "att_admin_48": {
+      "id": "att_admin_48",
+      "userId": "user_admin_1",
+      "problemId": "prob_work_02",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-25T09:20:56.555Z"
+    },
+    "att_admin_49": {
+      "id": "att_admin_49",
+      "userId": "user_admin_1",
+      "problemId": "prob_dh_11",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-24T09:20:56.555Z"
+    },
+    "att_admin_50": {
+      "id": "att_admin_50",
+      "userId": "user_admin_1",
+      "problemId": "prob_dh_12",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-23T09:20:56.555Z"
+    },
+    "att_admin_51": {
+      "id": "att_admin_51",
+      "userId": "user_admin_1",
+      "problemId": "prob_dh_13",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-22T09:20:56.555Z"
+    },
+    "att_admin_52": {
+      "id": "att_admin_52",
+      "userId": "user_admin_1",
+      "problemId": "prob_dh_14",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-21T09:20:56.555Z"
+    },
+    "att_admin_53": {
+      "id": "att_admin_53",
+      "userId": "user_admin_1",
+      "problemId": "prob_dh_15",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-20T09:20:56.555Z"
+    },
+    "att_admin_54": {
+      "id": "att_admin_54",
+      "userId": "user_admin_1",
+      "problemId": "prob_dh_16",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-19T09:20:56.555Z"
+    },
+    "att_admin_55": {
+      "id": "att_admin_55",
+      "userId": "user_admin_1",
+      "problemId": "prob_trans_11",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-18T09:20:56.555Z"
+    },
+    "att_admin_56": {
+      "id": "att_admin_56",
+      "userId": "user_admin_1",
+      "problemId": "prob_trans_12",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-17T09:20:56.555Z"
+    },
+    "att_admin_57": {
+      "id": "att_admin_57",
+      "userId": "user_admin_1",
+      "problemId": "prob_trans_13",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-16T09:20:56.555Z"
+    },
+    "att_admin_58": {
+      "id": "att_admin_58",
+      "userId": "user_admin_1",
+      "problemId": "prob_trans_14",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-15T09:20:56.555Z"
+    },
+    "att_admin_59": {
+      "id": "att_admin_59",
+      "userId": "user_admin_1",
+      "problemId": "prob_trans_15",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-14T09:20:56.555Z"
+    },
+    "att_admin_60": {
+      "id": "att_admin_60",
+      "userId": "user_admin_1",
+      "problemId": "prob_trans_16",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-13T09:20:56.555Z"
+    },
+    "att_admin_61": {
+      "id": "att_admin_61",
+      "userId": "user_admin_1",
+      "problemId": "prob_fk_11",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-12T09:20:56.555Z"
+    },
+    "att_admin_62": {
+      "id": "att_admin_62",
+      "userId": "user_admin_1",
+      "problemId": "prob_fk_12",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-11T09:20:56.555Z"
+    },
+    "att_admin_63": {
+      "id": "att_admin_63",
+      "userId": "user_admin_1",
+      "problemId": "prob_fk_13",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-10T09:20:56.555Z"
+    },
+    "att_admin_64": {
+      "id": "att_admin_64",
+      "userId": "user_admin_1",
+      "problemId": "prob_fk_14",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-09T09:20:56.555Z"
+    },
+    "att_admin_65": {
+      "id": "att_admin_65",
+      "userId": "user_admin_1",
+      "problemId": "prob_fk_15",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-08T09:20:56.555Z"
+    },
+    "att_admin_66": {
+      "id": "att_admin_66",
+      "userId": "user_admin_1",
+      "problemId": "prob_fk_16",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-07T09:20:56.555Z"
+    },
+    "att_admin_67": {
+      "id": "att_admin_67",
+      "userId": "user_admin_1",
+      "problemId": "prob_ik_11",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-06T09:20:56.555Z"
+    },
+    "att_admin_68": {
+      "id": "att_admin_68",
+      "userId": "user_admin_1",
+      "problemId": "prob_ik_12",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-05T09:20:56.555Z"
+    },
+    "att_admin_69": {
+      "id": "att_admin_69",
+      "userId": "user_admin_1",
+      "problemId": "prob_ik_13",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-04T09:20:56.555Z"
+    },
+    "att_admin_70": {
+      "id": "att_admin_70",
+      "userId": "user_admin_1",
+      "problemId": "prob_ik_14",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-03T09:20:56.555Z"
+    },
+    "att_admin_71": {
+      "id": "att_admin_71",
+      "userId": "user_admin_1",
+      "problemId": "prob_ik_15",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-02T09:20:56.555Z"
+    },
+    "att_admin_72": {
+      "id": "att_admin_72",
+      "userId": "user_admin_1",
+      "problemId": "prob_jac_05",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-07-01T09:20:56.555Z"
+    },
+    "att_admin_73": {
+      "id": "att_admin_73",
+      "userId": "user_admin_1",
+      "problemId": "prob_jac_06",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-06-30T09:20:56.555Z"
+    },
+    "att_admin_74": {
+      "id": "att_admin_74",
+      "userId": "user_admin_1",
+      "problemId": "prob_jac_07",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-06-29T09:20:56.555Z"
+    },
+    "att_admin_75": {
+      "id": "att_admin_75",
+      "userId": "user_admin_1",
+      "problemId": "prob_jac_08",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-06-28T09:20:56.555Z"
+    },
+    "att_admin_76": {
+      "id": "att_admin_76",
+      "userId": "user_admin_1",
+      "problemId": "prob_traj_03",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-06-27T09:20:56.555Z"
+    },
+    "att_admin_77": {
+      "id": "att_admin_77",
+      "userId": "user_admin_1",
+      "problemId": "prob_traj_04",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-06-26T09:20:56.555Z"
+    },
+    "att_admin_78": {
+      "id": "att_admin_78",
+      "userId": "user_admin_1",
+      "problemId": "prob_traj_05",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-06-25T09:20:56.555Z"
+    },
+    "att_admin_79": {
+      "id": "att_admin_79",
+      "userId": "user_admin_1",
+      "problemId": "prob_work_03",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-06-24T09:20:56.555Z"
+    },
+    "att_admin_80": {
+      "id": "att_admin_80",
+      "userId": "user_admin_1",
+      "problemId": "prob_work_04",
+      "submittedAnswer": 1,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 25000,
+      "feedback": "Verified correct answer.",
+      "attemptNumber": 1,
+      "createdAt": "2026-06-23T09:20:56.555Z"
+    },
+    "att_1789032056835_44dlg": {
+      "id": "att_1789032056835_44dlg",
+      "userId": "user_1789032056807_imj5e",
+      "problemId": "prob_trans_01",
+      "submittedAnswer": 0.48,
+      "isCorrect": true,
+      "score": 100,
+      "hintsUsed": 0,
+      "solveTimeMs": 30000,
+      "feedback": "Correct! Value 0.48 matches target within tolerance 0.005.",
+      "validationDetails": {
+        "userValue": 0.48,
+        "expected": 0.48,
+        "difference": 0
+      },
+      "attemptNumber": 1,
+      "createdAt": "2026-09-10T09:20:56.835Z"
     }
   },
   "challenges": {
@@ -13856,8 +15620,108 @@
     }
   },
   "challengeAttempts": {},
-  "xpTransactions": {},
-  "ratingHistory": {},
+  "xpTransactions": {
+    "tx_1789032056601_4oozra": {
+      "id": "tx_1789032056601_4oozra",
+      "userId": "user_student_1",
+      "amount": 180,
+      "reason": "Badge Unlocked: Zero Hint Maestro",
+      "referenceType": "badge",
+      "referenceId": "zero_hint",
+      "createdAt": "2026-09-10T09:20:56.601Z"
+    },
+    "tx_1789032056614_76c4wy": {
+      "id": "tx_1789032056614_76c4wy",
+      "userId": "user_student_1",
+      "amount": 100,
+      "reason": "Badge Unlocked: Relentless Scholar",
+      "referenceType": "badge",
+      "referenceId": "streak_master",
+      "createdAt": "2026-09-10T09:20:56.614Z"
+    },
+    "tx_1789032056693_8kdsi8": {
+      "id": "tx_1789032056693_8kdsi8",
+      "userId": "user_teacher_1",
+      "amount": 50,
+      "reason": "Badge Unlocked: DH Apprentice",
+      "referenceType": "badge",
+      "referenceId": "dh_apprentice",
+      "createdAt": "2026-09-10T09:20:56.693Z"
+    },
+    "tx_1789032056704_livfae": {
+      "id": "tx_1789032056704_livfae",
+      "userId": "user_teacher_1",
+      "amount": 120,
+      "reason": "Badge Unlocked: FK Specialist",
+      "referenceType": "badge",
+      "referenceId": "fk_specialist",
+      "createdAt": "2026-09-10T09:20:56.704Z"
+    },
+    "tx_1789032056715_pea9li": {
+      "id": "tx_1789032056715_pea9li",
+      "userId": "user_teacher_1",
+      "amount": 250,
+      "reason": "Badge Unlocked: IK Specialist",
+      "referenceType": "badge",
+      "referenceId": "ik_specialist",
+      "createdAt": "2026-09-10T09:20:56.715Z"
+    },
+    "tx_1789032056727_eveyvy": {
+      "id": "tx_1789032056727_eveyvy",
+      "userId": "user_teacher_1",
+      "amount": 180,
+      "reason": "Badge Unlocked: Zero Hint Maestro",
+      "referenceType": "badge",
+      "referenceId": "zero_hint",
+      "createdAt": "2026-09-10T09:20:56.727Z"
+    },
+    "tx_1789032056744_f2izrc": {
+      "id": "tx_1789032056744_f2izrc",
+      "userId": "user_teacher_1",
+      "amount": 350,
+      "reason": "Badge Unlocked: Six DOF Virtuoso",
+      "referenceType": "badge",
+      "referenceId": "six_dof",
+      "createdAt": "2026-09-10T09:20:56.744Z"
+    },
+    "tx_1789032056763_3e5i1y": {
+      "id": "tx_1789032056763_3e5i1y",
+      "userId": "user_teacher_1",
+      "amount": 500,
+      "reason": "Badge Unlocked: KyntriX Master",
+      "referenceType": "badge",
+      "referenceId": "kyntrix_master",
+      "createdAt": "2026-09-10T09:20:56.763Z"
+    },
+    "tx_1789032056776_f8ev3j": {
+      "id": "tx_1789032056776_f8ev3j",
+      "userId": "user_teacher_1",
+      "amount": 100,
+      "reason": "Badge Unlocked: Relentless Scholar",
+      "referenceType": "badge",
+      "referenceId": "streak_master",
+      "createdAt": "2026-09-10T09:20:56.776Z"
+    },
+    "tx_1789032056866_uww7m0": {
+      "id": "tx_1789032056866_uww7m0",
+      "userId": "user_1789032056807_imj5e",
+      "amount": 38,
+      "reason": "Solved Problem: Vector Dot Product and Orthogonal Projection",
+      "referenceType": "problem",
+      "referenceId": "prob_trans_01",
+      "createdAt": "2026-09-10T09:20:56.866Z"
+    }
+  },
+  "ratingHistory": {
+    "rh_1789032056885_hvz39r": {
+      "id": "rh_1789032056885_hvz39r",
+      "userId": "user_1789032056807_imj5e",
+      "rating": 1212,
+      "delta": 12,
+      "reason": "Solved Vector Dot Product and Orthogonal Projection (beginner)",
+      "createdAt": "2026-09-10T09:20:56.885Z"
+    }
+  },
   "badges": {
     "dh_apprentice": {
       "id": "dh_apprentice",
@@ -13966,6 +15830,60 @@
       "userId": "user_student_1",
       "badgeId": "dh_apprentice",
       "unlockedAt": "2025-08-20T10:00:00.000Z"
+    },
+    "ub_user_student_1_zero_hint": {
+      "id": "ub_user_student_1_zero_hint",
+      "userId": "user_student_1",
+      "badgeId": "zero_hint",
+      "unlockedAt": "2026-09-10T09:20:56.600Z"
+    },
+    "ub_user_student_1_streak_master": {
+      "id": "ub_user_student_1_streak_master",
+      "userId": "user_student_1",
+      "badgeId": "streak_master",
+      "unlockedAt": "2026-09-10T09:20:56.614Z"
+    },
+    "ub_user_teacher_1_dh_apprentice": {
+      "id": "ub_user_teacher_1_dh_apprentice",
+      "userId": "user_teacher_1",
+      "badgeId": "dh_apprentice",
+      "unlockedAt": "2026-09-10T09:20:56.693Z"
+    },
+    "ub_user_teacher_1_fk_specialist": {
+      "id": "ub_user_teacher_1_fk_specialist",
+      "userId": "user_teacher_1",
+      "badgeId": "fk_specialist",
+      "unlockedAt": "2026-09-10T09:20:56.704Z"
+    },
+    "ub_user_teacher_1_ik_specialist": {
+      "id": "ub_user_teacher_1_ik_specialist",
+      "userId": "user_teacher_1",
+      "badgeId": "ik_specialist",
+      "unlockedAt": "2026-09-10T09:20:56.715Z"
+    },
+    "ub_user_teacher_1_zero_hint": {
+      "id": "ub_user_teacher_1_zero_hint",
+      "userId": "user_teacher_1",
+      "badgeId": "zero_hint",
+      "unlockedAt": "2026-09-10T09:20:56.727Z"
+    },
+    "ub_user_teacher_1_six_dof": {
+      "id": "ub_user_teacher_1_six_dof",
+      "userId": "user_teacher_1",
+      "badgeId": "six_dof",
+      "unlockedAt": "2026-09-10T09:20:56.744Z"
+    },
+    "ub_user_teacher_1_kyntrix_master": {
+      "id": "ub_user_teacher_1_kyntrix_master",
+      "userId": "user_teacher_1",
+      "badgeId": "kyntrix_master",
+      "unlockedAt": "2026-09-10T09:20:56.763Z"
+    },
+    "ub_user_teacher_1_streak_master": {
+      "id": "ub_user_teacher_1_streak_master",
+      "userId": "user_teacher_1",
+      "badgeId": "streak_master",
+      "unlockedAt": "2026-09-10T09:20:56.776Z"
     }
   },
   "classrooms": {

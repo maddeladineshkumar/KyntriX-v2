@@ -28,6 +28,9 @@ export class BadgeRoutes {
   private db = DatabaseService.getInstance();
 
   public listBadges(userId?: string): { status: number; body: any } {
+    if (userId) {
+      this.db.evaluateBadges(userId);
+    }
     const badges = this.db.getAllBadges();
     const userBadges = userId ? this.db.getUserBadges(userId) : [];
     const unlockedMap = new Map(userBadges.map((ub) => [ub.badgeId, ub.unlockedAt]));

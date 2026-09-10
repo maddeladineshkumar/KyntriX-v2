@@ -110,6 +110,7 @@ export class AuthRoutes {
       return { status: 404, body: { error: 'User not found.' } };
     }
 
+    this.db.evaluateBadges(user.id);
     const profile = this.db.getProfile(user.id);
     const userBadges = this.db.getUserBadges(user.id);
     const { passwordHash: _, salt: __, ...sanitized } = user;

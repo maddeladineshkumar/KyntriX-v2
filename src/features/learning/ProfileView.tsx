@@ -171,6 +171,25 @@ export const ProfileView: React.FC = () => {
         </div>
       </div>
 
+      {/* Guest Mode Notice */}
+      {!user && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-amber-950">
+          <div className="flex items-center gap-2.5 text-xs font-medium">
+            <Flame className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>
+              You are currently viewing as Guest. Sign in or register to maintain your individual problem-solving streak, unlock badges, and sync your personalized activity!
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAuthModalOpen(true)}
+            className="shrink-0 px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black transition-all cursor-pointer shadow-xs"
+          >
+            Sign In / Register
+          </button>
+        </div>
+      )}
+
       {/* LeetCode Style Problem Solving & Activity Heatmap */}
       <LeetCodeStatsCard
         profile={profile}

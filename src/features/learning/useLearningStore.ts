@@ -158,9 +158,21 @@ export const useLearningStore = create<LearningState>((set, get) => ({
 
   // --- Auth Actions ---
   initializeAuth: async () => {
+    const isExplicitLogout = typeof window !== 'undefined' && localStorage.getItem('kyntrix_explicit_logout') === 'true';
     const token = ApiClient.getToken();
     if (!token) {
-      // Auto-login default demo student Dinesh Kumar so the app is instantly usable
+      if (isExplicitLogout) {
+        set({
+          user: null,
+          profile: null,
+          isAuthenticated: false,
+          authLoading: false,
+          badges: [],
+          analyticsData: null,
+        });
+        return;
+      }
+      // Auto-login default demo student Dinesh Kumar on initial first-time visit
       const loginRes = await ApiClient.login({
         email: 'student@kyntrix.edu',
         password: 'KyntriX2025!',
@@ -194,6 +206,11 @@ export const useLearningStore = create<LearningState>((set, get) => ({
       get().fetchBadges();
       get().fetchAnalytics();
     } else if (res.status === 401 || res.status === 403) {
+      if (isExplicitLogout) {
+        ApiClient.setToken(null);
+        set({ user: null, profile: null, isAuthenticated: false, authLoading: false, badges: [], analyticsData: null });
+        return;
+      }
       // Token expired, fallback to student demo
       const loginRes = await ApiClient.login({
         email: 'student@kyntrix.edu',
@@ -212,7 +229,7 @@ export const useLearningStore = create<LearningState>((set, get) => ({
         get().fetchAnalytics();
       } else {
         ApiClient.setToken(null);
-        set({ user: null, profile: null, isAuthenticated: false, authLoading: false });
+        set({ user: null, profile: null, isAuthenticated: false, authLoading: false, badges: [], analyticsData: null });
       }
     } else {
       // Offline mode / temporary network failure (status 0): preserve existing session state
@@ -221,7 +238,10 @@ export const useLearningStore = create<LearningState>((set, get) => ({
   },
 
   login: async (email, password) => {
-    set({ authLoading: true, authError: null });
+    try {
+      localStorage.removeItem('kyntrix_explicit_logout');
+    } catch {}
+    set({ authLoading: true, authError: null, badges: [], analyticsData: null });
     const res = await ApiClient.login({ email, password });
     if (res.data && res.data.token) {
       ApiClient.setToken(res.data.token);
@@ -233,8 +253,11 @@ export const useLearningStore = create<LearningState>((set, get) => ({
         authLoading: false,
         authModalOpen: false,
       });
-      get().fetchBadges();
-      get().fetchAnalytics();
+      await Promise.all([
+        get().fetchBadges(),
+        get().fetchAnalytics(),
+        get().fetchProblems(),
+      ]);
       return true;
     } else {
       set({ authError: res.error || 'Login failed', authLoading: false });
@@ -243,7 +266,10 @@ export const useLearningStore = create<LearningState>((set, get) => ({
   },
 
   register: async (data) => {
-    set({ authLoading: true, authError: null });
+    try {
+      localStorage.removeItem('kyntrix_explicit_logout');
+    } catch {}
+    set({ authLoading: true, authError: null, badges: [], analyticsData: null });
     const res = await ApiClient.register(data);
     if (res.data && res.data.token) {
       ApiClient.setToken(res.data.token);
@@ -255,8 +281,11 @@ export const useLearningStore = create<LearningState>((set, get) => ({
         authLoading: false,
         authModalOpen: false,
       });
-      get().fetchBadges();
-      get().fetchAnalytics();
+      await Promise.all([
+        get().fetchBadges(),
+        get().fetchAnalytics(),
+        get().fetchProblems(),
+      ]);
       return true;
     } else {
       set({ authError: res.error || 'Registration failed', authLoading: false });
@@ -265,13 +294,20 @@ export const useLearningStore = create<LearningState>((set, get) => ({
   },
 
   logout: async () => {
+    try {
+      localStorage.setItem('kyntrix_explicit_logout', 'true');
+    } catch {}
     await ApiClient.logout();
     set({
       user: null,
       profile: null,
       token: null,
       isAuthenticated: false,
-      activeSubtab: 'dashboard',
+      badges: [],
+      analyticsData: null,
+      activeProblem: null,
+      activeProblemAttempts: [],
+      activeSubtab: 'profile',
     });
   },
 
@@ -475,6 +511,10 @@ export const useLearningStore = create<LearningState>((set, get) => ({
 
   // --- Analytics ---
   fetchAnalytics: async () => {
+    if (!ApiClient.getToken()) {
+      set({ analyticsData: null, analyticsLoading: false });
+      return;
+    }
     set({ analyticsLoading: true });
     const res = await ApiClient.getAnalytics();
     if (res.data) {
@@ -484,7 +524,7 @@ export const useLearningStore = create<LearningState>((set, get) => ({
         profile: res.data.profile || get().profile,
       });
     } else {
-      set({ analyticsLoading: false });
+      set({ analyticsData: null, analyticsLoading: false });
     }
   },
 

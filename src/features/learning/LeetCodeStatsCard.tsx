@@ -92,6 +92,9 @@ export const LeetCodeStatsCard: React.FC<LeetCodeStatsCardProps> = ({
 
   // 2. Live Arena Synced Stats
   const liveStats = useMemo(() => {
+    // Merge user profile: prefer analyticsData.profile when loaded, fallback to prop profile
+    const userProfile = analyticsData?.profile || profile;
+
     // Problem catalogs from store / props or analytics
     const problems = allProblems.length > 0 ? allProblems : (analyticsData?.allProblems || []);
     
@@ -104,10 +107,10 @@ export const LeetCodeStatsCard: React.FC<LeetCodeStatsCardProps> = ({
       (p: any) => p.difficulty === 'expert' || p.difficulty === 'research'
     );
 
-    const totalProblems = problems.length || 256;
-    const easyTotal = easyProblems.length || 78;
-    const medTotal = medProblems.length || 132;
-    const hardTotal = hardProblems.length || 46;
+    const totalProblems = analyticsData?.difficultyBreakdown?.totalProblems ?? (problems.length || 256);
+    const easyTotal = analyticsData?.difficultyBreakdown?.easy?.total ?? (easyProblems.length || 154);
+    const medTotal = analyticsData?.difficultyBreakdown?.med?.total ?? (medProblems.length || 102);
+    const hardTotal = analyticsData?.difficultyBreakdown?.hard?.total ?? (hardProblems.length || 46);
 
     // Determine solved counts per tier
     let easySolved = 0;
@@ -118,66 +121,74 @@ export const LeetCodeStatsCard: React.FC<LeetCodeStatsCardProps> = ({
       easySolved = analyticsData.difficultyBreakdown.easy?.solved ?? 0;
       medSolved = analyticsData.difficultyBreakdown.med?.solved ?? 0;
       hardSolved = analyticsData.difficultyBreakdown.hard?.solved ?? 0;
-    } else if (profile?.stats?.categoryStats) {
+    } else if (userProfile?.stats?.categoryStats) {
       // Approximate from category stats if difficulty breakdown is computing
-      const catStats = profile.stats.categoryStats;
-      const totalSolved = profile.stats.problemsSolved || 0;
+      const catStats = userProfile.stats.categoryStats;
+      const totalSolved = userProfile.stats.problemsSolved || 0;
       // Beginner problems are heavily in DH & Transforms
       easySolved = Math.min(easyTotal, (catStats.dh?.solved || 0) + (catStats.transforms?.solved || 0));
       medSolved = Math.min(medTotal, Math.max(0, totalSolved - easySolved));
       hardSolved = Math.max(0, totalSolved - easySolved - medSolved);
     } else {
-      easySolved = Math.min(easyTotal, profile?.stats?.problemsSolved || 0);
+      easySolved = Math.min(easyTotal, userProfile?.stats?.problemsSolved || 0);
     }
 
-    const totalSolved = profile?.stats?.problemsSolved ?? (easySolved + medSolved + hardSolved);
-    const totalAttempts = profile?.stats?.totalAttempts ?? 0;
+    const totalSolved = analyticsData?.difficultyBreakdown?.totalSolved ?? userProfile?.stats?.problemsSolved ?? (easySolved + medSolved + hardSolved);
+    const totalAttempts = userProfile?.stats?.totalAttempts ?? 0;
     const attempting = analyticsData?.difficultyBreakdown?.attempting ??
       Math.max(0, totalAttempts - totalSolved);
 
     // Badges calculation
     const allBadgesList = analyticsData?.badges || badges || [];
     const unlockedBadges = allBadgesList.filter((b: any) => b.unlocked);
-    const lockedBadges = allBadgesList.filter((b: any) => !b.unlocked);
+    const lockedBadges = (analyticsData?.lockedBadges || allBadgesList.filter((b: any) => !b.unlocked)).filter((b: any) => !b.unlocked);
 
     // Determine the next badge the user is closest to getting
     let nextBadge = analyticsData?.nextBadge;
+    if ((!nextBadge || nextBadge.unlocked || (nextBadge.percentage !== undefined && nextBadge.percentage >= 100)) && lockedBadges.length > 0) {
+      nextBadge = lockedBadges.find((b: any) => !b.unlocked && (b.percentage === undefined || b.percentage < 100)) || null;
+    }
     if (!nextBadge && lockedBadges.length > 0) {
       // Compute fallback progress towards locked badges
       const getProgress = (badge: any) => {
         switch (badge.id) {
           case 'streak_master':
-            return { progress: profile?.streak?.currentStreak || 0, target: 7 };
+            return { progress: Math.max(userProfile?.streak?.currentStreak || 0, userProfile?.streak?.longestStreak || 0), target: 7 };
           case 'dh_apprentice':
-            return { progress: profile?.stats?.categoryStats?.dh?.solved || 0, target: 5 };
+            return { progress: userProfile?.stats?.categoryStats?.dh?.solved || 0, target: 5 };
           case 'dh_master':
-            return { progress: profile?.stats?.categoryStats?.dh?.solved || 0, target: 25 };
+            return { progress: userProfile?.stats?.categoryStats?.dh?.solved || 0, target: 25 };
           case 'matrix_master':
-            return { progress: profile?.stats?.categoryStats?.transforms?.solved || 0, target: 15 };
+            return { progress: userProfile?.stats?.categoryStats?.transforms?.solved || 0, target: 15 };
           case 'fk_specialist':
-            return { progress: profile?.stats?.categoryStats?.fk?.solved || 0, target: 10 };
+            return { progress: userProfile?.stats?.categoryStats?.fk?.solved || 0, target: 10 };
           case 'ik_specialist':
-            return { progress: profile?.stats?.categoryStats?.ik?.solved || 0, target: 10 };
+            return { progress: userProfile?.stats?.categoryStats?.ik?.solved || 0, target: 10 };
           case 'jacobian_explorer':
-            return { progress: profile?.stats?.categoryStats?.jacobians?.solved || 0, target: 5 };
+            return { progress: userProfile?.stats?.categoryStats?.jacobians?.solved || 0, target: 5 };
           case 'zero_hint':
-            return { progress: profile?.stats?.correctFirstAttempt || 0, target: 10 };
+            return { progress: userProfile?.stats?.correctFirstAttempt || 0, target: 10 };
           case 'six_dof':
-            return { progress: profile?.stats?.challengesCompleted || 0, target: 5 };
+            return { progress: userProfile?.stats?.challengesCompleted || 0, target: 5 };
           case 'kyntrix_master':
-            return { progress: profile?.xp || 0, target: 2000 };
+            return { progress: userProfile?.xp || 0, target: 2000 };
           default:
             return { progress: 0, target: 1 };
         }
       };
 
-      const withProgress = lockedBadges.map((b: any) => {
-        const { progress, target } = getProgress(b);
-        const percentage = Math.min(100, Math.round((progress / target) * 100));
-        return { ...b, progress, target, percentage };
-      });
+      const withProgress = lockedBadges
+        .map((b: any) => {
+          const { progress, target } = getProgress(b);
+          const percentage = Math.min(100, Math.round((progress / target) * 100));
+          return { ...b, progress, target, percentage };
+        })
+        .filter((b: any) => b.percentage < 100);
+
       withProgress.sort((a: any, b: any) => b.percentage - a.percentage);
-      nextBadge = withProgress[0];
+      if (withProgress.length > 0) {
+        nextBadge = withProgress[0];
+      }
     }
 
     // Daily Problem Activity & Streak
@@ -193,11 +204,12 @@ export const LeetCodeStatsCard: React.FC<LeetCodeStatsCardProps> = ({
       (dailyActivity[todayUtc]?.total || dailyActivity[todayUtc]?.solved || 0) ||
       (dailyActivity[todayLocal]?.total || dailyActivity[todayLocal]?.solved || 0);
 
-    const currentStreak = profile?.streak?.currentStreak ?? 0;
-    const longestStreak = profile?.streak?.longestStreak ?? currentStreak;
+    const currentStreak = analyticsData?.currentStreak ?? userProfile?.streak?.currentStreak ?? 0;
+    const longestStreak = analyticsData?.maxStreak ?? userProfile?.streak?.longestStreak ?? currentStreak;
+    const maxStreak = Math.max(longestStreak, currentStreak);
 
     // A daily problem was completed TODAY if todayCount > 0 or lastActivityDate is today
-    const lastActivity = profile?.streak?.lastActivityDate;
+    const lastActivity = userProfile?.streak?.lastActivityDate;
     const todayDone =
       todayCount > 0 ||
       lastActivity === todayUtc ||
@@ -207,7 +219,12 @@ export const LeetCodeStatsCard: React.FC<LeetCodeStatsCardProps> = ({
     const activeDates = Object.keys(dailyActivity).filter(
       (d) => (dailyActivity[d]?.total || dailyActivity[d]?.solved || 0) > 0
     );
-    const totalActiveDays = Math.max(activeDates.length, currentStreak);
+    const totalActiveDays = analyticsData?.totalActiveDays ?? (
+      activeDates.length > 0
+        ? activeDates.length
+        : (userProfile?.stats?.problemsSolved ? Math.min(userProfile.stats.problemsSolved, currentStreak || 1) : 0)
+    );
+
     let totalProblemsInYear = 0;
     Object.values(dailyActivity).forEach((val: any) => {
       totalProblemsInYear += (val.solved || val.total || 0);
@@ -225,20 +242,12 @@ export const LeetCodeStatsCard: React.FC<LeetCodeStatsCardProps> = ({
       hard: { solved: hardSolved, total: hardTotal },
       badgeCount: unlockedBadges.length,
       totalBadges: allBadgesList.length || 10,
-      nextBadge: nextBadge || {
-        id: 'streak_master',
-        name: 'Relentless Scholar',
-        description: 'Maintain an unbroken 7-day meaningful learning streak in KyntriX.',
-        rarity: 'rare',
-        criteriaDescription: 'Maintain 7-day learning streak (1 problem/day)',
-        progress: currentStreak,
-        target: 7,
-        percentage: Math.min(100, Math.round((currentStreak / 7) * 100)),
-      },
+      nextBadge,
       lockedBadges: analyticsData?.lockedBadges || lockedBadges,
       totalProblemsInYear,
-      totalActiveDays: totalActiveDays || (currentStreak > 0 ? currentStreak : 1),
-      maxStreak: longestStreak || currentStreak,
+      totalActiveDays,
+      currentStreak,
+      maxStreak,
       todayDone,
       todayCount,
     };
@@ -255,7 +264,6 @@ export const LeetCodeStatsCard: React.FC<LeetCodeStatsCardProps> = ({
     const now = new Date();
     const currentYear = now.getFullYear();
     const startYear = now.getMonth() >= 8 ? currentYear : currentYear - 1;
-    const todayMs = now.getTime();
 
     // Reference mode active days (matches the screenshot's 3 green squares)
     const refActiveDays: Record<string, number> = {
@@ -288,9 +296,11 @@ export const LeetCodeStatsCard: React.FC<LeetCodeStatsCardProps> = ({
             problemsDone = dailyActivityMap[dateStr].solved || dailyActivityMap[dateStr].total || 0;
           } else {
             // Check if within current active streak
-            const thisDateMs = new Date(dateStr).getTime();
-            const diffDays = Math.floor((todayMs - thisDateMs) / (24 * 3600 * 1000));
-            const streak = profile?.streak?.currentStreak || 0;
+            const [y, m, dNum] = dateStr.split('-').map(Number);
+            const dateUtc = Date.UTC(y, m - 1, dNum);
+            const nowUtc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+            const diffDays = Math.round((nowUtc - dateUtc) / (24 * 3600 * 1000));
+            const streak = liveStats.currentStreak;
             if (diffDays === 0) {
               if (liveStats.todayDone) {
                 problemsDone = Math.max(1, liveStats.todayCount);
@@ -332,7 +342,7 @@ export const LeetCodeStatsCard: React.FC<LeetCodeStatsCardProps> = ({
     });
 
     return blocks;
-  }, [viewMode, analyticsData, profile, liveStats.todayDone, liveStats.todayCount]);
+  }, [viewMode, analyticsData, liveStats.todayDone, liveStats.todayCount, liveStats.currentStreak]);
 
   // SVG circular arc helper
   const describeArc = (
@@ -606,52 +616,68 @@ export const LeetCodeStatsCard: React.FC<LeetCodeStatsCardProps> = ({
 
           {/* Bottom Section: Locked Badge & Progress to Next Badge */}
           <div className="pt-4 border-t border-stone-800/60 mt-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="text-[11px] font-medium text-stone-400">
-                {viewMode === 'reference' ? 'Locked Badge' : 'Next Badge to Unlock'}
-              </div>
-              {activeStats.nextBadge?.percentage !== undefined && (
-                <span className="text-[10px] font-bold text-amber-400">
-                  {activeStats.nextBadge.progress} / {activeStats.nextBadge.target} ({activeStats.nextBadge.percentage}%)
-                </span>
-              )}
-            </div>
+            {activeStats.nextBadge ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <div className="text-[11px] font-medium text-stone-400">
+                    {viewMode === 'reference' ? 'Locked Badge' : 'Next Badge to Unlock'}
+                  </div>
+                  {activeStats.nextBadge?.percentage !== undefined && (
+                    <span className="text-[10px] font-bold text-amber-400">
+                      {activeStats.nextBadge.progress} / {activeStats.nextBadge.target} ({activeStats.nextBadge.percentage}%)
+                    </span>
+                  )}
+                </div>
 
-            <div className="text-sm font-semibold text-stone-100 tracking-tight flex items-center justify-between gap-2">
-              <span className="truncate">{activeStats.nextBadge?.name || 'Sep LeetCoding Challenge'}</span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded uppercase font-black tracking-wider shrink-0 bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                {activeStats.nextBadge?.rarity || 'Challenge'}
-              </span>
-            </div>
+                <div className="text-sm font-semibold text-stone-100 tracking-tight flex items-center justify-between gap-2">
+                  <span className="truncate">{activeStats.nextBadge.name}</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded uppercase font-black tracking-wider shrink-0 bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    {activeStats.nextBadge.rarity || 'Challenge'}
+                  </span>
+                </div>
 
-            {/* Criteria description */}
-            <div className="text-[11px] text-stone-400 leading-snug">
-              Criteria: {activeStats.nextBadge?.criteriaDescription || 'Solve daily robotics challenges.'}
-            </div>
+                {/* Criteria description */}
+                <div className="text-[11px] text-stone-400 leading-snug">
+                  Criteria: {activeStats.nextBadge.criteriaDescription || 'Solve daily robotics challenges.'}
+                </div>
 
-            {/* Progress bar towards next badge */}
-            {activeStats.nextBadge?.percentage !== undefined && (
-              <div className="w-full bg-[#333333] h-1.5 rounded-full overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-amber-500 to-orange-500 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, activeStats.nextBadge.percentage)}%` }}
-                />
+                {/* Progress bar towards next badge */}
+                {activeStats.nextBadge.percentage !== undefined && (
+                  <div className="w-full bg-[#333333] h-1.5 rounded-full overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-amber-500 to-orange-500 h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, activeStats.nextBadge.percentage)}%` }}
+                    />
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="py-1">
+                <div className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                  <Award className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>Grandmaster of Kinematics</span>
+                </div>
+                <p className="text-[11px] text-stone-400 mt-0.5">
+                  All 10/10 achievements unlocked! Outstanding mastery of robotics kinematics.
+                </p>
               </div>
             )}
 
             {/* Expander Button to View All Locked Badges */}
-            <div className="pt-1">
-              <button
-                type="button"
-                onClick={() => setShowLockedModal(!showLockedModal)}
-                className="inline-flex items-center gap-1 text-[11px] text-teal-400 hover:text-teal-300 font-bold transition-colors cursor-pointer"
-              >
-                <span>
-                  {showLockedModal ? 'Hide Locked Badges' : 'View All Locked Badges & Goals'}
-                </span>
-                {showLockedModal ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-              </button>
-            </div>
+            {activeStats.lockedBadges && activeStats.lockedBadges.length > 0 && (
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowLockedModal(!showLockedModal)}
+                  className="inline-flex items-center gap-1 text-[11px] text-teal-400 hover:text-teal-300 font-bold transition-colors cursor-pointer"
+                >
+                  <span>
+                    {showLockedModal ? 'Hide Locked Badges' : 'View All Locked Badges & Goals'}
+                  </span>
+                  {showLockedModal ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

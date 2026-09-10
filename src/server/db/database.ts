@@ -90,6 +90,14 @@ export class DatabaseService {
             for (const c of seedChallenges) {
               parsed.challenges[c.id] = { ...c };
             }
+            if (parsed.problemAttempts && Object.values(parsed.problemAttempts).every((a: any) => a.userId !== 'user_teacher_1')) {
+              const freshSeed = this.createSeedSchema();
+              for (const [k, v] of Object.entries(freshSeed.problemAttempts)) {
+                if (!parsed.problemAttempts[k]) {
+                  parsed.problemAttempts[k] = v;
+                }
+              }
+            }
             return parsed;
           }
         }
@@ -190,6 +198,84 @@ export class DatabaseService {
         feedback: 'Value mismatch.',
         attemptNumber: 1,
         createdAt: new Date(todayMs - (idx % 5) * dayMs).toISOString(),
+      };
+    });
+
+    // Seed problem attempts for user_teacher_1 (48 solved, 50 attempts, 21-day streak)
+    const teacherSolved = [
+      'prob_dh_01', 'prob_dh_02', 'prob_dh_03', 'prob_dh_04', 'prob_dh_05', 'prob_dh_06', 'prob_dh_07', 'prob_dh_08', 'prob_dh_09', 'prob_dh_10',
+      'prob_trans_01', 'prob_trans_02', 'prob_trans_03', 'prob_trans_04', 'prob_trans_05', 'prob_trans_06', 'prob_trans_07', 'prob_trans_08', 'prob_trans_09', 'prob_trans_10',
+      'prob_fk_01', 'prob_fk_02', 'prob_fk_03', 'prob_fk_04', 'prob_fk_05', 'prob_fk_06', 'prob_fk_07', 'prob_fk_08', 'prob_fk_09', 'prob_fk_10',
+      'prob_ik_01', 'prob_ik_02', 'prob_ik_03', 'prob_ik_04', 'prob_ik_05', 'prob_ik_06', 'prob_ik_07', 'prob_ik_08', 'prob_ik_09', 'prob_ik_10',
+      'prob_jac_01', 'prob_jac_02', 'prob_jac_03', 'prob_jac_04',
+      'prob_traj_01', 'prob_traj_02',
+      'prob_work_01', 'prob_work_02',
+    ];
+
+    teacherSolved.forEach((pid, idx) => {
+      // 0 to 20 days offset covers active 21-day streak; remainder cover prior study sessions
+      const offsetDays = idx < 21 ? idx : 20 + (idx % 10);
+      const attDate = new Date(todayMs - offsetDays * dayMs).toISOString();
+      const attId = `att_teacher_${idx + 1}`;
+      initial.problemAttempts[attId] = {
+        id: attId,
+        userId: 'user_teacher_1',
+        problemId: pid,
+        submittedAnswer: 1,
+        isCorrect: true,
+        score: 100,
+        hintsUsed: 0,
+        solveTimeMs: 30000,
+        feedback: 'Verified correct answer.',
+        attemptNumber: 1,
+        createdAt: attDate,
+      };
+    });
+
+    ['prob_jac_05', 'prob_work_03'].forEach((pid, idx) => {
+      const attId = `att_teacher_inc_${idx + 1}`;
+      initial.problemAttempts[attId] = {
+        id: attId,
+        userId: 'user_teacher_1',
+        problemId: pid,
+        submittedAnswer: 0,
+        isCorrect: false,
+        score: 0,
+        hintsUsed: 0,
+        solveTimeMs: 40000,
+        feedback: 'Value mismatch.',
+        attemptNumber: 1,
+        createdAt: new Date(todayMs - (idx + 1) * dayMs).toISOString(),
+      };
+    });
+
+    // Seed problem attempts for user_admin_1 (80 solved across 60 days)
+    const adminSolved = teacherSolved.concat([
+      'prob_dh_11', 'prob_dh_12', 'prob_dh_13', 'prob_dh_14', 'prob_dh_15', 'prob_dh_16',
+      'prob_trans_11', 'prob_trans_12', 'prob_trans_13', 'prob_trans_14', 'prob_trans_15', 'prob_trans_16',
+      'prob_fk_11', 'prob_fk_12', 'prob_fk_13', 'prob_fk_14', 'prob_fk_15', 'prob_fk_16',
+      'prob_ik_11', 'prob_ik_12', 'prob_ik_13', 'prob_ik_14', 'prob_ik_15',
+      'prob_jac_05', 'prob_jac_06', 'prob_jac_07', 'prob_jac_08',
+      'prob_traj_03', 'prob_traj_04', 'prob_traj_05',
+      'prob_work_03', 'prob_work_04',
+    ]);
+
+    adminSolved.forEach((pid, idx) => {
+      const offsetDays = Math.min(99, idx);
+      const attDate = new Date(todayMs - offsetDays * dayMs).toISOString();
+      const attId = `att_admin_${idx + 1}`;
+      initial.problemAttempts[attId] = {
+        id: attId,
+        userId: 'user_admin_1',
+        problemId: pid,
+        submittedAnswer: 1,
+        isCorrect: true,
+        score: 100,
+        hintsUsed: 0,
+        solveTimeMs: 25000,
+        feedback: 'Verified correct answer.',
+        attemptNumber: 1,
+        createdAt: attDate,
       };
     });
 
@@ -613,6 +699,7 @@ export class DatabaseService {
           };
           this.awardXP(userId, badge.xpReward, `Badge Unlocked: ${badge.name}`, 'badge', badgeId);
           unlockedNow.push(badge);
+          userBadgeIds.add(badgeId);
         }
       }
     };
@@ -632,7 +719,7 @@ export class DatabaseService {
     checkAndAward('zero_hint', p.stats.correctFirstAttempt >= 10);
     checkAndAward('six_dof', p.stats.challengesCompleted >= 5);
     checkAndAward('kyntrix_master', p.xp >= 2000);
-    checkAndAward('streak_master', p.streak.currentStreak >= 7);
+    checkAndAward('streak_master', (p.streak.currentStreak || 0) >= 7 || (p.streak.longestStreak || 0) >= 7);
 
     if (unlockedNow.length > 0) {
       this.save();

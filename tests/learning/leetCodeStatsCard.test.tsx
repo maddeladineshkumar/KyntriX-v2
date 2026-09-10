@@ -437,4 +437,87 @@ describe('LeetCodeStatsCard Component Suite', () => {
     expect(container.textContent).toContain('1/ 1 Unlocked');
     expect(container.textContent).toContain('5/1'); // Easy solved (5 out of 1 catalog problem)
   });
+
+  it('proves that stats, streaks, active days, and badges are individually distinct and isolated per user', async () => {
+    const mockProblems = [
+      { id: 'p1', difficulty: 'beginner' },
+      { id: 'p2', difficulty: 'beginner' },
+      { id: 'p3', difficulty: 'intermediate' },
+    ];
+
+    // User 1: New learner (0 problems, 0 streak, 0 active days)
+    const newLearnerProfile: any = {
+      xp: 0,
+      streak: { currentStreak: 0, longestStreak: 0, lastActivityDate: null },
+      stats: { problemsSolved: 0, totalAttempts: 0, categoryStats: {} },
+    };
+    const newLearnerAnalytics: any = {
+      profile: newLearnerProfile,
+      difficultyBreakdown: { easy: { solved: 0, total: 2 }, med: { solved: 0, total: 1 }, hard: { solved: 0, total: 0 }, totalSolved: 0, totalProblems: 3, attempting: 0 },
+      dailyProblemActivity: {},
+      totalActiveDays: 0,
+      currentStreak: 0,
+      maxStreak: 0,
+      badges: [{ id: 'b1', name: 'First Step', unlocked: false, progress: 0, target: 1, percentage: 0 }],
+      nextBadge: { id: 'b1', name: 'First Step', unlocked: false, progress: 0, target: 1, percentage: 0 },
+      lockedBadges: [{ id: 'b1', name: 'First Step', unlocked: false, progress: 0, target: 1, percentage: 0 }],
+    };
+
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        React.createElement(LeetCodeStatsCard, {
+          profile: newLearnerProfile,
+          analyticsData: newLearnerAnalytics,
+          allProblems: mockProblems,
+        })
+      );
+      await new Promise((r) => setTimeout(r, 50));
+    });
+
+    expect(container.textContent).toContain('0/3'); // 0 solved
+    expect(container.textContent).toContain('Total active days: 0');
+    expect(container.textContent).toContain('Max streak: 0');
+    expect(container.textContent).toContain('Today: 1 Problem/Day Pending');
+    expect(container.textContent).toContain('0/ 1 Unlocked');
+
+    // User 2: Senior Teacher (48 solved, 21-day streak, 45 max streak, 25 active days)
+    const teacherProfile: any = {
+      xp: 5800,
+      streak: { currentStreak: 21, longestStreak: 45, lastActivityDate: new Date().toISOString().slice(0, 10) },
+      stats: { problemsSolved: 48, totalAttempts: 50, categoryStats: { dh: { solved: 10 } } },
+    };
+    const teacherAnalytics: any = {
+      profile: teacherProfile,
+      difficultyBreakdown: { easy: { solved: 24, total: 154 }, med: { solved: 24, total: 102 }, hard: { solved: 0, total: 46 }, totalSolved: 48, totalProblems: 256, attempting: 2 },
+      dailyProblemActivity: { '2026-09-10': { solved: 3, total: 3 } },
+      totalActiveDays: 25,
+      currentStreak: 21,
+      maxStreak: 45,
+      badges: [
+        { id: 'b1', name: 'First Step', unlocked: true },
+        { id: 'b2', name: 'Scholar', unlocked: true },
+      ],
+      nextBadge: null, // All locked badges unlocked or achieved
+      lockedBadges: [],
+    };
+
+    await act(async () => {
+      root.render(
+        React.createElement(LeetCodeStatsCard, {
+          profile: teacherProfile,
+          analyticsData: teacherAnalytics,
+          allProblems: mockProblems,
+        })
+      );
+      await new Promise((r) => setTimeout(r, 50));
+    });
+
+    expect(container.textContent).toContain('48/256'); // 48 solved
+    expect(container.textContent).toContain('24/154'); // Easy 24/154
+    expect(container.textContent).toContain('Total active days: 25');
+    expect(container.textContent).toContain('Max streak: 45');
+    expect(container.textContent).toContain('Today: Goal Met');
+    expect(container.textContent).toContain('Grandmaster of Kinematics'); // Celebration when all badges unlocked!
+  });
 });

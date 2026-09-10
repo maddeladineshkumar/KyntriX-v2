@@ -8,13 +8,10 @@ import type {
   ClassroomMember,
   Assignment,
 } from './types';
-import { createHash } from 'crypto';
+import { hashPassword } from '../cryptoUtils';
+export { hashPassword };
 import { allArenaProblems } from './problems';
 import { simulationChallenges } from './challenges/seedChallenges';
-
-export function hashPassword(password: string, salt: string): string {
-  return createHash('sha256').update(password + salt).digest('hex');
-}
 
 const SALT = 'kyntrix_secure_salt_2025';
 

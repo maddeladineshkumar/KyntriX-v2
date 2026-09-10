@@ -1,6 +1,5 @@
-import crypto from 'crypto';
+import { randomBytesHex, hashPassword } from '../cryptoUtils';
 import { DatabaseService } from '../db/database';
-import { hashPassword } from '../db/seedData';
 import type { User, UserRole } from '../db/types';
 
 export class AuthRoutes {
@@ -25,7 +24,7 @@ export class AuthRoutes {
       return { status: 409, body: { error: 'Username is already taken.' } };
     }
 
-    const salt = crypto.randomBytes(16).toString('hex');
+    const salt = randomBytesHex(16);
     const passwordHash = hashPassword(password, salt);
     const userId = `user_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
@@ -44,7 +43,7 @@ export class AuthRoutes {
 
     this.db.createUser(user);
 
-    const token = `tok_${crypto.randomBytes(32).toString('hex')}`;
+    const token = `tok_${randomBytesHex(32)}`;
     this.db.createSession(userId, token);
 
     const profile = this.db.getProfile(userId);
@@ -76,7 +75,7 @@ export class AuthRoutes {
       return { status: 401, body: { error: 'Invalid email or password.' } };
     }
 
-    const token = `tok_${crypto.randomBytes(32).toString('hex')}`;
+    const token = `tok_${randomBytesHex(32)}`;
     this.db.createSession(user.id, token);
 
     const profile = this.db.getProfile(user.id);

@@ -1,10 +1,61 @@
 const TOKEN_STORAGE_KEY = 'kyntrix_auth_token';
+import { handleApiRequest } from '../../server/apiRouter';
 
 export class ApiClient {
   private static baseUrl = '/api';
+  private static clientFallbackActive = false;
 
   public static setBaseUrl(url: string): void {
     this.baseUrl = url;
+  }
+
+  private static isStaticHost(): boolean {
+    if (this.clientFallbackActive) return true;
+    if (typeof window === 'undefined') return false;
+    const hostname = window.location.hostname;
+    // Auto-detect GitHub Pages, file protocol, or offline mode
+    if (
+      hostname.endsWith('github.io') ||
+      window.location.protocol === 'file:' ||
+      (typeof navigator !== 'undefined' && !navigator.onLine)
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  private static async executeClientApi<T = any>(
+    endpoint: string,
+    options: RequestInit = {},
+    headers: Record<string, string>
+  ): Promise<{ data?: T; error?: string; status: number }> {
+    this.clientFallbackActive = true;
+    const method = (options.method || 'GET').toUpperCase();
+    const ep = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `/api${ep}`;
+    let body: any = {};
+    if (options.body) {
+      try {
+        body = typeof options.body === 'string' ? JSON.parse(options.body) : options.body;
+      } catch {
+        body = options.body;
+      }
+    }
+    try {
+      const res = await handleApiRequest(method, url, body, headers);
+      if (res.status >= 400) {
+        return {
+          error: res.data?.error || `HTTP error ${res.status}`,
+          status: res.status,
+        };
+      }
+      return { data: res.data as T, status: res.status };
+    } catch (err: any) {
+      return {
+        error: err.message || 'Client database request failed',
+        status: 500,
+      };
+    }
   }
 
   private static getFullUrl(endpoint: string): string {
@@ -63,11 +114,21 @@ export class ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    // If static hosting environment or client fallback was activated, dispatch directly in-browser
+    if (this.isStaticHost()) {
+      return this.executeClientApi<T>(endpoint, options, headers);
+    }
+
     try {
       const response = await fetch(this.getFullUrl(endpoint), {
         ...options,
         headers,
       });
+
+      // If remote host returns 404/405 (e.g. static CDN on GitHub Pages or missing backend), fallback to client DB
+      if (response.status === 404 || response.status === 405) {
+        return await this.executeClientApi<T>(endpoint, options, headers);
+      }
 
       const data = await response.json().catch(() => ({}));
 
@@ -80,11 +141,16 @@ export class ApiClient {
 
       return { data, status: response.status };
     } catch (err: any) {
-      console.error(`Network error requesting ${endpoint}:`, err);
-      return {
-        error: err.message || 'Network failure. Please check your internet connection.',
-        status: 0,
-      };
+      // Network failure / offline: fallback seamlessly to client router
+      try {
+        return await this.executeClientApi<T>(endpoint, options, headers);
+      } catch {
+        console.error(`Network error requesting ${endpoint}:`, err);
+        return {
+          error: err.message || 'Network failure. Please check your internet connection.',
+          status: 0,
+        };
+      }
     }
   }
 

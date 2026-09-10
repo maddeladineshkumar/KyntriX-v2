@@ -57,15 +57,22 @@ export class DatabaseService {
   private hasPendingSave = false;
 
   private constructor() {
-    const dataDir = path.resolve(process.cwd(), 'data');
-    if (!fs.existsSync(dataDir)) {
+    if (typeof globalThis !== 'undefined' && typeof (globalThis as any).window !== 'undefined') {
+      this.dbPath = 'kyntrix_browser_db';
+    } else {
       try {
-        fs.mkdirSync(dataDir, { recursive: true });
+        const cwd = typeof process !== 'undefined' && process.cwd ? process.cwd() : '.';
+        const dataDir = path?.resolve ? path.resolve(cwd, 'data') : 'data';
+        if (fs?.existsSync && !fs.existsSync(dataDir)) {
+          try {
+            fs.mkdirSync(dataDir, { recursive: true });
+          } catch {}
+        }
+        this.dbPath = path?.join ? path.join(dataDir, 'kyntrix_db.json') : 'data/kyntrix_db.json';
       } catch {
-        // ignore if cannot create
+        this.dbPath = 'data/kyntrix_db.json';
       }
     }
-    this.dbPath = path.join(dataDir, 'kyntrix_db.json');
     this.data = this.loadOrInitialize();
   }
 
@@ -77,9 +84,37 @@ export class DatabaseService {
   }
 
   private loadOrInitialize(): DatabaseSchema {
+    const isBrowser = typeof globalThis !== 'undefined' && typeof (globalThis as any).window !== 'undefined';
+    const storage = isBrowser ? (globalThis as any).localStorage : null;
+    if (storage) {
+      try {
+        const raw = storage.getItem('kyntrix_browser_db');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed.users && parsed.problems && parsed.badges) {
+            for (const p of seedProblems) {
+              parsed.problems[p.id] = { ...p };
+            }
+            if (!parsed.challenges) parsed.challenges = {};
+            for (const c of seedChallenges) {
+              parsed.challenges[c.id] = { ...c };
+            }
+            return parsed;
+          }
+        }
+      } catch {
+        // fallback
+      }
+      const initial = this.createSeedSchema();
+      try {
+        storage.setItem('kyntrix_browser_db', JSON.stringify(initial));
+      } catch {}
+      return initial;
+    }
+
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        if (fs.existsSync(this.dbPath)) {
+        if (fs?.existsSync && fs.existsSync(this.dbPath)) {
           const raw = fs.readFileSync(this.dbPath, 'utf8');
           const parsed = JSON.parse(raw);
           if (parsed.users && parsed.problems && parsed.badges) {
@@ -288,20 +323,34 @@ export class DatabaseService {
   }
 
   public save(): void {
+    const isBrowser = typeof globalThis !== 'undefined' && typeof (globalThis as any).window !== 'undefined';
+    const storage = isBrowser ? (globalThis as any).localStorage : null;
+    if (storage) {
+      try {
+        storage.setItem('kyntrix_browser_db', JSON.stringify(this.data));
+      } catch (err) {
+        console.warn('Failed to save to localStorage:', err);
+      }
+      return;
+    }
+
     if (this.isSaving) {
       this.hasPendingSave = true;
       return;
     }
     this.isSaving = true;
     try {
-      const dataDir = path.dirname(this.dbPath);
-      if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
+      const dataDir = path?.dirname ? path.dirname(this.dbPath) : 'data';
+      if (fs?.existsSync && !fs.existsSync(dataDir)) {
+        try {
+          fs.mkdirSync(dataDir, { recursive: true });
+        } catch {}
       }
       const serialized = JSON.stringify(this.data, null, 2);
-      const tmpPath = `${this.dbPath}.tmp.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2, 7)}`;
+      const pid = typeof process !== 'undefined' && process.pid ? process.pid : '1';
+      const tmpPath = `${this.dbPath}.tmp.${pid}.${Date.now()}.${Math.random().toString(36).slice(2, 7)}`;
       try {
-        fs.writeFileSync(tmpPath, serialized, 'utf8');
+        if (fs?.writeFileSync) fs.writeFileSync(tmpPath, serialized, 'utf8');
       } catch {
         // Fallback directly to dbPath
       }
@@ -309,20 +358,22 @@ export class DatabaseService {
       let attempts = 0;
       while (attempts < 5) {
         try {
-          if (fs.existsSync(tmpPath)) {
+          if (fs?.existsSync && fs.existsSync(tmpPath)) {
             fs.renameSync(tmpPath, this.dbPath);
             break;
-          } else {
+          } else if (fs?.writeFileSync) {
             fs.writeFileSync(this.dbPath, serialized, 'utf8');
+            break;
+          } else {
             break;
           }
         } catch {
           attempts++;
           if (attempts >= 5) {
             try {
-              fs.writeFileSync(this.dbPath, serialized, 'utf8');
+              if (fs?.writeFileSync) fs.writeFileSync(this.dbPath, serialized, 'utf8');
             } catch (writeErr) {
-              if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+              if (process.env?.NODE_ENV !== 'test' && !process.env?.VITEST) {
                 console.warn('Failed to save kyntrix_db.json after retries:', writeErr);
               }
             }
@@ -333,10 +384,10 @@ export class DatabaseService {
         }
       }
       try {
-        if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
+        if (fs?.existsSync && fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
       } catch {}
     } catch (err) {
-      if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+      if (process.env?.NODE_ENV !== 'test' && !process.env?.VITEST) {
         console.warn('Failed to save kyntrix_db.json:', err);
       }
     } finally {

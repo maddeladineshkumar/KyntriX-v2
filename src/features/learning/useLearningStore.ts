@@ -52,6 +52,8 @@ export interface LearningState {
   loginWithGoogle: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<boolean>;
   updatePassword: (newPass: string) => Promise<boolean>;
+  pendingAuthRedirect: 'learning' | null;
+  setPendingAuthRedirect: (tab: 'learning' | null) => void;
 
   // Subtab
   activeSubtab: LearningSubtab;
@@ -136,6 +138,29 @@ export interface LearningState {
   submitAssignment: (assignmentId: string, attempts: any, timeSpentSeconds: number) => Promise<boolean>;
 }
 
+const PENDING_REDIRECT_KEY = 'kyntrix_pending_auth_redirect';
+
+function getStoredPendingRedirect(): 'learning' | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const val = sessionStorage.getItem(PENDING_REDIRECT_KEY);
+    return val === 'learning' ? 'learning' : null;
+  } catch {
+    return null;
+  }
+}
+
+function setStoredPendingRedirect(tab: 'learning' | null): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (tab) {
+      sessionStorage.setItem(PENDING_REDIRECT_KEY, tab);
+    } else {
+      sessionStorage.removeItem(PENDING_REDIRECT_KEY);
+    }
+  } catch {}
+}
+
 export const useLearningStore = create<LearningState>((set, get) => ({
   user: null,
   profile: null,
@@ -147,6 +172,11 @@ export const useLearningStore = create<LearningState>((set, get) => ({
   authMode: 'signin',
   setAuthMode: (mode) => set({ authMode: mode, authError: null, authSuccess: null }),
   setAuthSuccess: (msg) => set({ authSuccess: msg }),
+  pendingAuthRedirect: getStoredPendingRedirect(),
+  setPendingAuthRedirect: (tab) => {
+    setStoredPendingRedirect(tab);
+    set({ pendingAuthRedirect: tab });
+  },
 
   activeSubtab: 'dashboard',
   setActiveSubtab: (tab) => set({ activeSubtab: tab }),
@@ -186,7 +216,19 @@ export const useLearningStore = create<LearningState>((set, get) => ({
   classroomAnalytics: null,
 
   authModalOpen: false,
-  setAuthModalOpen: (open) => set({ authModalOpen: open, authError: null, authSuccess: null }),
+  setAuthModalOpen: (open) =>
+    set((state) => {
+      const pending = open ? state.pendingAuthRedirect : null;
+      if (!open) {
+        setStoredPendingRedirect(null);
+      }
+      return {
+        authModalOpen: open,
+        authError: null,
+        authSuccess: null,
+        pendingAuthRedirect: pending,
+      };
+    }),
 
   // --- Auth Actions ---
   initializeAuth: async () => {
@@ -196,11 +238,13 @@ export const useLearningStore = create<LearningState>((set, get) => ({
       supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_OUT') {
           ApiClient.setToken(null);
+          setStoredPendingRedirect(null);
           set({
             user: null,
             token: null,
             isAuthenticated: false,
             authLoading: false,
+            pendingAuthRedirect: null,
             badges: [],
             analyticsData: null,
           });
@@ -215,6 +259,7 @@ export const useLearningStore = create<LearningState>((set, get) => ({
               token,
               isAuthenticated: true,
               authLoading: false,
+              authModalOpen: false,
             });
             get().fetchBadges();
             get().fetchAnalytics();
@@ -247,12 +292,17 @@ export const useLearningStore = create<LearningState>((set, get) => ({
         get().fetchBadges();
         get().fetchAnalytics();
       } else {
-        set({
-          user: null,
-          token: null,
-          isAuthenticated: false,
-          authLoading: false,
-        });
+        const currentToken = ApiClient.getToken() || get().token;
+        if (currentToken && get().user) {
+          set({ authLoading: false, isAuthenticated: true });
+        } else {
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            authLoading: false,
+          });
+        }
       }
     } catch {
       set({ authLoading: false });
@@ -414,6 +464,7 @@ export const useLearningStore = create<LearningState>((set, get) => ({
       await AuthService.signOut();
     } catch {}
     ApiClient.setToken(null);
+    setStoredPendingRedirect(null);
     set({
       user: null,
       profile: null,
@@ -424,6 +475,7 @@ export const useLearningStore = create<LearningState>((set, get) => ({
       activeProblem: null,
       activeProblemAttempts: [],
       activeSubtab: 'profile',
+      pendingAuthRedirect: null,
     });
   },
 

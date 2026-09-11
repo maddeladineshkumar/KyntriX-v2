@@ -16,6 +16,8 @@ import {
   Zap,
   TrendingUp,
   LogIn,
+  Lock,
+  UserPlus,
 } from 'lucide-react';
 
 interface LearningWorkspaceProps {
@@ -30,11 +32,85 @@ export const LearningWorkspace: React.FC<LearningWorkspaceProps> = ({ onOpenSimu
     profile,
     initializeAuth,
     setAuthModalOpen,
+    setAuthMode,
+    isAuthenticated,
+    authLoading,
   } = useLearningStore();
 
   useEffect(() => {
     initializeAuth();
   }, [initializeAuth]);
+
+  const isAuthed = isAuthenticated || !!user;
+
+  // Automatically prompt auth modal if unauthenticated user arrives at workspace
+  useEffect(() => {
+    if (!isAuthed && !authLoading) {
+      setAuthMode('signin');
+      setAuthModalOpen(true);
+    }
+  }, [isAuthed, authLoading, setAuthMode, setAuthModalOpen]);
+
+  if (authLoading) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-[#f7f4ed] p-8 gap-3 select-none">
+        <div className="w-8 h-8 border-4 border-stone-300 border-t-amber-500 rounded-full animate-spin" />
+        <span className="text-xs font-bold text-stone-600">Verifying authentication...</span>
+      </div>
+    );
+  }
+
+  // Strict Protection Gate: Do NOT display challenges, arena, or dashboard to unauthenticated users
+  if (!isAuthed) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-[#f7f4ed] p-4 sm:p-8 select-none">
+        <div className="max-w-md w-full bg-white border-2 border-stone-300/80 rounded-3xl p-6 sm:p-8 shadow-xl text-center animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-14 h-14 rounded-2xl bg-amber-100 border border-amber-300 flex items-center justify-center mx-auto mb-4 text-amber-700 shadow-sm">
+            <Lock className="w-7 h-7" />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black text-stone-900 mb-2 tracking-tight">
+            Sign In to Access AI & Learning
+          </h2>
+          <p className="text-xs sm:text-sm text-stone-600 mb-6 leading-relaxed">
+            The Problem Arena, Simulation Challenges, Kinematics Benchmarks, and Learning Analytics require you to be signed in. Please sign in or create an account to continue.
+          </p>
+          <div className="flex flex-col gap-2.5">
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode('signin');
+                setAuthModalOpen(true);
+              }}
+              className="w-full py-2.5 px-4 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Sign In</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode('register');
+                setAuthModalOpen(true);
+              }}
+              className="w-full py-2.5 px-4 bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300 font-bold text-xs uppercase tracking-wider rounded-xl transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>Create Free Account</span>
+            </button>
+            {onOpenSimulator && (
+              <button
+                type="button"
+                onClick={() => onOpenSimulator()}
+                className="mt-2 text-xs text-stone-500 hover:text-stone-800 font-semibold underline cursor-pointer"
+              >
+                Return to 3D Simulator
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const navItems: Array<{ id: LearningSubtab; label: string; icon: React.ReactNode }> = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },

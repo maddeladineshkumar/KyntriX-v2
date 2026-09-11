@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLearningStore } from './useLearningStore';
 import { X, LogIn, UserPlus, KeyRound, Lock, CheckCircle2 } from 'lucide-react';
 
@@ -8,6 +8,7 @@ export const AuthModal: React.FC = () => {
     setAuthModalOpen,
     authMode,
     setAuthMode,
+    setPendingAuthRedirect,
     login,
     register,
     loginWithGoogle,
@@ -27,17 +28,29 @@ export const AuthModal: React.FC = () => {
   const [institution, setInstitution] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
 
+  const handleClose = useCallback(() => {
+    setPendingAuthRedirect(null);
+    setAuthModalOpen(false);
+    setLocalError(null);
+  }, [setPendingAuthRedirect, setAuthModalOpen]);
+
+  useEffect(() => {
+    if (!authModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [authModalOpen, handleClose]);
+
   if (!authModalOpen) return null;
 
   const isRegister = authMode === 'register';
   const isForgotPassword = authMode === 'forgot-password';
   const isResetPassword = authMode === 'reset-password';
   const isSignIn = authMode === 'signin';
-
-  const handleClose = () => {
-    setAuthModalOpen(false);
-    setLocalError(null);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,6 +121,11 @@ export const AuthModal: React.FC = () => {
       role="dialog"
       aria-modal="true"
       aria-labelledby="auth-modal-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          handleClose();
+        }
+      }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-200"
     >
       <div className="relative w-full max-w-md bg-[#fcfaf7] border border-stone-300 rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden max-h-[95vh] overflow-y-auto">
@@ -137,11 +155,51 @@ export const AuthModal: React.FC = () => {
           </h2>
           <p className="text-xs text-stone-600 mt-1 leading-relaxed">
             {isRegister && 'Access the Problem Arena, Simulation Challenges, Interactive Kinematics, and track your learning progress.'}
-            {isSignIn && 'Sign in to continue your robotic simulations, kinematics progress, and streak.'}
+            {isSignIn && 'Sign in to access AI & Learning, Problem Arena, Simulation Challenges, and track your learning progress.'}
             {isForgotPassword && 'Enter your email address and we will send you a secure link to reset your password.'}
             {isResetPassword && 'Enter your new password below to regain access to your KyntriX account.'}
           </p>
         </div>
+
+        {/* Segmented Auth Mode Switcher (Sign In vs Sign Up) */}
+        {(isSignIn || isRegister) && (
+          <div className="flex p-1 bg-stone-200/80 rounded-2xl mb-5" role="tablist" aria-label="Authentication Options">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={isSignIn}
+              onClick={() => {
+                setAuthMode('signin');
+                setLocalError(null);
+              }}
+              className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                isSignIn
+                  ? 'bg-white text-stone-900 shadow-sm'
+                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100/50'
+              }`}
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Sign In</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={isRegister}
+              onClick={() => {
+                setAuthMode('register');
+                setLocalError(null);
+              }}
+              className={`flex-1 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                isRegister
+                  ? 'bg-white text-stone-900 shadow-sm'
+                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100/50'
+              }`}
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>Create Account</span>
+            </button>
+          </div>
+        )}
 
         {/* Error Notification */}
         {displayError && (

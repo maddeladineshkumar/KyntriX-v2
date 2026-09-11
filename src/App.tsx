@@ -414,19 +414,94 @@ export function App() {
     };
   }, []);
 
-  const handleSelectTopTab = (tab: 'simulate' | 'trajectory' | 'learning') => {
-    setTopTab(tab);
-    // When switching top mode, close any open modal from previous mode if not applicable
-    if (tab === 'simulate' && (activeModal === 'trajectory' || activeModal === 'analysis')) {
-      closeModal();
-    } else if (tab === 'trajectory' && activeModal !== 'trajectory' && activeModal !== 'analysis') {
-      closeModal();
-    } else if (tab === 'learning') {
-      closeModal();
-      setShowJointDrawer(false);
-      setShowIKDrawer(false);
+  const isAuthenticated = useLearningStore((s) => s.isAuthenticated);
+  const user = useLearningStore((s) => s.user);
+  const authLoading = useLearningStore((s) => s.authLoading);
+  const pendingAuthRedirect = useLearningStore((s) => s.pendingAuthRedirect);
+  const setPendingAuthRedirect = useLearningStore((s) => s.setPendingAuthRedirect);
+  const isAuthed = isAuthenticated || !!user;
+
+  // Auto-redirect to AI & Learning upon successful authentication if user previously requested it
+  useEffect(() => {
+    if (isAuthed && pendingAuthRedirect === 'learning') {
+      const timer = setTimeout(() => {
+        setPendingAuthRedirect(null);
+        useLearningStore.getState().setAuthModalOpen(false);
+        closeModal();
+        setShowJointDrawer(false);
+        setShowIKDrawer(false);
+        setTopTab('learning');
+        setStatusAnnouncement('Welcome to AI & Learning!');
+      }, 0);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [isAuthed, pendingAuthRedirect, closeModal, setPendingAuthRedirect]);
+
+  // If user requested 'learning' while auth was still loading, and auth finished unauthenticated:
+  useEffect(() => {
+    if (!authLoading && !isAuthed && pendingAuthRedirect === 'learning' && !useLearningStore.getState().authModalOpen) {
+      const timer = setTimeout(() => {
+        useLearningStore.getState().setAuthMode('signin');
+        useLearningStore.getState().setAuthModalOpen(true);
+        setStatusAnnouncement('Please sign in or create an account to access AI & Learning, Problem Arena, and Challenges.');
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading, isAuthed, pendingAuthRedirect]);
+
+  // Protect learning workspace if user logs out while on the learning tab
+  useEffect(() => {
+    if (topTab === 'learning' && !isAuthed && !authLoading) {
+      const timer = setTimeout(() => {
+        setTopTab('simulate');
+        useLearningStore.getState().setAuthMode('signin');
+        useLearningStore.getState().setAuthModalOpen(true);
+        setStatusAnnouncement('Signed out. Please sign in to access AI & Learning.');
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [topTab, isAuthed, authLoading]);
+
+  const handleSelectTopTab = useCallback(
+    (tab: 'simulate' | 'trajectory' | 'learning') => {
+      if (tab === 'learning') {
+        const store = useLearningStore.getState();
+        const authed = store.isAuthenticated || !!store.user;
+
+        if (authed) {
+          closeModal();
+          setShowJointDrawer(false);
+          setShowIKDrawer(false);
+          setTopTab('learning');
+          return;
+        }
+
+        // If auth verification is still running (e.g. initial session check),
+        // record intent so user transitions smoothly once verified or gets prompted if not
+        if (store.authLoading) {
+          store.setPendingAuthRedirect('learning');
+          setStatusAnnouncement('Verifying authentication...');
+          return;
+        }
+
+        // User is unauthenticated: stay on homepage and prompt directly to login or sign up
+        store.setPendingAuthRedirect('learning');
+        store.setAuthMode('signin');
+        store.setAuthModalOpen(true);
+        setStatusAnnouncement('Please sign in or create an account to access AI & Learning, Problem Arena, and Challenges.');
+        return;
+      }
+
+      setTopTab(tab);
+      // When switching top mode, close any open modal from previous mode if not applicable
+      if (tab === 'simulate' && (activeModal === 'trajectory' || activeModal === 'analysis')) {
+        closeModal();
+      } else if (tab === 'trajectory' && activeModal !== 'trajectory' && activeModal !== 'analysis') {
+        closeModal();
+      }
+    },
+    [activeModal, closeModal]
+  );
 
   const handleOpenSimulatorFromLearning = useCallback(
     async (robotId?: string, targetPose?: any) => {

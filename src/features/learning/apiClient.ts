@@ -1,5 +1,4 @@
 const TOKEN_STORAGE_KEY = 'kyntrix_auth_token';
-import { handleApiRequest } from '../../server/apiRouter';
 
 export class ApiClient {
   private static baseUrl = '/api';
@@ -42,6 +41,7 @@ export class ApiClient {
       }
     }
     try {
+      const { handleApiRequest } = await import('../../server/apiRouter');
       const res = await handleApiRequest(method, url, body, headers);
       if (res.status >= 400) {
         return {

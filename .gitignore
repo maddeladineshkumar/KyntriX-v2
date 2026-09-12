@@ -23,6 +23,12 @@ dist-ssr
 *.local
 !.env.example
 
+# Local live databases and data caches (VULN-02)
+data/kyntrix_db.json
+data/*.json
+data/*.tmp*
+/data/
+
 # Legacy desktop reference archive (kept locally, excluded from web deployment)
 RoboAnalyzer_7_5_20190623/
 

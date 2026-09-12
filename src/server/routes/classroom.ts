@@ -1,8 +1,21 @@
 import { DatabaseService } from '../db/database';
+import { DeterministicEngine } from '../robotics/deterministicEngine';
+import { randomBytesHex } from '../cryptoUtils';
+import { sanitizeProblem } from './problems';
 import type { Classroom, Assignment, AssignmentSubmission } from '../db/types';
 
 export class ClassroomRoutes {
   private db = DatabaseService.getInstance();
+
+  private isUserAuthorizedForClassroom(classroomId: string, userId: string): boolean {
+    const classroom = this.db.getClassroomById(classroomId);
+    if (!classroom) return false;
+    if (classroom.teacherId === userId) return true;
+    const user = this.db.getUserById(userId);
+    if (user?.role === 'admin') return true;
+    const members = this.db.getClassroomMembers(classroomId);
+    return members.some((m) => m.userId === userId);
+  }
 
   public listClassrooms(userId: string): { status: number; body: any } {
     const classrooms = this.db.getClassroomsForUser(userId);
@@ -22,10 +35,10 @@ export class ClassroomRoutes {
       return { status: 400, body: { error: 'Classroom name is required.' } };
     }
 
-    const classId = `class_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const classId = `class_${Date.now()}_${randomBytesHex(6)}`;
     let joinCode = '';
     do {
-      joinCode = `KX-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+      joinCode = `KX-${randomBytesHex(4).toUpperCase()}-${randomBytesHex(2).toUpperCase()}`;
     } while (this.db.getClassroomByJoinCode(joinCode));
 
     const classroom: Classroom = {
@@ -62,12 +75,11 @@ export class ClassroomRoutes {
       return { status: 404, body: { error: 'Classroom not found' } };
     }
 
-    const members = this.db.getClassroomMembers(id);
-    const isMember = members.some((m) => m.userId === userId) || classroom.teacherId === userId;
-    if (!isMember) {
+    if (!this.isUserAuthorizedForClassroom(id, userId)) {
       return { status: 403, body: { error: 'You are not enrolled in this classroom.' } };
     }
 
+    const members = this.db.getClassroomMembers(id);
     const assignments = this.db.getAssignmentsForClassroom(id);
     return {
       status: 200,
@@ -120,7 +132,7 @@ export class ClassroomRoutes {
       return { status: 400, body: { error: 'Assignment title and at least one problem are required.' } };
     }
 
-    const assignId = `assign_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const assignId = `assign_${Date.now()}_${randomBytesHex(6)}`;
     const assignment: Assignment = {
       id: assignId,
       classroomId,
@@ -148,11 +160,24 @@ export class ClassroomRoutes {
       return { status: 404, body: { error: 'Assignment not found' } };
     }
 
-    const problems = assignment.problemIds
-      .map((pid) => this.db.getProblemById(pid))
-      .filter((p) => Boolean(p));
+    // BOLA verification: verify user is enrolled or teacher/admin
+    if (!this.isUserAuthorizedForClassroom(assignment.classroomId, userId)) {
+      return { status: 403, body: { error: 'You are not enrolled in this classroom.' } };
+    }
+
+    const classroom = this.db.getClassroomById(assignment.classroomId);
+    const user = this.db.getUserById(userId);
+    const isTeacherOrAdmin = classroom?.teacherId === userId || user?.role === 'admin';
 
     const submission = this.db.getSubmission(id, userId);
+    const isCompleted = submission?.status === 'submitted' || submission?.status === 'graded';
+    const allowSolution = isTeacherOrAdmin || isCompleted;
+
+    // VULN-03 fix: Strip solutions and expected answer values from assignment problems
+    const problems = assignment.problemIds
+      .map((pid) => this.db.getProblemById(pid))
+      .filter((p) => Boolean(p))
+      .map((p) => sanitizeProblem(p, allowSolution));
 
     return {
       status: 200,
@@ -167,8 +192,8 @@ export class ClassroomRoutes {
   public submitAssignment(
     id: string,
     body: {
-      problemAttempts: Record<string, { isCorrect: boolean; score: number; hintsUsed: number; answer: any }>;
-      timeSpentSeconds: number;
+      problemAttempts?: Record<string, { hintsUsed?: number; answer?: any; submission?: any }>;
+      timeSpentSeconds?: number;
     },
     userId: string
   ): { status: number; body: any } {
@@ -177,30 +202,127 @@ export class ClassroomRoutes {
       return { status: 404, body: { error: 'Assignment not found' } };
     }
 
+    // BOLA verification: verify caller is enrolled in the classroom
+    if (!this.isUserAuthorizedForClassroom(assignment.classroomId, userId)) {
+      return { status: 403, body: { error: 'You are not enrolled in this classroom.' } };
+    }
+
+    // Enforce Due Date
+    if (assignment.dueDate && new Date(assignment.dueDate).getTime() < Date.now()) {
+      return { status: 400, body: { error: 'Assignment submission deadline has passed.' } };
+    }
+
+    // Enforce Attempt Limit
+    const priorSubmissions = this.db.getSubmissionsForAssignment(id).filter((s) => s.studentId === userId);
+    if (assignment.attemptLimit > 0 && priorSubmissions.length >= assignment.attemptLimit) {
+      return {
+        status: 400,
+        body: { error: `Maximum attempt limit (${assignment.attemptLimit}) reached for this assignment.` },
+      };
+    }
+
+    // Authoritative Server-Side Deterministic Grading (VULN-05 Fix)
     let totalScore = 0;
     const maxScore = assignment.problemIds.length * 100;
     let hintsUsedTotal = 0;
     let correctCount = 0;
+    const verifiedAttempts: Record<string, any> = {};
 
     for (const pid of assignment.problemIds) {
-      const att = body.problemAttempts?.[pid];
-      if (att) {
-        totalScore += att.score || 0;
-        hintsUsedTotal += att.hintsUsed || 0;
-        if (att.isCorrect) correctCount += 1;
+      const problem = this.db.getProblemById(pid);
+      if (!problem) continue;
+
+      const clientAtt = body.problemAttempts?.[pid];
+      const answer = clientAtt?.answer !== undefined ? clientAtt.answer : clientAtt?.submission;
+      const hintsUsed = typeof clientAtt?.hintsUsed === 'number' ? Math.max(0, clientAtt.hintsUsed) : 0;
+      hintsUsedTotal += hintsUsed;
+
+      let isCorrect = false;
+      let feedback = '';
+      const schema = problem.answerSchema;
+
+      if (answer !== undefined && answer !== null) {
+        switch (schema.type) {
+          case 'scalar': {
+            const userNum = typeof answer === 'number' ? answer : parseFloat(answer);
+            const expected = schema.expectedScalar ?? 0;
+            const tol = schema.tolerance ?? 0.01;
+            isCorrect = DeterministicEngine.validateScalar(userNum, expected, tol);
+            feedback = isCorrect ? 'Correct scalar value.' : 'Incorrect scalar value.';
+            break;
+          }
+          case 'angle': {
+            const userRad = typeof answer === 'number' ? answer : parseFloat(answer);
+            const expectedRad = schema.expectedAngleRad ?? 0;
+            const tolRad = schema.angleToleranceRad ?? 0.02;
+            isCorrect = DeterministicEngine.validateAngle(userRad, expectedRad, tolRad);
+            feedback = isCorrect ? 'Correct angle.' : 'Incorrect angle.';
+            break;
+          }
+          case 'vector': {
+            const userVec = Array.isArray(answer) ? answer.map(Number) : [];
+            const expectedVec = schema.expectedVector ?? [];
+            const tol = schema.tolerance ?? 0.01;
+            isCorrect = DeterministicEngine.validateVector(userVec, expectedVec, tol);
+            feedback = isCorrect ? 'Correct vector components.' : 'Incorrect vector components.';
+            break;
+          }
+          case 'matrix': {
+            const userMat = Array.isArray(answer)
+              ? answer.map((r: any) => (Array.isArray(r) ? r.map(Number) : []))
+              : [];
+            const expectedMat = schema.expectedMatrix ?? [];
+            const tol = schema.matrixTolerance ?? schema.tolerance ?? 0.01;
+            isCorrect = DeterministicEngine.validateMatrix(userMat, expectedMat, tol);
+            feedback = isCorrect ? 'Correct transformation matrix.' : 'Incorrect transformation matrix.';
+            break;
+          }
+          case 'dh_table': {
+            const userRows = Array.isArray(answer) ? answer : [];
+            const expectedRows = schema.expectedDHTable ?? [];
+            const tol = schema.tolerance ?? 0.01;
+            isCorrect = DeterministicEngine.validateDHTable(userRows, expectedRows, tol);
+            feedback = isCorrect ? 'Correct DH table parameters.' : 'Incorrect DH table parameters.';
+            break;
+          }
+          case 'joint_config': {
+            const userQ = Array.isArray(answer) ? answer.map(Number) : [];
+            const expectedQ = schema.expectedJoints ?? [];
+            const tol = schema.tolerance ?? 0.02;
+            isCorrect = DeterministicEngine.validateVector(userQ, expectedQ, tol);
+            feedback = isCorrect ? 'Correct joint configuration.' : 'Incorrect joint configuration.';
+            break;
+          }
+          default: {
+            isCorrect = false;
+            feedback = 'Unknown answer schema type.';
+          }
+        }
       }
+
+      const problemScore = isCorrect ? Math.max(50, 100 - hintsUsed * 15) : 0;
+      if (isCorrect) correctCount += 1;
+      totalScore += problemScore;
+
+      verifiedAttempts[pid] = {
+        answer,
+        isCorrect,
+        score: problemScore,
+        hintsUsed,
+        feedback,
+      };
     }
 
     const accuracy = assignment.problemIds.length > 0
       ? Math.round((correctCount / assignment.problemIds.length) * 100)
       : 0;
 
-    const subId = `sub_${id}_${userId}`;
+    const subId = `sub_${id}_${userId}_${Date.now()}`;
     const submission: AssignmentSubmission = {
       id: subId,
       assignmentId: id,
       studentId: userId,
-      problemAttempts: body.problemAttempts || {},
+      problemAttempts: verifiedAttempts,
       totalScore,
       maxScore,
       accuracy,
@@ -213,9 +335,11 @@ export class ClassroomRoutes {
 
     this.db.saveSubmission(submission);
 
-    // Award assignment completion XP
+    // Award assignment completion XP based strictly on authoritatively validated score
     const xpReward = Math.round(assignment.xpReward * (totalScore / Math.max(1, maxScore)));
-    this.db.awardXP(userId, xpReward, `Assignment Completed: ${assignment.title}`, 'assignment', id);
+    if (xpReward > 0) {
+      this.db.awardXP(userId, xpReward, `Assignment Completed: ${assignment.title}`, 'assignment', id);
+    }
     this.db.recordLearningActivity(userId);
 
     return {

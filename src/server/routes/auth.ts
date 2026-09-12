@@ -6,7 +6,7 @@ export class AuthRoutes {
   private db = DatabaseService.getInstance();
 
   public register(body: any): { status: number; body: any } {
-    const { name, username, email, password, role = 'student', institution = '' } = body || {};
+    const { name, username, email, password, institution = '' } = body || {};
 
     if (!name || !username || !email || !password) {
       return { status: 400, body: { error: 'Name, username, email, and password are required.' } };
@@ -26,14 +26,14 @@ export class AuthRoutes {
 
     const salt = randomBytesHex(16);
     const passwordHash = hashPassword(password, salt);
-    const userId = `user_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const userId = `user_${Date.now()}_${randomBytesHex(6)}`;
 
     const user: User = {
       id: userId,
       name,
       username,
       email,
-      role: (['student', 'teacher', 'admin'].includes(role) ? role : 'student') as UserRole,
+      role: 'student' as UserRole, // VULN-04 fix: default registrations strictly to student
       institution,
       passwordHash,
       salt,
@@ -98,13 +98,20 @@ export class AuthRoutes {
     return { status: 200, body: { message: 'Logged out successfully.' } };
   }
 
-  public getMe(token: string): { status: number; body: any } {
-    const session = this.db.getSession(token);
-    if (!session) {
+  public getMe(token: string, userId?: string): { status: number; body: any } {
+    let targetUserId = userId;
+    if (!targetUserId && token) {
+      const session = this.db.getSession(token);
+      if (session) {
+        targetUserId = session.userId;
+      }
+    }
+
+    if (!targetUserId) {
       return { status: 401, body: { error: 'Session expired or invalid.' } };
     }
 
-    const user = this.db.getUserById(session.userId);
+    const user = this.db.getUserById(targetUserId);
     if (!user) {
       return { status: 404, body: { error: 'User not found.' } };
     }

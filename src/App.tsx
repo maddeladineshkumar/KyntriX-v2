@@ -424,28 +424,24 @@ export function App() {
   // Auto-redirect to AI & Learning upon successful authentication if user previously requested it
   useEffect(() => {
     if (isAuthed && pendingAuthRedirect === 'learning') {
-      const timer = setTimeout(() => {
-        setPendingAuthRedirect(null);
-        useLearningStore.getState().setAuthModalOpen(false);
-        closeModal();
-        setShowJointDrawer(false);
-        setShowIKDrawer(false);
-        setTopTab('learning');
-        setStatusAnnouncement('Welcome to AI & Learning!');
-      }, 0);
-      return () => clearTimeout(timer);
+      setPendingAuthRedirect(null);
+      useLearningStore.getState().setAuthModalOpen(false);
+      // oxlint-disable-next-line react/set-state-in-effect
+      closeModal();
+      setShowJointDrawer(false);
+      setShowIKDrawer(false);
+      setTopTab('learning');
+      setStatusAnnouncement('Welcome to AI & Learning!');
     }
   }, [isAuthed, pendingAuthRedirect, closeModal, setPendingAuthRedirect]);
 
   // If user requested 'learning' while auth was still loading, and auth finished unauthenticated:
   useEffect(() => {
     if (!authLoading && !isAuthed && pendingAuthRedirect === 'learning' && !useLearningStore.getState().authModalOpen) {
-      const timer = setTimeout(() => {
-        useLearningStore.getState().setAuthMode('signin');
-        useLearningStore.getState().setAuthModalOpen(true);
-        setStatusAnnouncement('Please sign in or create an account to access AI & Learning, Problem Arena, and Challenges.');
-      }, 0);
-      return () => clearTimeout(timer);
+      useLearningStore.getState().setAuthMode('signin');
+      useLearningStore.getState().setAuthModalOpen(true);
+      // oxlint-disable-next-line react/set-state-in-effect
+      setStatusAnnouncement('Please sign in or create an account to access AI & Learning, Problem Arena, and Challenges.');
     }
   }, [authLoading, isAuthed, pendingAuthRedirect]);
 

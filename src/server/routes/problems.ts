@@ -1,17 +1,51 @@
 import { DatabaseService } from '../db/database';
 import { DeterministicEngine } from '../robotics/deterministicEngine';
-import type { ProblemAttempt, DHParameterRow } from '../db/types';
+import { randomBytesHex } from '../cryptoUtils';
+import type { ProblemAttempt, DHParameterRow, Problem, ProblemAnswerSchema } from '../db/types';
+
+export function sanitizeAnswerSchema(schema: ProblemAnswerSchema | any): any {
+  if (!schema) return schema;
+  const {
+    expectedScalar: _expectedScalar,
+    expectedAngleRad: _expectedAngleRad,
+    expectedVector: expVec,
+    expectedMatrix: expMat,
+    expectedDHTable: expDH,
+    expectedPose: _expectedPose,
+    expectedJoints: expJoints,
+    ...rest
+  } = schema;
+
+  // Preserve non-sensitive structural metadata so frontend inputs know dimensions without leaking answer values
+  const dimension = rest.dimension ?? (Array.isArray(expVec) ? expVec.length : undefined);
+  const rowCount = rest.rowCount ?? (Array.isArray(expDH) ? expDH.length : Array.isArray(expMat) ? expMat.length : undefined);
+  const jointCount = rest.jointCount ?? (Array.isArray(expJoints) ? expJoints.length : Array.isArray(expDH) ? expDH.length : undefined);
+
+  return {
+    ...rest,
+    ...(dimension !== undefined ? { dimension } : {}),
+    ...(rowCount !== undefined ? { rowCount } : {}),
+    ...(jointCount !== undefined ? { jointCount } : {}),
+  };
+}
+
+export function sanitizeProblem(problem: Problem | any, allowSolution = false): any {
+  if (!problem) return problem;
+  const { solution, answerSchema, ...rest } = problem;
+  return {
+    ...rest,
+    ...(allowSolution ? { solution } : {}),
+    answerSchema: sanitizeAnswerSchema(answerSchema),
+  };
+}
 
 export class ProblemRoutes {
   private db = DatabaseService.getInstance();
 
   public listProblems(query: { category?: string; difficulty?: string; search?: string }): { status: number; body: any } {
     const problems = this.db.getProblems(query);
-    // Sanitize problems list: omit full solution derivation until attempt
-    const sanitized = problems.map((p) => {
-      const { solution: _, ...rest } = p;
-      return rest;
-    });
+    // Sanitize problems list: strip all answer keys (expected*) and solutions
+    const sanitized = problems.map((p) => sanitizeProblem(p, false));
     const list: any = [...sanitized];
     list.problems = sanitized;
     return { status: 200, body: list };
@@ -24,17 +58,20 @@ export class ProblemRoutes {
     }
 
     let userAttempts: ProblemAttempt[] = [];
+    let isTeacherOrAdmin = false;
     if (userId) {
       userAttempts = this.db.getAttemptsForUser(userId, id);
+      const user = this.db.getUserById(userId);
+      isTeacherOrAdmin = user?.role === 'teacher' || user?.role === 'admin';
     }
 
     const hasSolved = userAttempts.some((a) => a.isCorrect);
-    const { solution: _solution, ...rest } = problem;
+    const allowSolution = isTeacherOrAdmin || hasSolved;
 
     return {
       status: 200,
       body: {
-        problem: hasSolved ? problem : rest,
+        problem: sanitizeProblem(problem, allowSolution),
         attempts: userAttempts,
       },
     };
@@ -105,7 +142,9 @@ export class ProblemRoutes {
         feedback = isCorrect
           ? `Correct! Value ${userNum} matches target within tolerance ${tol}.`
           : `Incorrect value. Check formula substitutions and calculation steps.`;
-        validationDetails = { userValue: userNum, expected, difference: Math.abs(userNum - expected) };
+        validationDetails = isCorrect
+          ? { userValue: userNum, matched: true }
+          : { userValue: userNum, matched: false };
         break;
       }
 
@@ -117,7 +156,9 @@ export class ProblemRoutes {
         feedback = isCorrect
           ? `Correct angle! Result matches expected geometric axis.`
           : `Angle deviation exceeds allowable tolerance. Verify angle sign and right-hand orientation.`;
-        validationDetails = { userAngleRad: userRad, expectedRad };
+        validationDetails = isCorrect
+          ? { userAngleRad: userRad, matched: true }
+          : { userAngleRad: userRad, matched: false };
         break;
       }
 
@@ -128,8 +169,10 @@ export class ProblemRoutes {
         isCorrect = DeterministicEngine.validateVector(userVec, expectedVec, tol);
         feedback = isCorrect
           ? `Vector matches target coordinates!`
-          : `Vector components mismatch. Expected length ${expectedVec.length}.`;
-        validationDetails = { userVec, expectedVec };
+          : `Vector components mismatch. Check vector dimension and coordinates.`;
+        validationDetails = isCorrect
+          ? { userVec, matched: true }
+          : { userVecLength: userVec.length, matched: false };
         break;
       }
 
@@ -165,7 +208,9 @@ export class ProblemRoutes {
           feedback = isCorrect
             ? 'Correct joint configuration!'
             : `Joint angles do not match expected values within tolerance ${tol}.`;
-          validationDetails = { userQ, expectedJoints: schema.expectedJoints };
+          validationDetails = isCorrect
+            ? { userQ, matched: true }
+            : { userQ, matched: false };
         } else {
           const dhRows = schema.expectedDHTable || [
             { joint: 1, type: 'R', theta: 0, d: 0, a: 0.5, alpha: 0 },
@@ -199,7 +244,7 @@ export class ProblemRoutes {
     const score = isCorrect ? Math.max(50, 100 - hintsUsed * 15) : 0;
 
     // 2. Transactional updates
-    const attemptId = `att_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const attemptId = `att_${Date.now()}_${randomBytesHex(6)}`;
     const attempt: ProblemAttempt = {
       id: attemptId,
       userId,

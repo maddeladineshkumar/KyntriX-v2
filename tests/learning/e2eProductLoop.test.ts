@@ -44,10 +44,18 @@ describe('UPDATE.md §70 & §33-36 Authoritative End-to-End Product Loop', () =>
     expect(hintRes.data.hint).toBeDefined();
     expect(hintRes.data.level).toBe(1);
 
+    // Verify that the public API response properly strips answer keys (VULN-03)
+    expect((problem.answerSchema as any).expectedDHTable).toBeUndefined();
+    expect((problem.answerSchema as any).expectedScalar).toBeUndefined();
+    expect('expectedDHTable' in problem.answerSchema).toBe(false);
+
     // 5. Submit Problem Solution with Deterministic Validation
-    const expectedAnswer = (problem.answerSchema as any).expectedDHTable ||
-      (problem.answerSchema as any).expectedScalar ||
-      (problem.answerSchema as any).expectedPose ||
+    const dbProb = Database.getProblemById(problemId);
+    expect(dbProb).toBeDefined();
+    const schema = dbProb!.answerSchema as any;
+    const expectedAnswer = schema.expectedDHTable ||
+      schema.expectedScalar ||
+      schema.expectedPose ||
       0;
 
     const attemptRes = await handleApiRequest('POST', `/api/problems/${problemId}/attempt`, {

@@ -7,6 +7,7 @@ import { ChallengeRoutes } from './routes/challenges';
 import { LeaderboardRoutes, BadgeRoutes } from './routes/leaderboard';
 import { AnalyticsRoutes } from './routes/analytics';
 import { ClassroomRoutes } from './routes/classroom';
+import { verifyJwt } from './cryptoUtils';
 
 const authRoutes = new AuthRoutes();
 const profileRoutes = new ProfileRoutes();
@@ -18,6 +19,79 @@ const analyticsRoutes = new AnalyticsRoutes();
 const classroomRoutes = new ClassroomRoutes();
 const db = DatabaseService.getInstance();
 
+// --- Rate Limiting (VULN-10) ---
+interface RateLimitEntry {
+  timestamps: number[];
+}
+
+const rateLimitBuckets = new Map<string, RateLimitEntry>();
+let lastRateLimitCleanup = Date.now();
+
+export function clearRateLimits(): void {
+  rateLimitBuckets.clear();
+  lastRateLimitCleanup = Date.now();
+}
+
+function cleanupExpiredBuckets(now: number, windowMs: number): void {
+  // Prune expired buckets periodically (every 60 seconds) or when bucket count exceeds 5,000
+  if (now - lastRateLimitCleanup < 60000 && rateLimitBuckets.size < 5000) {
+    return;
+  }
+  lastRateLimitCleanup = now;
+  for (const [key, entry] of rateLimitBuckets.entries()) {
+    entry.timestamps = entry.timestamps.filter((ts) => now - ts < windowMs);
+    if (entry.timestamps.length === 0) {
+      rateLimitBuckets.delete(key);
+    }
+  }
+}
+
+function getHeaderValue(headers: Record<string, string | string[] | undefined>, headerName: string): string | undefined {
+  const target = headerName.toLowerCase();
+  for (const [k, v] of Object.entries(headers)) {
+    if (k.toLowerCase() === target) {
+      if (typeof v === 'string') return v;
+      if (Array.isArray(v) && v.length > 0) return v[0];
+    }
+  }
+  return undefined;
+}
+
+function getClientIp(headers: Record<string, string | string[] | undefined>): string {
+  const forwarded = getHeaderValue(headers, 'x-forwarded-for');
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  const realIp = getHeaderValue(headers, 'x-real-ip');
+  if (realIp) return realIp.trim();
+  return '127.0.0.1';
+}
+
+function checkRateLimit(key: string, maxRequests: number, windowMs: number): boolean {
+  if (typeof process !== 'undefined' && process.env.DISABLE_RATE_LIMIT === 'true') {
+    return true;
+  }
+
+  const now = Date.now();
+  cleanupExpiredBuckets(now, windowMs);
+
+  let bucket = rateLimitBuckets.get(key);
+  if (!bucket) {
+    bucket = { timestamps: [] };
+    rateLimitBuckets.set(key, bucket);
+  }
+
+  // Sliding window filter
+  bucket.timestamps = bucket.timestamps.filter((ts) => now - ts < windowMs);
+
+  if (bucket.timestamps.length >= maxRequests) {
+    return false;
+  }
+
+  bucket.timestamps.push(now);
+  return true;
+}
+
 async function dispatchApi(
   method: string,
   rawUrl: string,
@@ -28,6 +102,7 @@ async function dispatchApi(
   const urlObj = new URL(rawUrl || '/', `http://${host}`);
   const pathname = urlObj.pathname;
   const path = pathname.replace(/\/+$/, '');
+  const clientIp = getClientIp(headers);
 
   // Extract auth token
   const authHeader = (headers['authorization'] as string) || (headers['Authorization'] as string) || '';
@@ -35,36 +110,30 @@ async function dispatchApi(
   const session = token ? db.getSession(token) : undefined;
   let currentUserId = session ? session.userId : undefined;
 
-  // Support Supabase JWT tokens
+  // Cryptographic Supabase JWT verification (VULN-01)
   if (!currentUserId && token && token.includes('.')) {
     try {
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-        const jsonStr = typeof Buffer !== 'undefined'
-          ? Buffer.from(base64, 'base64').toString('utf8')
-          : atob(base64);
-        const payload = JSON.parse(jsonStr);
-        if (payload && payload.sub) {
-          const subId = String(payload.sub);
-          currentUserId = subId;
-          if (!db.getUserById(subId)) {
-            const email = payload.email || '';
-            const meta = payload.user_metadata || {};
-            db.createUser({
-              id: subId,
-              email,
-              name: meta.full_name || meta.name || email.split('@')[0] || 'Engineer',
-              username: meta.username || email.split('@')[0] || 'engineer',
-              role: (meta.role || 'student').toLowerCase(),
-              institution: meta.institution || undefined,
-              avatarUrl: meta.avatar_url || meta.picture || undefined,
-              passwordHash: '',
-              salt: '',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            });
-          }
+      const jwtResult = verifyJwt(token);
+      if (jwtResult.valid && jwtResult.payload && jwtResult.payload.sub) {
+        const payload = jwtResult.payload;
+        const subId = String(payload.sub);
+        currentUserId = subId;
+        if (!db.getUserById(subId)) {
+          const email = payload.email || '';
+          const meta = payload.user_metadata || {};
+          db.createUser({
+            id: subId,
+            email,
+            name: meta.full_name || meta.name || email.split('@')[0] || 'Engineer',
+            username: meta.username || email.split('@')[0] || 'engineer',
+            role: 'student', // VULN-04: Default registrations strictly to student, never trust client-provided role
+            institution: meta.institution || undefined,
+            avatarUrl: meta.avatar_url || meta.picture || undefined,
+            passwordHash: '',
+            salt: '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
         }
       }
     } catch {
@@ -73,13 +142,19 @@ async function dispatchApi(
   }
 
   try {
-    // 1. Auth routes
+    // 1. Auth routes (with rate limiting: 10 per minute per IP)
     if (path === '/api/auth/register' && method === 'POST') {
+      if (!checkRateLimit(`auth_reg_${clientIp}`, 10, 60000)) {
+        return { status: 429, body: { error: 'Too many registration requests. Please try again later.' } };
+      }
       const body = await getBody();
       return authRoutes.register(body);
     }
 
     if (path === '/api/auth/login' && method === 'POST') {
+      if (!checkRateLimit(`auth_login_${clientIp}`, 10, 60000)) {
+        return { status: 429, body: { error: 'Too many login requests. Please try again later.' } };
+      }
       const body = await getBody();
       return authRoutes.login(body);
     }
@@ -89,7 +164,7 @@ async function dispatchApi(
     }
 
     if (path === '/api/auth/me' && method === 'GET') {
-      return authRoutes.getMe(token);
+      return authRoutes.getMe(token, currentUserId);
     }
 
     // 2. Profile routes
@@ -121,6 +196,9 @@ async function dispatchApi(
       if (!currentUserId) {
         return { status: 401, body: { error: 'Authentication required to request hints' } };
       }
+      if (!checkRateLimit(`prob_hint_${currentUserId || clientIp}`, 30, 60000)) {
+        return { status: 429, body: { error: 'Too many hint requests. Please slow down.' } };
+      }
       const body = await getBody();
       return problemRoutes.getHint(problemHintMatch[1], body, currentUserId);
     }
@@ -129,6 +207,10 @@ async function dispatchApi(
     if (problemAttemptMatch && method === 'POST') {
       if (!currentUserId) {
         return { status: 401, body: { error: 'Authentication required to submit problem attempts' } };
+      }
+      // Rate limiting: 30 attempts per minute per user/IP
+      if (!checkRateLimit(`prob_att_${currentUserId || clientIp}`, 30, 60000)) {
+        return { status: 429, body: { error: 'Too many submission attempts. Please slow down and try again later.' } };
       }
       const body = await getBody();
       return problemRoutes.submitAttempt(problemAttemptMatch[1], body, currentUserId);
@@ -148,6 +230,9 @@ async function dispatchApi(
     if (challengeSubmitMatch && method === 'POST') {
       if (!currentUserId) {
         return { status: 401, body: { error: 'Authentication required to submit simulation challenge' } };
+      }
+      if (!checkRateLimit(`chal_sub_${currentUserId || clientIp}`, 30, 60000)) {
+        return { status: 429, body: { error: 'Too many challenge submission attempts. Please slow down.' } };
       }
       const body = await getBody();
       return await challengeRoutes.submitChallenge(challengeSubmitMatch[1], body, currentUserId);
@@ -218,12 +303,26 @@ async function dispatchApi(
       if (!currentUserId) {
         return { status: 401, body: { error: 'Authentication required' } };
       }
+      // VULN-06 fix: Verify authorization to access assignments for this classroom
+      const classroomId = classAssignmentsMatch[1];
+      const classroom = db.getClassroomById(classroomId);
+      if (!classroom) {
+        return { status: 404, body: { error: 'Classroom not found' } };
+      }
+      const members = db.getClassroomMembers(classroomId);
+      const isMember = members.some((m) => m.userId === currentUserId) || classroom.teacherId === currentUserId;
+      const user = db.getUserById(currentUserId);
+      const isAdmin = user?.role === 'admin';
+      if (!isMember && !isAdmin) {
+        return { status: 403, body: { error: 'You are not authorized to access assignments for this classroom.' } };
+      }
+
       if (method === 'POST') {
         const body = await getBody();
-        return classroomRoutes.createAssignment(classAssignmentsMatch[1], body, currentUserId);
+        return classroomRoutes.createAssignment(classroomId, body, currentUserId);
       }
       if (method === 'GET') {
-        const assignments = db.getAssignmentsForClassroom(classAssignmentsMatch[1]);
+        const assignments = db.getAssignmentsForClassroom(classroomId);
         return { status: 200, body: { assignments } };
       }
     }
@@ -242,6 +341,9 @@ async function dispatchApi(
       if (!currentUserId) {
         return { status: 401, body: { error: 'Authentication required' } };
       }
+      if (!checkRateLimit(`assign_sub_${currentUserId || clientIp}`, 30, 60000)) {
+        return { status: 429, body: { error: 'Too many assignment submission attempts. Please slow down.' } };
+      }
       const body = await getBody();
       return classroomRoutes.submitAssignment(assignmentSubmitMatch[1], body, currentUserId);
     }
@@ -257,8 +359,9 @@ async function dispatchApi(
     // 404 Route Not Found
     return { status: 404, body: { error: `Endpoint not found: ${method} ${pathname}` } };
   } catch (err: any) {
-    console.error(`Unhandled error handling ${method} ${pathname}:`, err);
-    return { status: 500, body: { error: 'Internal server error occurred.' } };
+    const status = err?.statusCode || 500;
+    const msg = err?.message && err.statusCode ? err.message : 'Internal server error occurred.';
+    return { status, body: { error: msg } };
   }
 }
 
@@ -313,24 +416,61 @@ export async function handleApiRequest(
     return;
   }
 
+  // VULN-11 fix: Enforce 1MB request body stream size limit
+  const MAX_BODY_SIZE = 1024 * 1024; // 1 MB limit
+
+  const clHeader = getHeaderValue(req.headers as any, 'content-length');
+  if (clHeader) {
+    const contentLength = parseInt(clHeader, 10);
+    if (!isNaN(contentLength) && contentLength > MAX_BODY_SIZE) {
+      res.statusCode = 413;
+      res.end(JSON.stringify({ error: 'Payload Too Large: Request body exceeds maximum size limit (1MB).' }));
+      return;
+    }
+  }
+
   const readBody = async (): Promise<any> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       let data = '';
+      let bytesRead = 0;
+      let aborted = false;
+
       req.on('data', (chunk) => {
+        if (aborted) return;
+        bytesRead += chunk.length;
+        if (bytesRead > MAX_BODY_SIZE) {
+          aborted = true;
+          req.destroy();
+          const err = new Error('Payload Too Large: Request body exceeds maximum size limit (1MB).');
+          (err as any).statusCode = 413;
+          reject(err);
+          return;
+        }
         data += chunk;
       });
+
       req.on('end', () => {
+        if (aborted) return;
         try {
           resolve(data ? JSON.parse(data) : {});
         } catch {
           resolve({});
         }
       });
-      req.on('error', () => resolve({}));
+
+      req.on('error', (err) => {
+        if (!aborted) reject(err);
+      });
     });
   };
 
-  const result = await dispatchApi(req.method || 'GET', req.url || '/', readBody, req.headers as any);
-  res.statusCode = result.status;
-  res.end(JSON.stringify(result.body));
+  try {
+    const result = await dispatchApi(req.method || 'GET', req.url || '/', readBody, req.headers as any);
+    res.statusCode = result.status;
+    res.end(JSON.stringify(result.body));
+  } catch (err: any) {
+    const status = err?.statusCode || 500;
+    res.statusCode = status;
+    res.end(JSON.stringify({ error: err?.message || 'Internal server error occurred.' }));
+  }
 }

@@ -29,6 +29,7 @@ import {
   seedAssignments,
   hashPassword,
 } from './seedData';
+import { randomBytesHex } from '../cryptoUtils';
 
 export interface DatabaseSchema {
   users: Record<string, User>;
@@ -348,7 +349,7 @@ export class DatabaseService {
       }
       const serialized = JSON.stringify(this.data, null, 2);
       const pid = typeof process !== 'undefined' && process.pid ? process.pid : '1';
-      const tmpPath = `${this.dbPath}.tmp.${pid}.${Date.now()}.${Math.random().toString(36).slice(2, 7)}`;
+      const tmpPath = `${this.dbPath}.tmp.${pid}.${Date.now()}.${randomBytesHex(6)}`;
       try {
         if (fs?.writeFileSync) fs.writeFileSync(tmpPath, serialized, 'utf8');
       } catch {
@@ -424,7 +425,7 @@ export class DatabaseService {
     if (!user) return null;
     const hash = hashPassword(password, user.salt);
     if (hash !== user.passwordHash) return null;
-    const token = `sess_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    const token = `tok_${randomBytesHex(32)}`;
     this.createSession(user.id, token);
     const profile = this.getProfile(user.id);
     return { user, token, profile };
@@ -437,10 +438,10 @@ export class DatabaseService {
     if ('passwordHash' in userOrData && 'salt' in userOrData && 'id' in userOrData) {
       user = userOrData as User;
     } else {
-      const salt = `salt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const salt = `salt_${randomBytesHex(16)}`;
       const pass = (userOrData as any).password || 'KyntriX2025!';
       const hash = hashPassword(pass, salt);
-      const id = (userOrData as any).id || `user_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const id = (userOrData as any).id || `user_${randomBytesHex(12)}`;
       const username = (userOrData as any).username || (userOrData as any).email.split('@')[0];
       user = {
         id,
@@ -589,7 +590,7 @@ export class DatabaseService {
       return isFourArgs ? false : { awarded: false, newTotalXP: p.xp };
     }
 
-    const txId = `tx_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const txId = `tx_${Date.now()}_${randomBytesHex(6)}`;
     const tx: XPTransaction = {
       id: txId,
       userId,
@@ -638,7 +639,7 @@ export class DatabaseService {
     const newRating = Math.max(100, oldRating + delta);
     p.rating = newRating;
 
-    const rhId = `rh_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const rhId = `rh_${Date.now()}_${randomBytesHex(6)}`;
     this.data.ratingHistory[rhId] = {
       id: rhId,
       userId,
@@ -677,7 +678,7 @@ export class DatabaseService {
     const newRating = Math.max(100, oldRating + delta);
     p.rating = newRating;
 
-    const rhId = `rh_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const rhId = `rh_${Date.now()}_${randomBytesHex(6)}`;
     this.data.ratingHistory[rhId] = {
       id: rhId,
       userId,
@@ -954,12 +955,14 @@ export class DatabaseService {
       classroom = classroomOrData as Classroom;
     } else {
       const randChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      const randBytes = new Uint8Array(6);
+      crypto.getRandomValues(randBytes);
       let joinCode = '';
       for (let i = 0; i < 6; i++) {
-        joinCode += randChars.charAt(Math.floor(Math.random() * randChars.length));
+        joinCode += randChars.charAt(randBytes[i] % randChars.length);
       }
       classroom = {
-        id: (classroomOrData as any).id || `cr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        id: (classroomOrData as any).id || `cr_${Date.now()}_${randomBytesHex(6)}`,
         name: classroomOrData.name,
         description: classroomOrData.description || '',
         teacherId: classroomOrData.teacherId,
@@ -1048,7 +1051,7 @@ export class DatabaseService {
       assignment = classroomIdOrAssignment;
     } else {
       const classroomId = classroomIdOrAssignment;
-      const assignId = data?.id || `assign_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      const assignId = data?.id || `assign_${Date.now()}_${randomBytesHex(6)}`;
       assignment = {
         id: assignId,
         classroomId,

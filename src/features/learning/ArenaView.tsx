@@ -50,14 +50,22 @@ const ProblemActiveView: React.FC<ProblemActiveViewProps> = ({
   const [scalarInput, setScalarInput] = useState<string>('');
   const [angleInput, setAngleInput] = useState<string>('');
   const [angleUnit, setAngleUnit] = useState<'rad' | 'deg'>('rad');
-  const [vectorInput, setVectorInput] = useState<string[]>(() =>
-    schema.type === 'vector' && schema.expectedVector
-      ? schema.expectedVector.map(() => '0')
-      : ['0', '0', '0']
-  );
+  const [vectorInput, setVectorInput] = useState<string[]>(() => {
+    if (schema.type === 'vector') {
+      const len = schema.expectedVector?.length || (schema as any).dimension || 3;
+      return Array(len).fill('0');
+    }
+    return ['0', '0', '0'];
+  });
   const [matrixInput, setMatrixInput] = useState<string[][]>(() => {
-    if (schema.type === 'matrix' && schema.expectedMatrix) {
-      return schema.expectedMatrix.map((row) => row.map(() => '0'));
+    if (schema.type === 'matrix') {
+      if (schema.expectedMatrix) {
+        return schema.expectedMatrix.map((row) => row.map(() => '0'));
+      }
+      const dim = (schema as any).rowCount || 4;
+      return Array.from({ length: dim }, (_, r) =>
+        Array.from({ length: dim }, (_, c) => (r === c ? '1' : '0'))
+      );
     }
     return [
       ['1', '0', '0', '0'],
@@ -66,19 +74,31 @@ const ProblemActiveView: React.FC<ProblemActiveViewProps> = ({
       ['0', '0', '0', '1'],
     ];
   });
-  const [dhTableInput, setDhTableInput] = useState<DHParameterRow[]>(() =>
-    schema.type === 'dh_table' && schema.expectedDHTable
-      ? schema.expectedDHTable.map((r, idx) => ({ joint: idx + 1, type: r.type, theta: 0, d: 0, a: 0, alpha: 0 }))
-      : [
-          { joint: 1, type: 'R', theta: 0, d: 0, a: 0.3, alpha: 0 },
-          { joint: 2, type: 'R', theta: 0, d: 0, a: 0.2, alpha: 0 },
-        ]
-  );
+  const [dhTableInput, setDhTableInput] = useState<DHParameterRow[]>(() => {
+    if (schema.type === 'dh_table') {
+      if (schema.expectedDHTable) {
+        return schema.expectedDHTable.map((r, idx) => ({ joint: idx + 1, type: r.type, theta: 0, d: 0, a: 0, alpha: 0 }));
+      }
+      const count = (schema as any).rowCount || activeProblem.questionData?.dof || 2;
+      return Array.from({ length: count }, (_, idx) => ({
+        joint: idx + 1,
+        type: 'R' as const,
+        theta: 0,
+        d: 0,
+        a: 0,
+        alpha: 0,
+      }));
+    }
+    return [
+      { joint: 1, type: 'R', theta: 0, d: 0, a: 0.3, alpha: 0 },
+      { joint: 2, type: 'R', theta: 0, d: 0, a: 0.2, alpha: 0 },
+    ];
+  });
   const [jointsInput, setJointsInput] = useState<string[]>(() => {
     if (schema.type === 'joint_config') {
       if (schema.expectedJoints) return schema.expectedJoints.map(() => '0');
-      if (schema.expectedDHTable) return schema.expectedDHTable.map(() => '0');
-      if (activeProblem.questionData.dof) return Array(activeProblem.questionData.dof).fill('0');
+      const count = (schema as any).jointCount || (schema as any).rowCount || activeProblem.questionData?.dof || 2;
+      return Array(count).fill('0');
     }
     return ['0', '0'];
   });

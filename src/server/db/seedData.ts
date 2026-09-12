@@ -13,7 +13,9 @@ export { hashPassword };
 import { allArenaProblems } from './problems';
 import { simulationChallenges } from './challenges/seedChallenges';
 
-const SALT = 'kyntrix_secure_salt_2025';
+const STUDENT_SALT = 'salt_student_f93a7c1b52e0486d';
+const TEACHER_SALT = 'salt_teacher_3d8b1e4c92a7f055';
+const ADMIN_SALT = 'salt_admin_a62f50d189c4e73b';
 
 export const seedUsers: User[] = [
   {
@@ -24,8 +26,8 @@ export const seedUsers: User[] = [
     role: 'student',
     institution: 'Indian Institute of Technology Madras',
     avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-    passwordHash: hashPassword('KyntriX2025!', SALT),
-    salt: SALT,
+    passwordHash: hashPassword('KyntriX2025!', STUDENT_SALT),
+    salt: STUDENT_SALT,
     createdAt: '2025-08-15T08:00:00.000Z',
     updatedAt: '2025-08-15T08:00:00.000Z',
   },
@@ -37,8 +39,8 @@ export const seedUsers: User[] = [
     role: 'teacher',
     institution: 'Stanford Robotics Center',
     avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-    passwordHash: hashPassword('KyntriX2025!', SALT),
-    salt: SALT,
+    passwordHash: hashPassword('KyntriX2025!', TEACHER_SALT),
+    salt: TEACHER_SALT,
     createdAt: '2025-08-01T08:00:00.000Z',
     updatedAt: '2025-08-01T08:00:00.000Z',
   },
@@ -50,8 +52,8 @@ export const seedUsers: User[] = [
     role: 'admin',
     institution: 'KyntriX Core Engineering',
     avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-    passwordHash: hashPassword('AdminPass2025!', SALT),
-    salt: SALT,
+    passwordHash: hashPassword('AdminPass2025!', ADMIN_SALT),
+    salt: ADMIN_SALT,
     createdAt: '2025-01-01T00:00:00.000Z',
     updatedAt: '2025-01-01T00:00:00.000Z',
   },

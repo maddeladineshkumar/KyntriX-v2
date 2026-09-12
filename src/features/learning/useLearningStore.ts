@@ -13,6 +13,12 @@ import type {
 } from '../../server/db/types';
 
 let authListenerSubscribed = false;
+let authInitializing = false;
+
+export function resetAuthInitializingForTest(): void {
+  authListenerSubscribed = false;
+  authInitializing = false;
+}
 
 function buildUserFromSupabase(supabaseUser: any, profile: any): User {
   return {
@@ -275,7 +281,11 @@ export const useLearningStore = create<LearningState>((set, get) => ({
       });
     }
 
-    set({ authLoading: true });
+    if (authInitializing) return;
+    authInitializing = true;
+    if (!get().isAuthenticated || !get().user) {
+      set({ authLoading: true });
+    }
     try {
       const session = await AuthService.getSession();
       if (session?.user) {
@@ -295,6 +305,30 @@ export const useLearningStore = create<LearningState>((set, get) => ({
         const currentToken = ApiClient.getToken() || get().token;
         if (currentToken && get().user) {
           set({ authLoading: false, isAuthenticated: true });
+        } else if (currentToken) {
+          try {
+            const meRes = await ApiClient.getMe();
+            if (meRes.status === 200 && meRes.data?.user) {
+              set({
+                user: meRes.data.user,
+                profile: meRes.data.profile || null,
+                token: currentToken,
+                isAuthenticated: true,
+                authLoading: false,
+              });
+              get().fetchBadges();
+              get().fetchAnalytics();
+              return;
+            }
+          } catch {
+            // Expired or invalid token
+          }
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            authLoading: false,
+          });
         } else {
           set({
             user: null,
@@ -306,6 +340,8 @@ export const useLearningStore = create<LearningState>((set, get) => ({
       }
     } catch {
       set({ authLoading: false });
+    } finally {
+      authInitializing = false;
     }
   },
 

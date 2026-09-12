@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadRobotById } from '../../src/data/robots';
-import type { RobotDefinition } from '../../src/data/schema/robotSchema';
-import { forwardKinematics, computeFK } from '../../src/robotics/kinematics/forwardKinematics';
-import { computeJacobian } from '../../src/robotics/kinematics/jacobian';
+import { computeFK } from '../../src/robotics/kinematics/forwardKinematics';
 import { solveIK } from '../../src/robotics/ik/ikPipeline';
 import { solveNumericalIK } from '../../src/robotics/ik/numericalIK';
 import { generateJointTrajectory } from '../../src/robotics/trajectories/jointTrajectory';

@@ -1,6 +1,7 @@
 import { DatabaseService } from '../db/database';
 import { DeterministicEngine } from '../robotics/deterministicEngine';
 import { loadRobotById } from '../../data/robots';
+import { randomBytesHex } from '../cryptoUtils';
 import type { ChallengeAttempt } from '../db/types';
 
 export class ChallengeRoutes {
@@ -54,7 +55,7 @@ export class ChallengeRoutes {
       timeSpent
     );
 
-    const attemptId = `ch_att_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const attemptId = `ch_att_${Date.now()}_${randomBytesHex(6)}`;
     const fullAttempt: ChallengeAttempt = {
       id: attemptId,
       userId,

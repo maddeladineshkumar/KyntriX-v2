@@ -65,11 +65,8 @@ BEGIN
     END LOOP;
   END IF;
 
-  -- Extract role: default to 'Student'
-  v_role := COALESCE(
-    new.raw_user_meta_data->>'role',
-    'Student'
-  );
+  -- Default registrations strictly to 'student' (VULN-04 fix: lock vertical privilege escalation)
+  v_role := 'student';
 
   -- Extract institution
   v_institution := new.raw_user_meta_data->>'institution';
@@ -149,3 +146,25 @@ CREATE POLICY "Users can delete own profile"
   FOR DELETE
   TO authenticated
   USING (auth.uid() = id);
+
+-- 4. Lock role column modifications to strictly prevent privilege escalation
+CREATE OR REPLACE FUNCTION public.lock_profile_role()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_catalog, pg_temp
+AS $$
+BEGIN
+  IF new.role IS DISTINCT FROM old.role THEN
+    RAISE EXCEPTION 'Vertical privilege escalation prohibited: profile roles are locked.';
+  END IF;
+  RETURN new;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_lock_profile_role ON public.profiles;
+CREATE TRIGGER on_lock_profile_role
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION public.lock_profile_role();
+

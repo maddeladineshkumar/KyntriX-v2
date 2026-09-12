@@ -35,6 +35,7 @@ export const LearningWorkspace: React.FC<LearningWorkspaceProps> = ({ onOpenSimu
     setAuthMode,
     isAuthenticated,
     authLoading,
+    googleAuthLoading,
   } = useLearningStore();
 
   useEffect(() => {
@@ -51,7 +52,7 @@ export const LearningWorkspace: React.FC<LearningWorkspaceProps> = ({ onOpenSimu
     }
   }, [isAuthed, authLoading, setAuthMode, setAuthModalOpen]);
 
-  if (authLoading) {
+  if (authLoading && !googleAuthLoading) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-[#f7f4ed] p-8 gap-3 select-none">
         <div className="w-8 h-8 border-4 border-stone-300 border-t-amber-500 rounded-full animate-spin" />

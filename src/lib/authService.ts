@@ -198,6 +198,18 @@ export class AuthService {
 
       const user = data.user;
       const session = data.session;
+
+      // In Supabase, if an account already exists and email confirmations are enabled,
+      // data.user may have an empty identities array.
+      if (user && Array.isArray(user.identities) && user.identities.length === 0) {
+        return {
+          user: null,
+          session: null,
+          error: 'An account with this email address already exists. Please sign in instead.',
+          needsEmailConfirmation: false,
+        };
+      }
+
       const needsEmailConfirmation = !session && !!user;
 
       return {
@@ -208,6 +220,33 @@ export class AuthService {
       };
     } catch (err: any) {
       return { user: null, session: null, error: formatAuthError(err), needsEmailConfirmation: false };
+    }
+  }
+
+  /**
+   * Resend signup verification email
+   */
+  public static async resendVerificationEmail(email: string): Promise<{ error: string | null }> {
+    if (!email?.trim() || !email.includes('@')) {
+      return { error: 'Please enter a valid email address.' };
+    }
+
+    try {
+      const redirectOrigin = typeof window !== 'undefined' ? `${window.location.origin}/` : undefined;
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email.trim(),
+        options: {
+          emailRedirectTo: redirectOrigin,
+        },
+      });
+
+      if (error) {
+        return { error: formatAuthError(error) };
+      }
+      return { error: null };
+    } catch (err: any) {
+      return { error: formatAuthError(err) };
     }
   }
 
@@ -243,13 +282,16 @@ export class AuthService {
   /**
    * Sign in with Google OAuth
    */
-  public static async signInWithGoogle(): Promise<{ error: string | null }> {
+  public static async signInWithGoogle(options?: {
+    skipBrowserRedirect?: boolean;
+  }): Promise<{ error: string | null; url?: string | null }> {
     try {
       const redirectOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${redirectOrigin}/`,
+          skipBrowserRedirect: options?.skipBrowserRedirect ?? false,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -258,11 +300,11 @@ export class AuthService {
       });
 
       if (error) {
-        return { error: formatAuthError(error) };
+        return { error: formatAuthError(error), url: null };
       }
-      return { error: null };
+      return { error: null, url: data?.url ?? null };
     } catch (err: any) {
-      return { error: formatAuthError(err) };
+      return { error: formatAuthError(err), url: null };
     }
   }
 

@@ -14,10 +14,53 @@ import type {
 
 let authListenerSubscribed = false;
 let authInitializing = false;
+let googleAuthTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
+let googleAuthCountdownInterval: ReturnType<typeof setInterval> | null = null;
+let googleAuthPopup: Window | null = null;
+let googleAuthPopupPollTimer: ReturnType<typeof setInterval> | null = null;
+
+export function closeGoogleAuthPopup(): void {
+  if (googleAuthPopup) {
+    try {
+      if (!googleAuthPopup.closed && typeof googleAuthPopup.close === 'function') {
+        googleAuthPopup.close();
+      }
+    } catch {
+      // Ignore cross-origin errors
+    }
+    googleAuthPopup = null;
+  }
+}
+
+export function clearGoogleAuthTimers(): void {
+  if (googleAuthTimeoutTimer) {
+    clearTimeout(googleAuthTimeoutTimer);
+    googleAuthTimeoutTimer = null;
+  }
+  if (googleAuthCountdownInterval) {
+    clearInterval(googleAuthCountdownInterval);
+    googleAuthCountdownInterval = null;
+  }
+  if (googleAuthPopupPollTimer) {
+    clearInterval(googleAuthPopupPollTimer);
+    googleAuthPopupPollTimer = null;
+  }
+}
 
 export function resetAuthInitializingForTest(): void {
   authListenerSubscribed = false;
   authInitializing = false;
+  clearGoogleAuthTimers();
+  closeGoogleAuthPopup();
+}
+
+export function resetGoogleAuthTimerForTest(): void {
+  clearGoogleAuthTimers();
+  closeGoogleAuthPopup();
+}
+
+export function getGoogleAuthPopupForTest(): Window | null {
+  return googleAuthPopup;
 }
 
 function buildUserFromSupabase(supabaseUser: any, profile: any): User {
@@ -50,12 +93,20 @@ export interface LearningState {
   token: string | null;
   isAuthenticated: boolean;
   authLoading: boolean;
+  googleAuthLoading: boolean;
+  googleCountdown: number;
   authError: string | null;
   authSuccess: string | null;
-  authMode: 'signin' | 'register' | 'forgot-password' | 'reset-password';
-  setAuthMode: (mode: 'signin' | 'register' | 'forgot-password' | 'reset-password') => void;
+  authMode: 'signin' | 'register' | 'forgot-password' | 'reset-password' | 'confirm-email';
+  setAuthMode: (mode: 'signin' | 'register' | 'forgot-password' | 'reset-password' | 'confirm-email') => void;
   setAuthSuccess: (msg: string | null) => void;
-  loginWithGoogle: () => Promise<void>;
+  setAuthError: (msg: string | null) => void;
+  pendingConfirmationEmail: string | null;
+  setPendingConfirmationEmail: (email: string | null) => void;
+  resendVerificationEmail: (email: string) => Promise<boolean>;
+  loginWithGoogle: (options?: { timeoutSeconds?: number; preferPopup?: boolean; skipBrowserRedirectFallback?: boolean }) => Promise<void>;
+  cancelGoogleAuth: (reason?: string) => void;
+  resetAuthLoading: () => void;
   sendPasswordReset: (email: string) => Promise<boolean>;
   updatePassword: (newPass: string) => Promise<boolean>;
   pendingAuthRedirect: 'learning' | null;
@@ -173,11 +224,16 @@ export const useLearningStore = create<LearningState>((set, get) => ({
   token: ApiClient.getToken(),
   isAuthenticated: false,
   authLoading: true,
+  googleAuthLoading: false,
+  googleCountdown: 30,
   authError: null,
   authSuccess: null,
   authMode: 'signin',
+  pendingConfirmationEmail: null,
   setAuthMode: (mode) => set({ authMode: mode, authError: null, authSuccess: null }),
   setAuthSuccess: (msg) => set({ authSuccess: msg }),
+  setAuthError: (msg) => set({ authError: msg }),
+  setPendingConfirmationEmail: (email) => set({ pendingConfirmationEmail: email }),
   pendingAuthRedirect: getStoredPendingRedirect(),
   setPendingAuthRedirect: (tab) => {
     setStoredPendingRedirect(tab);
@@ -227,12 +283,17 @@ export const useLearningStore = create<LearningState>((set, get) => ({
       const pending = open ? state.pendingAuthRedirect : null;
       if (!open) {
         setStoredPendingRedirect(null);
+        if (state.googleAuthLoading) {
+          clearGoogleAuthTimers();
+          closeGoogleAuthPopup();
+        }
       }
       return {
         authModalOpen: open,
         authError: null,
         authSuccess: null,
         pendingAuthRedirect: pending,
+        ...(open ? {} : { googleAuthLoading: false, authLoading: false, googleCountdown: 30 }),
       };
     }),
 
@@ -243,6 +304,8 @@ export const useLearningStore = create<LearningState>((set, get) => ({
       authListenerSubscribed = true;
       supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_OUT') {
+          clearGoogleAuthTimers();
+          closeGoogleAuthPopup();
           ApiClient.setToken(null);
           setStoredPendingRedirect(null);
           set({
@@ -250,11 +313,15 @@ export const useLearningStore = create<LearningState>((set, get) => ({
             token: null,
             isAuthenticated: false,
             authLoading: false,
+            googleAuthLoading: false,
+            googleCountdown: 30,
             pendingAuthRedirect: null,
             badges: [],
             analyticsData: null,
           });
         } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
+          clearGoogleAuthTimers();
+          closeGoogleAuthPopup();
           if (session?.user) {
             const token = session.access_token;
             ApiClient.setToken(token);
@@ -265,6 +332,8 @@ export const useLearningStore = create<LearningState>((set, get) => ({
               token,
               isAuthenticated: true,
               authLoading: false,
+              googleAuthLoading: false,
+              googleCountdown: 30,
               authModalOpen: false,
             });
             get().fetchBadges();
@@ -289,6 +358,8 @@ export const useLearningStore = create<LearningState>((set, get) => ({
     try {
       const session = await AuthService.getSession();
       if (session?.user) {
+        clearGoogleAuthTimers();
+        closeGoogleAuthPopup();
         const token = session.access_token;
         ApiClient.setToken(token);
         const prof = await AuthService.getProfile(session.user.id);
@@ -298,6 +369,8 @@ export const useLearningStore = create<LearningState>((set, get) => ({
           token,
           isAuthenticated: true,
           authLoading: false,
+          googleAuthLoading: false,
+          googleCountdown: 30,
         });
         get().fetchBadges();
         get().fetchAnalytics();
@@ -315,6 +388,8 @@ export const useLearningStore = create<LearningState>((set, get) => ({
                 token: currentToken,
                 isAuthenticated: true,
                 authLoading: false,
+                googleAuthLoading: false,
+                googleCountdown: 30,
               });
               get().fetchBadges();
               get().fetchAnalytics();
@@ -328,6 +403,8 @@ export const useLearningStore = create<LearningState>((set, get) => ({
             token: null,
             isAuthenticated: false,
             authLoading: false,
+            googleAuthLoading: false,
+            googleCountdown: 30,
           });
         } else {
           set({
@@ -335,11 +412,15 @@ export const useLearningStore = create<LearningState>((set, get) => ({
             token: null,
             isAuthenticated: false,
             authLoading: false,
+            googleAuthLoading: false,
+            googleCountdown: 30,
           });
         }
       }
     } catch {
-      set({ authLoading: false });
+      clearGoogleAuthTimers();
+      closeGoogleAuthPopup();
+      set({ authLoading: false, googleAuthLoading: false, googleCountdown: 30 });
     } finally {
       authInitializing = false;
     }
@@ -431,6 +512,8 @@ export const useLearningStore = create<LearningState>((set, get) => ({
       set({
         authSuccess: 'Account created successfully. Please check your email to verify your KyntriX account.',
         authLoading: false,
+        authMode: 'confirm-email',
+        pendingConfirmationEmail: data.email,
       });
       return true;
     }
@@ -457,12 +540,119 @@ export const useLearningStore = create<LearningState>((set, get) => ({
     return true;
   },
 
-  loginWithGoogle: async () => {
-    set({ authLoading: true, authError: null, authSuccess: null });
-    const res = await AuthService.signInWithGoogle();
+  loginWithGoogle: async (options?: { timeoutSeconds?: number; preferPopup?: boolean; skipBrowserRedirectFallback?: boolean }) => {
+    clearGoogleAuthTimers();
+    closeGoogleAuthPopup();
+
+    const timeoutSec = options?.timeoutSeconds ?? 30;
+
+    set({
+      authLoading: true,
+      googleAuthLoading: true,
+      googleCountdown: timeoutSec,
+      authError: null,
+      authSuccess: null,
+    });
+
+    // Authoritative 1s countdown timer in store
+    googleAuthCountdownInterval = setInterval(() => {
+      const current = get().googleCountdown;
+      if (current <= 1) {
+        get().cancelGoogleAuth(
+          'Google sign-in timed out. Please try again or sign in with your email and password below.'
+        );
+      } else {
+        set({ googleCountdown: current - 1 });
+      }
+    }, 1000);
+
+    // Hard safety timeout
+    googleAuthTimeoutTimer = setTimeout(() => {
+      const state = get();
+      if (state.googleAuthLoading && !state.isAuthenticated) {
+        get().cancelGoogleAuth(
+          'Google sign-in timed out. Please try again or sign in with your email and password below.'
+        );
+      }
+    }, timeoutSec * 1000);
+
+    const preferPopup = options?.preferPopup ?? (typeof window !== 'undefined' && typeof window.open === 'function');
+    const res = await AuthService.signInWithGoogle({ skipBrowserRedirect: preferPopup });
+
     if (res.error) {
-      set({ authError: res.error, authLoading: false });
+      clearGoogleAuthTimers();
+      closeGoogleAuthPopup();
+      set({
+        authError: res.error,
+        authLoading: false,
+        googleAuthLoading: false,
+        googleCountdown: 30,
+      });
+      return;
     }
+
+    if (preferPopup && res.url && typeof window !== 'undefined' && typeof window.open === 'function') {
+      const width = 500;
+      const height = 620;
+      const left = typeof window.screenX !== 'undefined'
+        ? window.screenX + Math.max(0, (window.outerWidth || 1024) - width) / 2
+        : 100;
+      const top = typeof window.screenY !== 'undefined'
+        ? window.screenY + Math.max(0, (window.outerHeight || 768) - height) / 2
+        : 100;
+
+      try {
+        googleAuthPopup = window.open(
+          res.url,
+          'kyntrix_google_oauth',
+          `width=${width},height=${height},left=${left},top=${top},status=no,resizable=yes`
+        );
+      } catch {
+        googleAuthPopup = null;
+      }
+
+      if (googleAuthPopup && typeof googleAuthPopup.closed !== 'undefined') {
+        // Poll popup.closed every 400ms to immediately catch when user closes the window
+        googleAuthPopupPollTimer = setInterval(async () => {
+          if (googleAuthPopup && googleAuthPopup.closed) {
+            if (googleAuthPopupPollTimer) {
+              clearInterval(googleAuthPopupPollTimer);
+              googleAuthPopupPollTimer = null;
+            }
+            googleAuthPopup = null;
+            const session = await AuthService.getSession();
+            if (!session?.user && get().googleAuthLoading) {
+              get().cancelGoogleAuth(
+                'Google sign-in window was closed. You can sign in with your email and password below.'
+              );
+            }
+          }
+        }, 400);
+      } else if (!googleAuthPopup && typeof window !== 'undefined' && window.location?.assign && process.env.NODE_ENV !== 'test' && !options?.skipBrowserRedirectFallback) {
+        window.location.assign(res.url);
+      }
+    }
+  },
+
+  cancelGoogleAuth: (reason?: string) => {
+    clearGoogleAuthTimers();
+    closeGoogleAuthPopup();
+    set({
+      authLoading: false,
+      googleAuthLoading: false,
+      googleCountdown: 30,
+      ...(reason !== undefined ? { authError: reason } : {}),
+    });
+  },
+
+  resetAuthLoading: () => {
+    clearGoogleAuthTimers();
+    closeGoogleAuthPopup();
+    set({
+      authLoading: false,
+      googleAuthLoading: false,
+      googleCountdown: 30,
+    });
   },
 
   sendPasswordReset: async (email) => {
@@ -474,6 +664,20 @@ export const useLearningStore = create<LearningState>((set, get) => ({
     }
     set({
       authSuccess: 'Password reset link sent! Please check your email inbox.',
+      authLoading: false,
+    });
+    return true;
+  },
+
+  resendVerificationEmail: async (email) => {
+    set({ authLoading: true, authError: null, authSuccess: null });
+    const res = await AuthService.resendVerificationEmail(email);
+    if (res.error) {
+      set({ authError: res.error, authLoading: false });
+      return false;
+    }
+    set({
+      authSuccess: 'A new verification link has been sent to your email inbox.',
       authLoading: false,
     });
     return true;
@@ -496,6 +700,8 @@ export const useLearningStore = create<LearningState>((set, get) => ({
   },
 
   logout: async () => {
+    clearGoogleAuthTimers();
+    closeGoogleAuthPopup();
     try {
       await AuthService.signOut();
     } catch {}
@@ -506,6 +712,13 @@ export const useLearningStore = create<LearningState>((set, get) => ({
       profile: null,
       token: null,
       isAuthenticated: false,
+      authLoading: false,
+      googleAuthLoading: false,
+      googleCountdown: 30,
+      authError: null,
+      authSuccess: null,
+      authMode: 'signin',
+      pendingConfirmationEmail: null,
       badges: [],
       analyticsData: null,
       activeProblem: null,

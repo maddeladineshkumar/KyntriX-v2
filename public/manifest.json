@@ -1,6 +1,6 @@
 {
   "id": "/#kyntrix",
-  "name": "KyntriX — 3D Robotics Kinematics & Simulation Laboratory",
+  "name": "KyntriX",
   "short_name": "KyntriX",
   "description": "Professional web-native 3D robotics simulation platform for serial manipulators, forward & inverse kinematics, DH parameter calculation, and dynamic trajectories.",
   "theme_color": "#f7f4ed",

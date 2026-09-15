@@ -58,7 +58,8 @@ export class DatabaseService {
   private hasPendingSave = false;
 
   private constructor() {
-    if (typeof globalThis !== 'undefined' && typeof (globalThis as any).window !== 'undefined') {
+    const isNode = typeof process !== 'undefined' && (!!process.versions?.node || !!process.env?.VITEST);
+    if (!isNode && typeof globalThis !== 'undefined' && typeof (globalThis as any).window !== 'undefined') {
       this.dbPath = 'kyntrix_browser_db';
     } else {
       try {
@@ -85,7 +86,8 @@ export class DatabaseService {
   }
 
   private loadOrInitialize(): DatabaseSchema {
-    const isBrowser = typeof globalThis !== 'undefined' && typeof (globalThis as any).window !== 'undefined';
+    const isNode = typeof process !== 'undefined' && (!!process.versions?.node || !!process.env?.VITEST);
+    const isBrowser = !isNode && typeof globalThis !== 'undefined' && typeof (globalThis as any).window !== 'undefined';
     const storage = isBrowser ? (globalThis as any).localStorage : null;
     if (storage) {
       try {
@@ -324,7 +326,8 @@ export class DatabaseService {
   }
 
   public save(): void {
-    const isBrowser = typeof globalThis !== 'undefined' && typeof (globalThis as any).window !== 'undefined';
+    const isNode = typeof process !== 'undefined' && (!!process.versions?.node || !!process.env?.VITEST);
+    const isBrowser = !isNode && typeof globalThis !== 'undefined' && typeof (globalThis as any).window !== 'undefined';
     const storage = isBrowser ? (globalThis as any).localStorage : null;
     if (storage) {
       try {

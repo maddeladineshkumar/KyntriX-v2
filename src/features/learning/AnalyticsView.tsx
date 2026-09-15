@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useLearningStore } from './useLearningStore';
 import {
   Activity,
@@ -8,12 +8,120 @@ import {
   Layers,
 } from 'lucide-react';
 
+interface CategoryMasteryItem {
+  name: string;
+  shortCode: string;
+  description: string;
+  attempted: number;
+  solved: number;
+  accuracy: number;
+  hintsUsed: number;
+  masteryLevel: string;
+}
+
+const CANONICAL_CATEGORIES: Record<string, { name: string; description: string }> = {
+  transforms: {
+    name: 'Transformations & Coordinate Frames',
+    description: 'Rotation matrices, homogeneous transforms, Euler angles & quaternions',
+  },
+  dh: {
+    name: 'Denavit-Hartenberg (DH) Parameters',
+    description: 'Standard & Craig DH parameter tables, frame alignment & twists',
+  },
+  fk: {
+    name: 'Forward Kinematics (FK)',
+    description: 'End-effector pose calculation from joint space configurations',
+  },
+  ik: {
+    name: 'Inverse Kinematics (IK)',
+    description: 'Analytical closed-form, spherical wrist & numerical IK solvers',
+  },
+  jacobians: {
+    name: 'Differential Kinematics & Jacobians',
+    description: 'Geometric Jacobians, velocity propagation & kinematic singularities',
+  },
+  dynamics: {
+    name: 'Manipulator Dynamics & Inertia',
+    description: 'Euler-Lagrange, Newton-Euler dynamics & joint torque evaluation',
+  },
+  control: {
+    name: 'Robot Control & Motion Tracking',
+    description: 'PID, feedforward, impedance control & operational space tracking',
+  },
+  mobile: {
+    name: 'Mobile Robotics & Odometry',
+    description: 'Differential drive, wheel odometry & kinematic vehicle models',
+  },
+  trajectory: {
+    name: 'Trajectory Planning & Generation',
+    description: 'Cubic & quintic polynomials, trapezoidal profiles & blend times',
+  },
+  workspace: {
+    name: 'Workspace Reachability & Volume',
+    description: 'Reachable & dextrous workspace envelopes and volume integration',
+  },
+};
+
 export const AnalyticsView: React.FC = () => {
   const { analyticsData, analyticsLoading, fetchAnalytics, selectProblem, setActiveSubtab } = useLearningStore();
 
   useEffect(() => {
     fetchAnalytics();
   }, [fetchAnalytics]);
+
+  const profile = analyticsData?.profile;
+  const weaknesses = analyticsData?.detectedWeaknesses || [];
+  const recommendations = analyticsData?.recommendations || [];
+  const recentAttempts = analyticsData?.recentAttempts || [];
+
+  const breakdown = useMemo<Record<string, CategoryMasteryItem>>(() => {
+    const raw = analyticsData?.categoryBreakdown || {};
+    const result: Record<string, CategoryMasteryItem> = {};
+
+    for (const [key, meta] of Object.entries(CANONICAL_CATEGORIES)) {
+      const data = raw[key];
+      const attempted = typeof data?.attempted === 'number' ? data.attempted : 0;
+      const solved = typeof data?.solved === 'number' ? data.solved : 0;
+      const accuracy = attempted > 0 ? Math.round((solved / attempted) * 100) : (data?.accuracy ?? 0);
+      const hintsUsed = typeof data?.hintsUsed === 'number' ? data.hintsUsed : 0;
+      let mastery = data?.masteryLevel || 'Novice';
+      if (!data?.masteryLevel) {
+        if (accuracy >= 85 && solved >= 5) mastery = 'Master';
+        else if (accuracy >= 70 && solved >= 3) mastery = 'Proficient';
+        else if (solved >= 1) mastery = 'Developing';
+      }
+
+      result[key] = {
+        name: meta.name,
+        shortCode: key,
+        description: meta.description,
+        attempted,
+        solved,
+        accuracy,
+        hintsUsed,
+        masteryLevel: mastery,
+      };
+    }
+
+    // Include any custom or extra categories
+    for (const [key, data] of Object.entries(raw)) {
+      if (!result[key] && data && typeof data === 'object') {
+        const d = data as any;
+        result[key] = {
+          name: key.toUpperCase(),
+          shortCode: key,
+          description: 'Kinematics category',
+          attempted: d.attempted ?? 0,
+          solved: d.solved ?? 0,
+          accuracy: d.accuracy ?? 0,
+          hintsUsed: d.hintsUsed ?? 0,
+          masteryLevel: d.masteryLevel ?? 'Novice',
+        };
+      }
+    }
+
+    return result;
+  }, [analyticsData?.categoryBreakdown]);
 
   if (analyticsLoading) {
     return (
@@ -22,12 +130,6 @@ export const AnalyticsView: React.FC = () => {
       </div>
     );
   }
-
-  const profile = analyticsData?.profile;
-  const breakdown = analyticsData?.categoryBreakdown || {};
-  const weaknesses = analyticsData?.detectedWeaknesses || [];
-  const recommendations = analyticsData?.recommendations || [];
-  const recentAttempts = analyticsData?.recentAttempts || [];
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-16">
@@ -119,21 +221,36 @@ export const AnalyticsView: React.FC = () => {
 
       {/* Category Mastery Breakdown */}
       <div className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-3xl p-6 shadow-xs space-y-4">
-        <h2 className="text-base font-black text-stone-900 tracking-tight flex items-center gap-2">
-          <Layers className="w-4 h-4 text-stone-700" />
-          <span>Category Mastery Breakdown</span>
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-black text-stone-900 tracking-tight flex items-center gap-2">
+            <Layers className="w-4 h-4 text-stone-700" />
+            <span>Category Mastery Breakdown</span>
+          </h2>
+          <span className="text-xs font-bold text-stone-500">
+            {Object.values(breakdown).filter((b) => b.solved > 0).length} of {Object.keys(breakdown).length} Categories Active
+          </span>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.entries(breakdown).map(([cat, data]: [string, any]) => (
-            <div key={cat} className="p-4 bg-stone-50 border border-stone-200/80 rounded-2xl space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-black text-stone-900 text-sm uppercase">{cat}</span>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+          {Object.entries(breakdown).map(([cat, data]) => (
+            <div key={cat} className="p-4 bg-stone-50 border border-stone-200/80 rounded-2xl space-y-2.5">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-black text-stone-900 text-sm">{data.name}</span>
+                    <span className="text-[10px] font-mono font-bold text-stone-500 bg-stone-200/70 px-1.5 py-0.5 rounded">
+                      {data.shortCode.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-stone-500 mt-0.5 line-clamp-1">{data.description}</div>
+                </div>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase shrink-0 ${
                   data.masteryLevel === 'Master'
                     ? 'bg-amber-100 text-amber-950 border border-amber-300'
                     : data.masteryLevel === 'Proficient'
                     ? 'bg-emerald-100 text-emerald-950 border border-emerald-300'
+                    : data.masteryLevel === 'Developing'
+                    ? 'bg-blue-100 text-blue-950 border border-blue-300'
                     : 'bg-stone-200 text-stone-700'
                 }`}>
                   {data.masteryLevel}
@@ -143,14 +260,14 @@ export const AnalyticsView: React.FC = () => {
               <div className="w-full bg-stone-200 h-2.5 rounded-full overflow-hidden">
                 <div
                   className="bg-gradient-to-r from-amber-500 to-orange-500 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, data.accuracy)}%` }}
+                  style={{ width: `${Math.max(data.accuracy > 0 ? 4 : 0, Math.min(100, data.accuracy))}%` }}
                 />
               </div>
 
-              <div className="flex justify-between text-xs text-stone-600 pt-1">
+              <div className="flex justify-between text-xs text-stone-600 pt-0.5">
                 <span>Accuracy: <strong className="font-mono text-stone-900">{data.accuracy}%</strong></span>
                 <span>Solved: <strong className="font-mono text-stone-900">{data.solved}/{data.attempted}</strong></span>
-                <span>Hints: <strong className="font-mono text-stone-900">{data.hintsUsed}</strong></span>
+                <span>Hints Used: <strong className="font-mono text-stone-900">{data.hintsUsed}</strong></span>
               </div>
             </div>
           ))}

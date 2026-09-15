@@ -805,10 +805,21 @@ export const useLearningStore = create<LearningState>((set, get) => ({
     if (currentCount >= active.hints.length) return;
 
     set({ hintLoading: true });
-    const res = await ApiClient.getHint(active.id, currentCount);
-    if (res.data && res.data.hint) {
+    try {
+      const res = await ApiClient.getHint(active.id, currentCount);
+      if (res.data && res.data.hint) {
+        set((s) => ({
+          revealedHints: [...s.revealedHints, res.data.hint],
+          hintLoading: false,
+        }));
+        return;
+      }
+    } catch {}
+
+    // Resilient fallback: active problem object in memory contains hints
+    if (active.hints && active.hints[currentCount]) {
       set((s) => ({
-        revealedHints: [...s.revealedHints, res.data.hint],
+        revealedHints: [...s.revealedHints, active.hints[currentCount]],
         hintLoading: false,
       }));
     } else {
@@ -843,7 +854,17 @@ export const useLearningStore = create<LearningState>((set, get) => ({
       get().fetchProblems();
       return res.data;
     } else {
-      set({ submittingAttempt: false });
+      const errMsg = res.error || 'Failed to validate answer. Please try again.';
+      set({
+        attemptResult: {
+          isCorrect: false,
+          feedback: errMsg,
+          score: 0,
+          xpAwarded: 0,
+          ratingDelta: 0,
+        },
+        submittingAttempt: false,
+      });
       return null;
     }
   },
@@ -893,7 +914,26 @@ export const useLearningStore = create<LearningState>((set, get) => ({
       get().fetchAnalytics();
       return res.data;
     } else {
-      set({ submittingChallenge: false });
+      const errMsg = res.error || 'Failed to score challenge. Please check joint values.';
+      set({
+        challengeResult: {
+          attempt: {
+            challengeId: active.id,
+            finalJoints,
+            positionErrorMm: 999999,
+            orientationErrorDeg: 180,
+            jointLimitsPassed: false,
+            trajectoryValid: false,
+            completionTimeSeconds,
+            score: 0,
+            xpAwarded: 0,
+            passed: false,
+          },
+          score: 0,
+          error: errMsg,
+        },
+        submittingChallenge: false,
+      });
       return null;
     }
   },
@@ -940,10 +980,6 @@ export const useLearningStore = create<LearningState>((set, get) => ({
 
   // --- Analytics ---
   fetchAnalytics: async () => {
-    if (!ApiClient.getToken()) {
-      set({ analyticsData: null, analyticsLoading: false });
-      return;
-    }
     set({ analyticsLoading: true });
     const res = await ApiClient.getAnalytics();
     if (res.data) {
@@ -953,7 +989,18 @@ export const useLearningStore = create<LearningState>((set, get) => ({
         profile: res.data.profile || get().profile,
       });
     } else {
-      set({ analyticsData: null, analyticsLoading: false });
+      // Baseline fallback so analytics never renders empty
+      const currentProf = get().profile;
+      const fallbackData = {
+        profile: currentProf,
+        overallAccuracy: currentProf?.stats?.totalAttempts ? Math.round((currentProf.stats.problemsSolved / currentProf.stats.totalAttempts) * 100) : 0,
+        firstAttemptAccuracy: currentProf?.stats?.problemsSolved ? Math.round((currentProf.stats.correctFirstAttempt / currentProf.stats.problemsSolved) * 100) : 0,
+        categoryBreakdown: currentProf?.stats?.categoryStats || {},
+        detectedWeaknesses: [],
+        recommendations: [],
+        recentAttempts: [],
+      };
+      set({ analyticsData: fallbackData, analyticsLoading: false });
     }
   },
 

@@ -11,13 +11,24 @@ export class ApiClient {
   private static isStaticHost(): boolean {
     if (this.clientFallbackActive) return true;
     if (typeof window === 'undefined') return false;
+    try {
+      if (localStorage.getItem('kyntrix_client_api_fallback') === 'true') {
+        this.clientFallbackActive = true;
+        return true;
+      }
+    } catch {}
     const hostname = window.location.hostname;
-    // Auto-detect GitHub Pages, file protocol, or offline mode
+    // Auto-detect GitHub Pages, kyntrix.in.net, Cloudflare Pages, Netlify, Render, file protocol, or offline mode
     if (
       hostname.endsWith('github.io') ||
+      hostname.includes('kyntrix.in.net') ||
+      hostname.endsWith('pages.dev') ||
+      hostname.endsWith('netlify.app') ||
+      hostname.endsWith('onrender.com') ||
       window.location.protocol === 'file:' ||
       (typeof navigator !== 'undefined' && !navigator.onLine)
     ) {
+      this.clientFallbackActive = true;
       return true;
     }
     return false;
@@ -29,6 +40,11 @@ export class ApiClient {
     headers: Record<string, string>
   ): Promise<{ data?: T; error?: string; status: number }> {
     this.clientFallbackActive = true;
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('kyntrix_client_api_fallback', 'true');
+      }
+    } catch {}
     const method = (options.method || 'GET').toUpperCase();
     const ep = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = `/api${ep}`;
@@ -125,12 +141,41 @@ export class ApiClient {
         headers,
       });
 
-      // If remote host returns 404/405 (e.g. static CDN on GitHub Pages or missing backend), fallback to client DB
-      if (response.status === 404 || response.status === 405) {
+      const contentType = response.headers.get('content-type') || '';
+      const contentLength = response.headers.get('content-length');
+
+      // Detect static CDN / Cloudflare empty responses, 404, 405, or HTML error pages
+      const isHtmlResponse = contentType.includes('text/html');
+      const isEmptyResponse = contentLength === '0' || response.status === 204;
+      const isMissingApi =
+        response.status === 404 ||
+        response.status === 405 ||
+        (response.status === 200 && (isHtmlResponse || isEmptyResponse));
+
+      if (isMissingApi) {
+        this.clientFallbackActive = true;
+        try {
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('kyntrix_client_api_fallback', 'true');
+          }
+        } catch {}
         return await this.executeClientApi<T>(endpoint, options, headers);
       }
 
-      const data = await response.json().catch(() => ({}));
+      let data: any = {};
+      try {
+        const text = await response.text();
+        if (!text || text.trim().length === 0) {
+          // Empty body when JSON expected -> fallback
+          this.clientFallbackActive = true;
+          return await this.executeClientApi<T>(endpoint, options, headers);
+        }
+        data = JSON.parse(text);
+      } catch {
+        // Failed to parse JSON -> fallback to client database
+        this.clientFallbackActive = true;
+        return await this.executeClientApi<T>(endpoint, options, headers);
+      }
 
       if (!response.ok) {
         return {

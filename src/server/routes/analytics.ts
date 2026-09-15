@@ -8,6 +8,19 @@ export class AnalyticsRoutes {
     this.db.evaluateBadges(userId);
 
     const profile = this.db.getProfile(userId);
+    if (!profile.stats) {
+      profile.stats = {
+        problemsSolved: 0,
+        totalAttempts: 0,
+        correctFirstAttempt: 0,
+        totalTimeSpentMs: 0,
+        challengesCompleted: 0,
+        categoryStats: {},
+      };
+    }
+    if (!profile.stats.categoryStats) {
+      profile.stats.categoryStats = {};
+    }
     const attempts = this.db.getAttemptsForUser(userId);
     const problems = this.db.getProblems();
 

@@ -234,6 +234,27 @@ export interface JwtVerificationResult {
   error?: string;
 }
 
+/**
+ * Safely decodes a JWT payload, validating structure and token expiration.
+ * Used for browser/client-side session extraction where the server secret is not embedded.
+ */
+export function decodeJwtPayload(token: string): any | null {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  try {
+    const payload = JSON.parse(base64UrlDecode(parts[1]));
+    const nowSec = Math.floor(Date.now() / 1000);
+    const CLOCK_SKEW_TOLERANCE_SEC = 30;
+    if (typeof payload?.exp === 'number' && payload.exp < nowSec - CLOCK_SKEW_TOLERANCE_SEC) {
+      return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
 export function verifyJwt(token: string, secret?: string): JwtVerificationResult {
   if (!token || typeof token !== 'string') {
     return { valid: false, error: 'Empty or non-string token.' };

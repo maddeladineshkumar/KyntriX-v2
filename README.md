@@ -59,12 +59,31 @@
 
 ---
 
+### 6. AI & Learning System (Robotics Arena & Challenges)
+- **Robotics Arena**: 256 curriculum-aligned problems spanning 10 canonical robotics disciplines:
+  1. *Spatial Transforms* — $SO(3)$ / $SE(3)$ rotation matrices, Euler angles, unit quaternions.
+  2. *Denavit-Hartenberg* — Standard & Modified DH link parameter derivation.
+  3. *Forward Kinematics* — Serial chain pose calculation and homogeneous product chains.
+  4. *Inverse Kinematics* — Planar, Pieper spherical wrist, and numerical Jacobian inversion.
+  5. *Differential Kinematics & Jacobians* — Singularity analysis, manipulability, and joint velocities.
+  6. *Robot Dynamics* — Euler-Lagrange equations, mass inertia matrices, Coriolis, and gravity vectors.
+  7. *Motion & Trajectory Control* — Computed torque, PD/PID feedback, and tracking error stabilization.
+  8. *Mobile Robotics* — Unicycle kinematics, differential drive odometry, and non-holonomic constraints.
+  9. *Trajectory Planning* — Cubic/Quintic splines, trapezoidal velocity profiling, and jerk bounds.
+  10. *Workspace Analysis* — Reachable vs. dexterous workspace volume, dexterity indices, and ISO 9283 metrics.
+- **Progressive Hint System**: Multi-stage hints with mathematical formulations, step derivations, and local fallback caching.
+- **Authoritative Simulation Challenges**: 25 industrial and skeleton robotics pose targets scored in real-time on position error ($\Delta p$) and orientation tolerance ($\Delta \phi$).
+- **Performance Analytics & Category Mastery**: Live radar charts, category breakdown cards, rating progression, streak tracking, and LeetCode-style difficulty distributions.
+- **Universal Deployment Architecture**: Native client-side API router and local database fallback guarantee complete offline functionality and zero-backend static deployment compatibility.
+
+---
+
 ## 🛠 Project Architecture
 
 ```text
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml        # GitHub Actions CI/CD for automated GitHub Pages hosting
+│       └── deploy.yml        # GitHub Actions CI/CD for automated hosting
 ├── docs/
 │   └── PRD.md                # Comprehensive Product Requirements Document
 ├── public/
@@ -84,6 +103,7 @@
 │   │   ├── custom/           # Custom robot builder with JSON export/import
 │   │   ├── dh/               # Interactive DH table
 │   │   ├── ik/               # Inverse kinematics studio & target controls
+│   │   ├── learning/         # Arena, Challenges, Analytics, Leaderboard & Classroom views
 │   │   ├── trajectory/       # Trajectory studio & speed controls
 │   │   ├── transform/        # SE(3) transformation matrix studio & step mode
 │   │   └── viewport/         # 3D Three.js viewport, camera controls, HUD
@@ -93,10 +113,15 @@
 │   │   ├── kinematics/       # Authoritative FK and Geometric Jacobian
 │   │   ├── math/             # Core linear algebra (Matrix3, Matrix4, Vector3, Euler, Quaternion)
 │   │   └── trajectories/     # Trapezoidal, Cubic, Quintic trajectory engines
+│   ├── server/
+│   │   ├── db/               # Browser/Node dual-mode persistent JSON database & seed data
+│   │   ├── routes/           # API routes (problems, challenges, analytics, leaderboard, auth)
+│   │   ├── apiRouter.ts      # Universal API router & fallback dispatcher
+│   │   └── cryptoUtils.ts    # Secure token generation and JWT claim extraction
 │   ├── simulation/           # Three.js scene graph, meshes, frames, gizmos
 │   ├── state/                # Zustand store, Web Worker dispatch, persistence
 │   └── workers/              # Off-thread Web Worker IK and workspace solvers
-├── tests/                    # Vitest unit & integration test suites
+├── tests/                    # Vitest unit & integration test suites (55 suites, 348 tests)
 ├── index.html                # Entry HTML
 ├── package.json              # Dependencies and build scripts
 └── vite.config.ts            # Vite + PWA configuration with universal base path
@@ -129,10 +154,10 @@ An automated GitHub Actions workflow is included at `.github/workflows/deploy.ym
 
 ## 🧪 Testing & Verification
 
-The test suite contains 74 tests across 20 test suites, verifying numerical accuracy, DH conventions, kinematics roundtrips, and trajectory stability:
+The comprehensive test suite contains **348 tests across 55 test suites**, verifying numerical accuracy, DH conventions, kinematics roundtrips, trajectory stability, analytical/numerical IK solvers, and AI/Learning workflows:
 
 ```bash
-# Run full Vitest test suite
+# Run full Vitest test suite (348 tests)
 npm test
 
 # Run production TypeScript check & Vite build

@@ -26,6 +26,9 @@ const RobotCatalogModal = lazy(() =>
 const WorkspaceStudio = lazy(() =>
   import('./features/workspace/WorkspaceStudio').then((m) => ({ default: m.WorkspaceStudio }))
 );
+const SmaBfgsStudio = lazy(() =>
+  import('./features/smaBfgs/SmaBfgsStudio').then((m) => ({ default: m.SmaBfgsStudio }))
+);
 const LearningWorkspace = lazy(() =>
   import('./features/learning/LearningWorkspace').then((m) => ({ default: m.LearningWorkspace }))
 );
@@ -66,6 +69,7 @@ import {
   Download,
   HelpCircle,
   BookOpen,
+  Dna,
 } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -73,7 +77,7 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-type StudioModal = 'dh' | 'transform' | 'custom' | 'trajectory' | 'analysis' | 'workspace' | null;
+type StudioModal = 'dh' | 'transform' | 'custom' | 'trajectory' | 'analysis' | 'workspace' | 'sma-bfgs' | null;
 
 const KinematicFeasibilityBadge: React.FC = () => {
   const jacobian = useRobotStore((s) => s.jacobian);
@@ -548,7 +552,7 @@ export function App() {
       closeModal();
     } else {
       setActiveModal(modal);
-      if (modal) {
+      if (modal && modal !== 'sma-bfgs') {
         setActiveTab(modal);
       }
     }
@@ -822,6 +826,20 @@ export function App() {
                 <Wrench className="w-3.5 h-3.5" />
                 <span>Custom Serial Arm</span>
               </button>
+
+              {/* SMA-BFGS Quasi-Newton IK Solver Pop-up */}
+              <button
+                onClick={() => handleToggleModal('sma-bfgs')}
+                aria-label="SMA-BFGS Quasi-Newton IK Solver"
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-black text-xs border transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
+                  activeModal === 'sma-bfgs'
+                    ? 'bg-amber-500 text-white border-amber-600 shadow-sm'
+                    : 'bg-white/80 hover:bg-white text-stone-800 border-stone-300 hover:border-stone-400'
+                }`}
+              >
+                <Dna className="w-3.5 h-3.5" />
+                <span>SMA-BFGS IK Solver</span>
+              </button>
             </>
           )}
 
@@ -1079,6 +1097,8 @@ export function App() {
               ? 'Trajectory Planning and Simulation Studio'
               : activeModal === 'analysis'
               ? 'Dynamic Telemetry and Kinematic Plots Studio'
+              : activeModal === 'sma-bfgs'
+              ? 'SMA-BFGS Quasi-Newton IK Solver Studio'
               : 'Reachable Workspace Point Cloud Studio'
           }
           onKeyDown={handleFocusTrap}
@@ -1094,6 +1114,8 @@ export function App() {
           <div className={`studio-modal-container flex flex-col w-full ${
             activeModal === 'dh'
               ? 'h-full max-h-full rounded-none border-0 shadow-none'
+              : activeModal === 'sma-bfgs'
+              ? 'max-w-5xl lg:max-w-6xl h-[96%] h-[96dvh] max-h-[96%] max-h-[96dvh] bg-[#fbf9f5] border-2 border-stone-300/90 rounded-2xl sm:rounded-3xl shadow-2xl'
               : 'max-w-4xl lg:max-w-5xl h-[96%] h-[96dvh] max-h-[96%] max-h-[96dvh] bg-[#fbf9f5] border-2 border-stone-300/90 rounded-2xl sm:rounded-3xl shadow-2xl'
           } bg-[#fbf9f5] overflow-hidden animate-in zoom-in-95 duration-150`}>
             {/* Pop-up Window Header */}
@@ -1106,6 +1128,7 @@ export function App() {
                   {activeModal === 'trajectory' && <MoveUpRight className="w-4 h-4 sm:w-5 sm:h-5 text-black" />}
                   {activeModal === 'analysis' && <LineChart className="w-4 h-4 sm:w-5 sm:h-5 text-black" />}
                   {activeModal === 'workspace' && <Box className="w-4 h-4 sm:w-5 sm:h-5 text-black" />}
+                  {activeModal === 'sma-bfgs' && <Dna className="w-4 h-4 sm:w-5 sm:h-5 text-black" />}
                 </div>
                 <div className="min-w-0">
                   <h2 className="text-xs sm:text-sm font-black text-black uppercase tracking-wider truncate">
@@ -1115,6 +1138,7 @@ export function App() {
                     {activeModal === 'trajectory' && 'Trajectory Planning & Simulation Studio'}
                     {activeModal === 'analysis' && 'Dynamic Telemetry & Kinematic Plots'}
                     {activeModal === 'workspace' && 'Reachable Workspace Point Cloud Studio'}
+                    {activeModal === 'sma-bfgs' && 'SMA-BFGS Quasi-Newton Inverse Kinematics Studio'}
                   </h2>
                   <p className="text-[11px] sm:text-xs text-stone-600 font-medium hidden sm:block truncate">
                     {activeModal === 'dh' && `Live 3D robot simulation & kinematic DH parameters table for ${robot.name}`}
@@ -1123,6 +1147,7 @@ export function App() {
                     {activeModal === 'trajectory' && 'Joint-space and Cartesian straight line trajectory interpolation'}
                     {activeModal === 'analysis' && 'Time-series plots of joint positions, velocities, accelerations, and dexterity'}
                     {activeModal === 'workspace' && 'Sample robot workspace via Web Worker and inspect 3D point cloud'}
+                    {activeModal === 'sma-bfgs' && `Reproducible hybrid optimization IK solver with step-by-step trace for ${robot.name}`}
                   </p>
                 </div>
               </div>
@@ -1151,6 +1176,7 @@ export function App() {
                 {activeModal === 'trajectory' && <TrajectoryStudio />}
                 {activeModal === 'analysis' && <AnalysisStudio />}
                 {activeModal === 'workspace' && <WorkspaceStudio />}
+                {activeModal === 'sma-bfgs' && <SmaBfgsStudio />}
               </Suspense>
             </div>
           </div>

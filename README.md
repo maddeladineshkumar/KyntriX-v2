@@ -124,7 +124,7 @@
 ├── tests/                    # Vitest unit & integration test suites (55 suites, 348 tests)
 ├── index.html                # Entry HTML
 ├── package.json              # Dependencies and build scripts
-└── vite.config.ts            # Vite + PWA configuration with universal base path
+└── vite.config.ts            # Vite + PWA configuration with universal base path 
 ```
 
 ---

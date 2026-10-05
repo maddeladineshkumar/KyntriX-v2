@@ -180,3 +180,4 @@ $$A_i = \text{Rot}_X(\alpha_{i-1}) \cdot \text{Trans}_X(a_{i-1}) \cdot \text{Rot
 
 Inspired by and built as the modern web implementation of the desktop **RoboAnalyzer** software developed at IIT Delhi.
 Designed for modern robotics education and research.
+                                                                                                                  

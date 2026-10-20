@@ -32,6 +32,9 @@ const SmaBfgsStudio = lazy(() =>
 const LearningWorkspace = lazy(() =>
   import('./features/learning/LearningWorkspace').then((m) => ({ default: m.LearningWorkspace }))
 );
+const MechanismsStudio = lazy(() =>
+  import('./features/mechanisms/MechanismsStudio').then((m) => ({ default: m.MechanismsStudio }))
+);
 import { LegalPageView } from './features/legal/LegalPageView';
 import { AuthModal } from './features/learning/AuthModal';
 import { useLearningStore } from './features/learning/useLearningStore';
@@ -70,6 +73,7 @@ import {
   HelpCircle,
   BookOpen,
   Dna,
+  Orbit,
 } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -127,7 +131,7 @@ export function App() {
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [statusAnnouncement, setStatusAnnouncement] = useState<string>('');
-  const [topTab, setTopTab] = useState<'simulate' | 'trajectory' | 'learning'>('simulate');
+  const [topTab, setTopTab] = useState<'simulate' | 'trajectory' | 'learning' | 'mechanisms'>('simulate');
   const [activeModal, setActiveModal] = useState<StudioModal>(null);
   const [showJointDrawer, setShowJointDrawer] = useState(false);
   const [showIKDrawer, setShowIKDrawer] = useState(false);
@@ -463,7 +467,16 @@ export function App() {
   }, [topTab, isAuthed, authLoading]);
 
   const handleSelectTopTab = useCallback(
-    (tab: 'simulate' | 'trajectory' | 'learning') => {
+    (tab: 'simulate' | 'trajectory' | 'learning' | 'mechanisms') => {
+      if (tab === 'mechanisms') {
+        closeModal();
+        setShowJointDrawer(false);
+        setShowIKDrawer(false);
+        setTopTab('mechanisms');
+        setStatusAnnouncement('Switched to Mechanisms & Engines Laboratory.');
+        return;
+      }
+
       if (tab === 'learning') {
         const store = useLearningStore.getState();
         const authed = store.isAuthenticated || !!store.user;
@@ -680,7 +693,7 @@ export function App() {
         {/* Top-Level Mode Selector */}
         <nav
           aria-label="Simulation Mode Selector"
-          className="flex items-center gap-1 sm:gap-3 p-1 sm:p-1.5 bg-white/90 backdrop-blur-xl rounded-2xl border-2 border-stone-200/90 shadow-md max-w-full"
+          className="flex max-w-full items-center gap-1 overflow-x-auto scrollbar-none rounded-2xl border-2 border-stone-200/90 bg-white/90 p-1 shadow-md backdrop-blur-xl sm:gap-1.5 sm:p-1.5 lg:gap-2 xl:gap-3"
         >
           {/* Button 1: Simulate Kinematics */}
           <button
@@ -688,14 +701,16 @@ export function App() {
             onClick={() => handleSelectTopTab('simulate')}
             aria-label="Simulate Kinematics Mode"
             aria-pressed={topTab === 'simulate'}
-            className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-8 py-2 sm:py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 ${
+            title="Simulate Kinematics"
+            className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-1 py-2 text-[10px] font-black uppercase tracking-normal transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 sm:gap-1.5 sm:px-2.5 sm:py-2.5 sm:text-[10px] sm:tracking-normal md:px-2 lg:gap-2 lg:px-3 lg:text-[11px] lg:tracking-wide xl:gap-3 xl:px-4 xl:text-xs xl:tracking-wider ${
               topTab === 'simulate'
                 ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-lg shadow-orange-500/25 scale-[1.02]'
                 : 'text-stone-700 hover:text-black hover:bg-stone-100/90'
             }`}
           >
             <Sliders className={`w-4 h-4 ${topTab === 'simulate' ? 'text-white' : 'text-stone-700'}`} />
-            <span>Simulate Kinematics</span>
+            <span className="inline max-[389px]:hidden sm:hidden lg:inline xl:hidden">Simulate</span>
+            <span className="hidden xl:inline">Simulate Kinematics</span>
           </button>
 
           {/* Button 2: Trajectory Analysis */}
@@ -704,14 +719,16 @@ export function App() {
             onClick={() => handleSelectTopTab('trajectory')}
             aria-label="Trajectory Analysis Mode"
             aria-pressed={topTab === 'trajectory'}
-            className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-8 py-2 sm:py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 ${
+            title="Trajectory Analysis"
+            className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-1 py-2 text-[10px] font-black uppercase tracking-normal transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 sm:gap-1.5 sm:px-2.5 sm:py-2.5 sm:text-[10px] sm:tracking-normal md:px-2 lg:gap-2 lg:px-3 lg:text-[11px] lg:tracking-wide xl:gap-3 xl:px-4 xl:text-xs xl:tracking-wider ${
               topTab === 'trajectory'
                 ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white shadow-lg shadow-emerald-600/25 scale-[1.02]'
                 : 'text-stone-700 hover:text-black hover:bg-stone-100/90'
             }`}
           >
             <Activity className={`w-4 h-4 ${topTab === 'trajectory' ? 'text-white' : 'text-stone-700'}`} />
-            <span>Trajectory Analysis</span>
+            <span className="inline max-[389px]:hidden sm:hidden lg:inline xl:hidden">Trajectory</span>
+            <span className="hidden xl:inline">Trajectory Analysis</span>
           </button>
 
           {/* Button 3: AI & Learning */}
@@ -720,19 +737,39 @@ export function App() {
             onClick={() => handleSelectTopTab('learning')}
             aria-label="AI & Learning Mode"
             aria-pressed={topTab === 'learning'}
-            className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-8 py-2 sm:py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 ${
+            title="AI & Learning"
+            className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-1 py-2 text-[10px] font-black uppercase tracking-normal transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 sm:gap-1.5 sm:px-2.5 sm:py-2.5 sm:text-[10px] sm:tracking-normal md:px-2 lg:gap-2 lg:px-3 lg:text-[11px] lg:tracking-wide xl:gap-3 xl:px-4 xl:text-xs xl:tracking-wider ${
               topTab === 'learning'
                 ? 'bg-gradient-to-r from-stone-800 via-stone-900 to-black text-white shadow-lg shadow-stone-900/25 scale-[1.02]'
                 : 'text-stone-700 hover:text-black hover:bg-stone-100/90'
             }`}
           >
             <Bot className={`w-4 h-4 ${topTab === 'learning' ? 'text-white' : 'text-stone-700'}`} />
-            <span>AI & Learning</span>
+            <span className="inline max-[389px]:hidden sm:hidden lg:inline xl:hidden">Learning</span>
+            <span className="hidden xl:inline">AI & Learning</span>
+          </button>
+
+          {/* Button 4: Mechanisms & Engines */}
+          <button
+            type="button"
+            onClick={() => handleSelectTopTab('mechanisms')}
+            aria-label="Mechanisms & Engines Mode"
+            aria-pressed={topTab === 'mechanisms'}
+            title="Mechanisms & Engines"
+            className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-1 py-2 text-[10px] font-black uppercase tracking-normal transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 sm:gap-1.5 sm:px-2.5 sm:py-2.5 sm:text-[10px] sm:tracking-normal md:px-2 lg:gap-2 lg:px-3 lg:text-[11px] lg:tracking-wide xl:gap-3 xl:px-4 xl:text-xs xl:tracking-wider ${
+              topTab === 'mechanisms'
+                ? 'bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white shadow-lg shadow-orange-500/25 scale-[1.02]'
+                : 'text-stone-700 hover:text-black hover:bg-stone-100/90'
+            }`}
+          >
+            <Orbit className={`w-4 h-4 ${topTab === 'mechanisms' ? 'text-white' : 'text-stone-700'}`} />
+            <span className="inline max-[389px]:hidden sm:hidden lg:inline xl:hidden">Engines</span>
+            <span className="hidden xl:inline">Mechanisms &amp; Engines</span>
           </button>
         </nav>
 
         {/* Revealing Feature Toolbar */}
-        {topTab !== 'learning' && (
+        {topTab !== 'learning' && topTab !== 'mechanisms' && (
           <nav
             aria-label="Feature Studio Tools"
             className="flex items-center gap-2 mt-2 pt-1.5 border-t border-stone-200/70 overflow-x-auto max-w-full pb-0.5"
@@ -891,10 +928,10 @@ export function App() {
 
       {/* 2. Main Expansive 3D Simulation Canvas - Semantic Landmark */}
       <main className="flex-1 w-full h-full relative overflow-hidden bg-[#f7f4ed]">
-        <Viewport3D isPaused={topTab === 'learning' || !!activeModal} />
+        <Viewport3D isPaused={topTab === 'learning' || topTab === 'mechanisms' || !!activeModal} />
 
         {/* Floating Tactile Joint Jogger Drawer (Responsive across mobile, tablet & desktop) */}
-        {topTab !== 'learning' && showJointDrawer && (
+        {topTab !== 'learning' && topTab !== 'mechanisms' && showJointDrawer && (
           <div
             role="dialog"
             aria-label="Joint Actuation Panel"
@@ -940,7 +977,7 @@ export function App() {
         )}
 
         {/* Floating Tactile IK Target Solver Drawer (Responsive right drawer) */}
-        {topTab !== 'learning' && showIKDrawer && (
+        {topTab !== 'learning' && topTab !== 'mechanisms' && showIKDrawer && (
           <div
             role="dialog"
             aria-label="Inverse Kinematics Target Solver"
@@ -995,7 +1032,7 @@ export function App() {
         )}
 
         {/* Sleek Floating Glassmorphic Dock in 3D Viewport - Single row horizontal non-wrapping across mobile and desktop */}
-        {topTab !== 'learning' && (
+        {topTab !== 'learning' && topTab !== 'mechanisms' && (
           <div
             style={{ bottom: 'max(0.625rem, calc(0.5rem + env(safe-area-inset-bottom, 0px)))' }}
             className="absolute left-1/2 -translate-x-1/2 z-20 flex flex-nowrap items-center justify-start sm:justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-white/95 backdrop-blur-2xl border-2 border-stone-300/80 rounded-2xl shadow-xl max-w-[calc(100vw-16px)] overflow-x-auto scrollbar-none"
@@ -1076,6 +1113,15 @@ export function App() {
           <div className="absolute inset-0 z-20 bg-[#f7f4ed] overflow-y-auto">
             <Suspense fallback={<StudioLoadingFallback label="Loading AI & Learning Environment..." />}>
               <LearningWorkspace onOpenSimulator={handleOpenSimulatorFromLearning} />
+            </Suspense>
+          </div>
+        )}
+
+        {/* Mechanisms & Aerodynamics Laboratory */}
+        {topTab === 'mechanisms' && (
+          <div className="absolute inset-0 z-20 bg-[#f7f4ed] overflow-hidden">
+            <Suspense fallback={<StudioLoadingFallback label="Loading Mechanisms & Engines..." />}>
+              <MechanismsStudio />
             </Suspense>
           </div>
         )}

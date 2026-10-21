@@ -1,4 +1,5 @@
 import type { EngineType } from './types';
+import { SI_CONFIGS, isSiEngine } from './engineDynamics';
 
 class SoundSynthesizer {
   private ctx: AudioContext | null = null;
@@ -67,12 +68,17 @@ class SoundSynthesizer {
       this.osc2 = this.ctx.createOscillator();
       this.filterNode = this.ctx.createBiquadFilter();
 
-      const baseFreq =
-        engine === 'v8' || engine === 'inline4'
-          ? 55
-          : engine === 'bldc-motor'
+      const baseFreq = isSiEngine(engine)
+        ? 30 + SI_CONFIGS[engine].cylinders * 2.5
+        : engine === 'bldc-motor'
           ? 400
-          : 180;
+          : engine === 'axial-flux-motor'
+            ? 640
+            : engine === 'induction-motor'
+              ? 520
+              : engine === 'stepper-motor'
+                ? 220
+                : 180;
 
       this.osc1.type = engine.includes('turbo') || engine === 'airplane-jet' ? 'sawtooth' : 'triangle';
       this.osc1.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
@@ -101,25 +107,42 @@ class SoundSynthesizer {
     }
   }
 
-  update(engine: EngineType, throttlePct: number, afterburner = false) {
+  update(engine: EngineType, throttlePct: number, afterburner = false, rpm = 0) {
     if (!this.ctx || !this.isRunning || !this.osc1 || !this.filterNode) return;
     const t = throttlePct / 100;
+    const speed = Number.isFinite(rpm) && rpm > 0 ? rpm : null;
 
-    let targetFreq = 160 + t * 450;
-    if (engine === 'v8' || engine === 'inline4') {
-      targetFreq = 45 + t * 180;
-    } else if (engine === 'bldc-motor') {
-      targetFreq = 300 + t * 900;
-    } else if (engine === 'turboprop') {
-      targetFreq = 90 + t * 140;
+    let targetFreq: number;
+    if (isSiEngine(engine)) {
+      const cylinders = SI_CONFIGS[engine].cylinders;
+      const firingHz = speed !== null ? (speed / 60) * (cylinders / 2) : 25 + t * 80;
+      targetFreq = Math.max(18, firingHz * 0.5);
+    } else if (engine === 'bldc-motor' || engine === 'axial-flux-motor' || engine === 'induction-motor') {
+      const poles = engine === 'bldc-motor' ? 14 : engine === 'axial-flux-motor' ? 24 : 4;
+      const electricalHz = speed !== null ? (speed / 60) * (poles / 4) : 300 + t * 900;
+      targetFreq = Math.max(80, electricalHz);
+    } else if (engine === 'stepper-motor') {
+      const stepHz = speed !== null ? (speed / 60) * (200 / 4) : 120 + t * 500;
+      targetFreq = Math.max(60, stepHz);
+    } else if (engine === 'turboprop' || engine === 'turboshaft') {
+      targetFreq = speed !== null ? 70 + (speed / 24000) * 260 : 90 + t * 140;
+    } else if (engine === 'rotary') {
+      targetFreq = speed !== null ? 40 + (speed / 9500) * 420 : 120 + t * 360;
+    } else {
+      targetFreq = speed !== null ? 45 + (speed / 18000) * 520 : 160 + t * 450;
     }
 
     if (afterburner) targetFreq *= 1.25;
+    targetFreq = Math.min(4200, Math.max(18, targetFreq));
 
     const now = this.ctx.currentTime;
     this.osc1.frequency.setTargetAtTime(targetFreq, now, 0.1);
     if (this.osc2) {
-      this.osc2.frequency.setTargetAtTime(targetFreq * 2.2, now, 0.1);
+      this.osc2.frequency.setTargetAtTime(
+        Math.min(8000, targetFreq * (engine === 'stepper-motor' ? 3.1 : 2.2)),
+        now,
+        0.1
+      );
     }
     this.filterNode.frequency.setTargetAtTime(
       400 + targetFreq * 2.5 + (afterburner ? 1200 : 0),

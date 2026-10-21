@@ -29,6 +29,36 @@ const AEROSPACE_ENGINES = new Set<EngineType>([
 
 const SHAFT_ENGINES = new Set<EngineType>(['turboprop', 'turboshaft']);
 
+export const PISTON_ENGINES = new Set<EngineType>([
+  'v8',
+  'v12',
+  'flat6',
+  'inline4',
+  'ea888-b8',
+  'b58',
+]);
+
+export const ELECTRIC_ENGINES = new Set<EngineType>([
+  'bldc-motor',
+  'axial-flux-motor',
+  'induction-motor',
+  'stepper-motor',
+]);
+
+export type PistonEngineType = 'v8' | 'v12' | 'flat6' | 'inline4' | 'ea888-b8' | 'b58';
+
+export function isPiston(engine: EngineType): engine is PistonEngineType {
+  return PISTON_ENGINES.has(engine);
+}
+
+export function isElectric(engine: EngineType): boolean {
+  return ELECTRIC_ENGINES.has(engine);
+}
+
+export function isRotary(engine: EngineType): boolean {
+  return engine === 'rotary';
+}
+
 export function isAerospace(engine: EngineType): boolean {
   return AEROSPACE_ENGINES.has(engine);
 }
@@ -53,6 +83,7 @@ export function supportsVectoring(engine: EngineType): boolean {
 export function testbedLabel(engine: EngineType): string {
   if (isFlightTestbed(engine)) return 'Flight Testbed';
   if (isShaftEngine(engine)) return 'Shaft Testbed';
+  if (isElectric(engine)) return 'Motor Dyno Testbed';
   return 'Dyno Testbed';
 }
 
@@ -74,6 +105,9 @@ const PISTON_GROUPS: Record<string, string> = {
   heads: 'Cylinder Head & Valvetrain',
   valvetrain: 'Cylinder Head & Valvetrain',
   manifolds: 'Gas Exchange',
+  turbo: 'Forced Induction',
+  fuel: 'Fuel & Ignition',
+  chargecooler: 'Forced Induction',
 };
 
 const ROTARY_GROUPS: Record<string, string> = {
@@ -96,6 +130,34 @@ const BLDC_GROUPS: Record<string, string> = {
   housing: 'Structure & Cooling',
 };
 
+const AXIAL_FLUX_GROUPS: Record<string, string> = {
+  stator: 'Stator & Windings',
+  windings: 'Stator & Windings',
+  rotor: 'Rotor & Shaft',
+  shaft: 'Rotor & Shaft',
+  inverter: 'Power & Feedback',
+  encoder: 'Power & Feedback',
+  housing: 'Structure & Cooling',
+};
+
+const INDUCTION_GROUPS: Record<string, string> = {
+  stator: 'Stator & Windings',
+  windings: 'Stator & Windings',
+  rotor: 'Rotor & Shaft',
+  shaft: 'Rotor & Shaft',
+  encoder: 'Power & Feedback',
+  housing: 'Structure & Cooling',
+};
+
+const STEPPER_GROUPS: Record<string, string> = {
+  stator: 'Stator & Windings',
+  windings: 'Stator & Windings',
+  rotor: 'Rotor & Shaft',
+  shaft: 'Rotor & Shaft',
+  encoder: 'Power & Feedback',
+  housing: 'Structure & Cooling',
+};
+
 const AIRFRAME_GROUPS: Record<string, string> = {
   fuselage: 'Airframe',
   wings: 'Airframe',
@@ -112,16 +174,50 @@ const GROUP_ORDER: Record<EngineType, string[]> = {
   turboprop: ['Power Output', 'Inlet & Fan', 'Compression', 'Combustion', 'Expansion', 'Exhaust', 'Structure & Casing', 'Drivetrain'],
   turboshaft: ['Power Output', 'Inlet & Fan', 'Compression', 'Combustion', 'Expansion', 'Exhaust', 'Structure & Casing', 'Drivetrain'],
   v8: ['Rotating Assembly', 'Reciprocating Assembly', 'Cylinder Block', 'Cylinder Head & Valvetrain', 'Gas Exchange'],
-  inline4: ['Rotating Assembly', 'Reciprocating Assembly', 'Cylinder Block', 'Cylinder Head & Valvetrain', 'Gas Exchange'],
+  v12: ['Rotating Assembly', 'Reciprocating Assembly', 'Cylinder Block', 'Cylinder Head & Valvetrain', 'Gas Exchange'],
+  flat6: ['Rotating Assembly', 'Reciprocating Assembly', 'Cylinder Block', 'Cylinder Head & Valvetrain', 'Gas Exchange'],
+  inline4: [
+    'Rotating Assembly',
+    'Reciprocating Assembly',
+    'Cylinder Block',
+    'Cylinder Head & Valvetrain',
+    'Forced Induction',
+    'Fuel & Ignition',
+    'Gas Exchange',
+  ],
+  'ea888-b8': [
+    'Rotating Assembly',
+    'Reciprocating Assembly',
+    'Cylinder Block',
+    'Cylinder Head & Valvetrain',
+    'Forced Induction',
+    'Fuel & Ignition',
+    'Gas Exchange',
+  ],
+  b58: [
+    'Rotating Assembly',
+    'Reciprocating Assembly',
+    'Cylinder Block',
+    'Cylinder Head & Valvetrain',
+    'Forced Induction',
+    'Fuel & Ignition',
+    'Gas Exchange',
+  ],
   rotary: ['Rotor Assembly', 'Housing & Ports'],
   'bldc-motor': ['Stator & Windings', 'Rotor & Shaft', 'Transmission & Feedback', 'Structure & Cooling'],
+  'axial-flux-motor': ['Stator & Windings', 'Rotor & Shaft', 'Power & Feedback', 'Structure & Cooling'],
+  'induction-motor': ['Stator & Windings', 'Rotor & Shaft', 'Power & Feedback', 'Structure & Cooling'],
+  'stepper-motor': ['Stator & Windings', 'Rotor & Shaft', 'Power & Feedback', 'Structure & Cooling'],
   'airplane-jet': ['Airframe', 'Propulsion', 'Control & Gear'],
 };
 
 export function partGroup(engine: EngineType, partId: string): string {
-  if (engine === 'v8' || engine === 'inline4') return PISTON_GROUPS[partId] ?? 'Other';
+  if (isPiston(engine)) return PISTON_GROUPS[partId] ?? 'Other';
   if (engine === 'rotary') return ROTARY_GROUPS[partId] ?? 'Other';
   if (engine === 'bldc-motor') return BLDC_GROUPS[partId] ?? 'Other';
+  if (engine === 'axial-flux-motor') return AXIAL_FLUX_GROUPS[partId] ?? 'Other';
+  if (engine === 'induction-motor') return INDUCTION_GROUPS[partId] ?? 'Other';
+  if (engine === 'stepper-motor') return STEPPER_GROUPS[partId] ?? 'Other';
   if (engine === 'airplane-jet') return AIRFRAME_GROUPS[partId] ?? 'Other';
   if ((engine === 'turboprop' || engine === 'turboshaft') && partId === 'fan') {
     return 'Power Output';

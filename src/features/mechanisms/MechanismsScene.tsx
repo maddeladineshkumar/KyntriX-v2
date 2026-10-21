@@ -16,9 +16,14 @@ import {
   buildRotaryEngine,
   buildShaftOutput,
   buildElectricMotor,
+  buildAxialFluxMotor,
+  buildInductionMotor,
+  buildStepperMotor,
   buildAirplaneJet,
+  type MechanismAnimator,
 } from './mechanicalEngines';
 import { SectionRendering, SectionGizmo } from './sectionRendering';
+import { isPiston } from './studioConfig';
 import { WALKTHROUGHS } from './walkthroughs';
 import { fitWalkthroughCamera } from './walkthroughCamera';
 import { ExplosionController } from './explosionController';
@@ -27,6 +32,10 @@ interface MechanismsSceneProps {
   state: ViewerState;
   onSelect: (id: string | null, piece?: PieceInfo | null) => void;
   onStats?: (total: number, visible: number) => void;
+  /** Physics-derived crank speed used to drive the visible mechanism. */
+  rpm?: number;
+  /** Normalized engine load (0-1) used for combustion glow. */
+  load?: number;
 }
 
 const TAU = Math.PI * 2;
@@ -50,17 +59,23 @@ const MechanismsSceneComponent: React.FC<MechanismsSceneProps> = ({
   state,
   onSelect,
   onStats,
+  rpm = 0,
+  load = 0.5,
 }) => {
   const host = useRef<HTMLDivElement>(null);
   const live = useRef(state);
   const select = useRef(onSelect);
   const stats = useRef(onStats);
+  const rpmRef = useRef(rpm);
+  const loadRef = useRef(load);
 
   useEffect(() => {
     live.current = state;
     select.current = onSelect;
     stats.current = onStats;
-  }, [state, onSelect, onStats]);
+    rpmRef.current = rpm;
+    loadRef.current = load;
+  }, [state, onSelect, onStats, rpm, load]);
 
   const [error, setError] = useState('');
   const [ready, setReady] = useState(false);
@@ -200,7 +215,7 @@ const MechanismsSceneComponent: React.FC<MechanismsSceneProps> = ({
     let labelMetrics: LabelMetric[] = [];
     let explosion: ExplosionController | null = null;
     let PARTS = getParts(live.current.engine);
-    let mechanism: ((time: number) => void) | null = null;
+    let mechanism: MechanismAnimator | null = null;
     let mechanismTime = 0;
     let spool = 0;
     const modelBounds = new T.Box3();
@@ -477,12 +492,18 @@ const MechanismsSceneComponent: React.FC<MechanismsSceneProps> = ({
         });
       });
 
-      if (kind === 'v8' || kind === 'inline4') {
+      if (isPiston(kind)) {
         mechanism = buildPistonEngine(kind, { groups, clip, materials });
       } else if (kind === 'rotary') {
         mechanism = buildRotaryEngine({ groups, clip, materials });
       } else if (kind === 'bldc-motor') {
         mechanism = buildElectricMotor({ groups, clip, materials });
+      } else if (kind === 'axial-flux-motor') {
+        mechanism = buildAxialFluxMotor({ groups, clip, materials });
+      } else if (kind === 'induction-motor') {
+        mechanism = buildInductionMotor({ groups, clip, materials });
+      } else if (kind === 'stepper-motor') {
+        mechanism = buildStepperMotor({ groups, clip, materials });
       } else if (kind === 'airplane-jet') {
         mechanism = buildAirplaneJet({ groups, clip, materials });
       } else {
@@ -865,7 +886,9 @@ const MechanismsSceneComponent: React.FC<MechanismsSceneProps> = ({
           let p: T.Object3D | null = o;
           while (p && !p.userData.id) p = p.parent;
           o.userData.part = p?.userData.id;
-          const source = o.material as T.MeshStandardMaterial;
+          // Additive combustion and plume overlays are FX, not clip-able hardware.
+          if (!(o.material instanceof T.MeshStandardMaterial)) return;
+          const source = o.material;
           const key = o.userData.part + source.uuid;
           let local = partMaterials.get(key);
           if (!local) {
@@ -1540,20 +1563,26 @@ const MechanismsSceneComponent: React.FC<MechanismsSceneProps> = ({
         });
       }
 
-      // Mechanism rotational physics & animation with a simple spool-up inertia
-      const targetSpool =
-        s.playing && !s.walkthrough && !inventoryVisible ? Math.max(0.06, s.throttle / 100) : 0;
-      spool += (targetSpool - spool) * Math.min(1, dt * (targetSpool > spool ? 2.2 : 5));
+      // Mechanism rotational physics: the visual crank follows the live RPM
+      // computed by the powertrain simulator, then decays smoothly on stop.
+      const simulatedRpm = rpmRef.current;
+      const targetSpool = s.playing && !s.walkthrough && !inventoryVisible
+        ? Math.max(0, simulatedRpm) / 1000
+        : 0;
+      spool += (targetSpool - spool) * Math.min(1, dt * (targetSpool > spool ? 3.2 : 5.5));
 
-      if (s.playing && !s.walkthrough && !inventoryVisible) {
-        const speedMultiplier = s.speed * Math.max(0.08, spool);
-        mechanismTime += dt * speedMultiplier * 5.5;
-        mechanism?.(mechanismTime);
+      if (s.playing && !s.walkthrough && !inventoryVisible && spool > 0.001) {
+        const speedMultiplier = s.speed * spool * 0.95;
+        mechanismTime += dt * speedMultiplier;
+        mechanism?.(mechanismTime, {
+          load: loadRef.current,
+          rpm: simulatedRpm,
+          time: now / 1000,
+        });
         rotors.forEach((r, i) => {
           r.rotation.x +=
             dt *
             speedMultiplier *
-            5.5 *
             (r.userData.rate ?? (i === 0 && s.engine === 'turbofan' ? 0.7 : 1.1));
         });
       }
@@ -1570,7 +1599,7 @@ const MechanismsSceneComponent: React.FC<MechanismsSceneProps> = ({
         !s.isolated;
 
       if (flow.visible) {
-        flowTime += dt * (s.playing ? Math.max(0.2, spool) * s.speed : 0);
+        flowTime += dt * (s.playing ? Math.max(0.2, Math.min(1.6, spool)) * s.speed : 0);
         const fan = s.engine === 'turbofan';
         const power = s.engine === 'turboprop' || s.engine === 'turboshaft';
 

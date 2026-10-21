@@ -14,7 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { ENGINES } from './engineData';
-import type { EnginePart, EngineType, PieceInfo, ViewerState } from './types';
+import type { EnginePart, EngineType, PieceInfo, SimulationTelemetry, ViewerState } from './types';
 import type { InspectorTab } from './studioConfig';
 import { isFlightTestbed, isShaftEngine, supportsVectoring, testbedLabel } from './studioConfig';
 import { StudioTelemetry } from './StudioTelemetry';
@@ -24,7 +24,8 @@ import { cx } from './studioUtils';
 interface StudioInspectorProps {
   engine: EngineType;
   state: ViewerState;
-  elapsed: number;
+  telemetry: SimulationTelemetry;
+  crankAngleRad: number;
   tab: InspectorTab;
   selectedPart: EnginePart | null;
   selectedPiece: PieceInfo | null;
@@ -46,7 +47,8 @@ const TABS: { id: InspectorTab; label: string; icon: React.ReactNode }[] = [
 const StudioInspectorComponent: React.FC<StudioInspectorProps> = ({
   engine,
   state,
-  elapsed,
+  telemetry,
+  crankAngleRad,
   tab,
   selectedPart,
   selectedPiece,
@@ -239,6 +241,14 @@ const StudioInspectorComponent: React.FC<StudioInspectorProps> = ({
                 <span className="rounded-md border border-stone-200 bg-white px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-stone-600">
                   {meta.category}
                 </span>
+                {meta.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-md bg-stone-900/90 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white"
+                  >
+                    {tag}
+                  </span>
+                ))}
               </div>
             </div>
 
@@ -314,7 +324,14 @@ const StudioInspectorComponent: React.FC<StudioInspectorProps> = ({
           </div>
         ) : null}
 
-        {tab === 'telemetry' ? <StudioTelemetry engine={engine} state={state} elapsed={elapsed} /> : null}
+        {tab === 'telemetry' ? (
+          <StudioTelemetry
+            engine={engine}
+            state={state}
+            telemetry={telemetry}
+            crankAngleRad={crankAngleRad}
+          />
+        ) : null}
       </div>
     </div>
   );
@@ -324,7 +341,8 @@ function areInspectorPropsEqual(
   previous: StudioInspectorProps,
   next: StudioInspectorProps
 ): boolean {
-  if (previous.elapsed !== next.elapsed && next.tab === 'telemetry') return false;
+  if (previous.telemetry !== next.telemetry && next.tab === 'telemetry') return false;
+  if (previous.crankAngleRad !== next.crankAngleRad && next.tab === 'telemetry') return false;
   return (
     previous.engine === next.engine &&
     previous.state === next.state &&

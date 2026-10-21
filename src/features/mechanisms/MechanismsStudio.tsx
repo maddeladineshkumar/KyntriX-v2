@@ -41,7 +41,7 @@ import {
   stepWalkthrough,
   WALKTHROUGHS,
 } from './walkthroughs';
-import { calculateTelemetry } from './telemetryEngine';
+import { usePowertrainSimulation } from './usePowertrainSimulation';
 import { soundSynthesizer } from './soundSynthesizer';
 import { MechanismsScene } from './MechanismsScene';
 import {
@@ -138,9 +138,10 @@ export const MechanismsStudio: React.FC = () => {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const [consoleExpanded, setConsoleExpanded] = useState(true);
   const [counts, setCounts] = useState({ total: 0, visible: 0 });
-  const [elapsed, setElapsed] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [status, setStatus] = useState('');
+  const [dynoRun, setDynoRun] = useState(false);
+  const [dynoProgress, setDynoProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const viewMenuRef = useRef<HTMLDivElement>(null);
 
@@ -160,29 +161,57 @@ export const MechanismsStudio: React.FC = () => {
   const canVector = supportsVectoring(s.engine);
   const canFlow = currentEngineMeta.flow;
 
-  const telemetry = useMemo(
-    () => calculateTelemetry(s.engine, s, elapsed),
-    [s, elapsed]
-  );
+  const powertrain = usePowertrainSimulation(s);
+  const telemetry = powertrain.telemetry;
 
-  // Telemetry is intentionally refreshed at 10 Hz rather than every animation frame.
-  useEffect(() => {
-    const start = performance.now();
-    const timer = window.setInterval(() => {
-      setElapsed((performance.now() - start) / 1000);
-    }, 100);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  // Audio synthesizer synchronization
+  // Audio synthesizer lifecycle.
   useEffect(() => {
     if (s.audioEnabled && (s.playing || s.mode === 'flight-sim')) {
       soundSynthesizer.start(s.engine);
-      soundSynthesizer.update(s.engine, s.throttle, s.afterburner);
     } else {
       soundSynthesizer.stop();
     }
-  }, [s.audioEnabled, s.playing, s.mode, s.engine, s.throttle, s.afterburner]);
+  }, [s.audioEnabled, s.playing, s.mode, s.engine]);
+
+  // Keep the acoustic model locked to the simulated firing/electrical frequency.
+  useEffect(() => {
+    if (!s.audioEnabled) return;
+    soundSynthesizer.update(s.engine, s.throttle, s.afterburner, telemetry.rpm);
+  }, [s.audioEnabled, s.engine, s.throttle, s.afterburner, telemetry.rpm]);
+
+  // Automated dyno pull: ramp to full throttle, hold on the limiter, then settle.
+  useEffect(() => {
+    if (!dynoRun) return;
+    const started = performance.now();
+    const duration = 9000;
+    let raf = 0;
+    let lastThrottle = -1;
+    let lastProgress = -1;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - started) / duration);
+      const target =
+        t < 0.8 ? Math.min(1, t / 0.68) : Math.max(0, 1 - (t - 0.8) / 0.2);
+      const throttle = Math.round(target * 100);
+      const progress = Math.round(t * 100);
+      if (progress !== lastProgress) {
+        lastProgress = progress;
+        setDynoProgress(progress / 100);
+      }
+      if (throttle !== lastThrottle) {
+        lastThrottle = throttle;
+        setS((previous) => ({ ...previous, playing: true, throttle }));
+      }
+      if (t < 1) {
+        raf = window.requestAnimationFrame(tick);
+      } else {
+        setDynoRun(false);
+        setDynoProgress(0);
+        setStatus('Dyno pull complete. Peak values are held in the telemetry inspector.');
+      }
+    };
+    raf = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(raf);
+  }, [dynoRun]);
 
   // Guided walkthrough auto-advancing with a reading-time-aware dwell.
   useEffect(() => {
@@ -248,6 +277,8 @@ export const MechanismsStudio: React.FC = () => {
   );
 
   const selectMode = useCallback((mode: ViewerState['mode']) => {
+    setDynoRun(false);
+    setDynoProgress(0);
     setS((previous) => {
       const base = previous.walkthrough ? exitWalkthrough(previous) : previous;
       return {
@@ -274,6 +305,8 @@ export const MechanismsStudio: React.FC = () => {
   }, [s.engine]);
 
   const changeEngine = useCallback((newEngine: EngineType) => {
+    setDynoRun(false);
+    setDynoProgress(0);
     setS((previous) => ({
       ...INITIAL_STATE,
       engine: newEngine,
@@ -789,6 +822,8 @@ export const MechanismsStudio: React.FC = () => {
             state={s}
             onSelect={handleSelectPart}
             onStats={handleStats}
+            rpm={telemetry.rpm}
+            load={powertrain.load}
           />
 
           {/* Model title */}
@@ -1318,6 +1353,41 @@ export const MechanismsStudio: React.FC = () => {
                         format={(value) => `${Math.round(value)}%`}
                         accent="amber"
                       />
+                      {!isFlight ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (dynoRun) return;
+                            setDynoProgress(0);
+                            setDynoRun(true);
+                          }}
+                          disabled={dynoRun}
+                          aria-pressed={dynoRun}
+                          className={cx(
+                            'relative flex min-h-[3.25rem] flex-col justify-center gap-1 overflow-hidden rounded-xl px-3 py-2 text-xs font-black transition-all',
+                            dynoRun
+                              ? 'border border-amber-300 bg-amber-100 text-amber-900'
+                              : 'border border-stone-300 bg-white text-stone-800 hover:border-amber-300 hover:bg-amber-50'
+                          )}
+                        >
+                          <span className="flex items-center justify-center gap-1.5">
+                            <Gauge className="h-3.5 w-3.5" />
+                            {dynoRun ? 'Pull in progress…' : 'Run dyno pull'}
+                          </span>
+                          {dynoRun ? (
+                            <span className="absolute inset-x-0 bottom-0 h-1 bg-amber-200">
+                              <span
+                                className="block h-full bg-amber-600 transition-[width] duration-100"
+                                style={{ width: `${Math.round(dynoProgress * 100)}%` }}
+                              />
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-bold text-stone-500">
+                              Idle → redline → idle sweep
+                            </span>
+                          )}
+                        </button>
+                      ) : null}
                       {isAero ? (
                         <RangeControl
                           label="Altitude"
@@ -1427,7 +1497,8 @@ export const MechanismsStudio: React.FC = () => {
           <StudioInspector
             engine={s.engine}
             state={s}
-            elapsed={elapsed}
+            telemetry={telemetry}
+            crankAngleRad={powertrain.crankAngleRad}
             tab={inspectorTab}
             selectedPart={selectedPart}
             selectedPiece={selectedPieceInfo}

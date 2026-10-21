@@ -18,9 +18,21 @@ import {
 } from '../../src/features/mechanisms/walkthroughs';
 import { fitWalkthroughCamera } from '../../src/features/mechanisms/walkthroughCamera';
 import { calculateTelemetry } from '../../src/features/mechanisms/telemetryEngine';
+import {
+  ELECTRIC_CONFIGS,
+  SI_CONFIGS,
+  EngineSimulator,
+  electricOperatingPoint,
+  getCylinderStates,
+  getDynoCurve,
+  getPvLoop,
+  siOperatingPoint,
+} from '../../src/features/mechanisms/engineDynamics';
 import { ExplosionController } from '../../src/features/mechanisms/explosionController';
 import { SectionGizmo } from '../../src/features/mechanisms/sectionRendering';
 import { soundSynthesizer } from '../../src/features/mechanisms/soundSynthesizer';
+import { buildPistonEngine } from '../../src/features/mechanisms/mechanicalEngines';
+import { isPiston } from '../../src/features/mechanisms/studioConfig';
 import {
   CAMERA_OPTIONS,
   QUALITY_OPTIONS,
@@ -43,9 +55,16 @@ describe('Mechanisms & Engines Simulation Suite', () => {
     'turboprop',
     'turboshaft',
     'v8',
+    'v12',
+    'flat6',
     'inline4',
+    'ea888-b8',
+    'b58',
     'rotary',
     'bldc-motor',
+    'axial-flux-motor',
+    'induction-motor',
+    'stepper-motor',
     'airplane-jet',
   ];
 
@@ -83,7 +102,7 @@ describe('Mechanisms & Engines Simulation Suite', () => {
   });
 
   describe('1. Engine Catalog & Parts Inventory Integrity', () => {
-    it('defines metadata for all 9 engines with required specifications', () => {
+    it('defines metadata for all 14 engines with required specifications', () => {
       for (const engine of allEngineTypes) {
         const meta = ENGINES[engine];
         expect(meta).toBeDefined();
@@ -156,6 +175,171 @@ describe('Mechanisms & Engines Simulation Suite', () => {
       expect(airplaneIds).toContain('wings');
       expect(airplaneIds).toContain('nozzles');
       expect(airplaneIds).toContain('canopy');
+    });
+  });
+
+  describe('1b. V12 & Flat-Six Architectures', () => {
+    const buildContext = () => {
+      const groups: Record<string, THREE.Group> = {};
+      for (const id of [
+        'block',
+        'pistons',
+        'rods',
+        'crankshaft',
+        'heads',
+        'valvetrain',
+        'manifolds',
+        'turbo',
+        'chargecooler',
+        'fuel',
+      ]) {
+        groups[id] = new THREE.Group();
+      }
+      return {
+        groups,
+        clip: new THREE.Plane(),
+        materials: [] as THREE.MeshStandardMaterial[],
+      };
+    };
+
+    it('registers both architectures as naturally aspirated piston engines', () => {
+      for (const engine of ['v12', 'flat6'] as const) {
+        expect(isPiston(engine)).toBe(true);
+        expect(ENGINES[engine].family).toBe('Piston engines');
+        expect(ENGINES[engine].tags.length).toBeGreaterThanOrEqual(3);
+        const ids = getParts(engine).map((part) => part.id);
+        expect(ids).toContain('crankshaft');
+        expect(ids).not.toContain('turbo');
+      }
+      expect(SI_CONFIGS.v12.cylinders).toBe(12);
+      expect(SI_CONFIGS.v12.layout).toBe('v12');
+      expect(SI_CONFIGS.flat6.cylinders).toBe(6);
+      expect(SI_CONFIGS.flat6.layout).toBe('f6');
+      expect(SI_CONFIGS.v12.turbo).toBe(false);
+      expect(SI_CONFIGS.flat6.turbo).toBe(false);
+    });
+
+    it('uses unique, complete firing sequences for both engines', () => {
+      for (const engine of ['v12', 'flat6'] as const) {
+        const config = SI_CONFIGS[engine];
+        const order = [...config.firingOrder].sort((a, b) => a - b);
+        expect(order).toEqual(Array.from({ length: config.cylinders }, (_, i) => i + 1));
+      }
+      expect(SI_CONFIGS.v12.firingOrder).toHaveLength(12);
+      expect(SI_CONFIGS.flat6.firingOrder).toHaveLength(6);
+    });
+
+    it('produces a calibrated dyno curve near the published peaks', () => {
+      const v12 = getDynoCurve('v12');
+      expect(v12.kind).toBe('si');
+      expect(v12.points.length).toBeGreaterThan(20);
+      expect(v12.peakTorqueNm).toBeGreaterThan(650);
+      expect(v12.peakTorqueNm).toBeLessThanOrEqual(730);
+      expect(v12.peakPowerKw).toBeGreaterThan(SI_CONFIGS.v12.peakPowerKw * 0.85);
+      expect(v12.peakPowerKw).toBeLessThanOrEqual(SI_CONFIGS.v12.peakPowerKw * 1.1);
+      expect(v12.redlineRpm).toBe(8700);
+
+      const flat6 = getDynoCurve('flat6');
+      expect(flat6.peakTorqueNm).toBeGreaterThan(430);
+      expect(flat6.peakTorqueNm).toBeLessThanOrEqual(480);
+      expect(flat6.peakPowerKw).toBeGreaterThan(SI_CONFIGS.flat6.peakPowerKw * 0.85);
+      expect(flat6.peakPowerKw).toBeLessThanOrEqual(SI_CONFIGS.flat6.peakPowerKw * 1.1);
+      expect(flat6.redlineRpm).toBe(9000);
+      // Power is still climbing in the top 15% of the rev range on the boxer.
+      expect(flat6.peakPowerRpm).toBeGreaterThanOrEqual(flat6.redlineRpm * 0.85);
+      expect(flat6.peakPowerRpm).toBeLessThanOrEqual(flat6.redlineRpm);
+    });
+
+    it('exposes all twelve and six cylinder states across the 720° cycle', () => {
+      const v12 = getCylinderStates('v12', 4000, 100, 0, 0.4);
+      const flat6 = getCylinderStates('flat6', 4000, 100, 0, 0.4);
+      expect(v12).toHaveLength(12);
+      expect(flat6).toHaveLength(6);
+      for (const state of [...v12, ...flat6]) {
+        expect(state.pressureBar).toBeGreaterThan(0);
+        expect(state.volumeCc).toBeGreaterThan(0);
+        expect(['intake', 'compression', 'power', 'exhaust']).toContain(state.phase);
+      }
+      expect(new Set(v12.map((state) => state.index)).size).toBe(12);
+    });
+
+    it('spools to the limiter and holds it under sustained full throttle', () => {
+      for (const engine of ['v12', 'flat6'] as const) {
+        const simulator = new EngineSimulator(engine);
+        const config = SI_CONFIGS[engine];
+        let peakRpm = 0;
+        let sawLimiter = false;
+        for (let i = 0; i < 240 * 9; i++) {
+          simulator.step(1 / 240, {
+            throttlePct: 100,
+            altitudeMeters: 0,
+            afterburner: false,
+            active: true,
+          });
+          if (i % 24 === 0) {
+            const sample = simulator.snapshot();
+            peakRpm = Math.max(peakRpm, sample.rpm);
+            sawLimiter = sawLimiter || sample.revLimiterActive;
+          }
+        }
+        const telemetry = simulator.snapshot();
+        expect(peakRpm).toBeGreaterThan(config.redlineRpm - 40);
+        expect(telemetry.rpm).toBeLessThanOrEqual(config.redlineRpm + 5);
+        expect(sawLimiter).toBe(true);
+        expect(telemetry.boostBar).toBe(0);
+        expect(telemetry.powerKW).toBeGreaterThan(0);
+      }
+    });
+
+    it('assembles the exploded-hardware view for every piston engine without FX material errors', () => {
+      for (const engine of ['v8', 'v12', 'flat6', 'inline4', 'ea888-b8', 'b58'] as const) {
+        const ctx = buildContext();
+        const root = new THREE.Group();
+        const animate = buildPistonEngine(engine, ctx);
+        animate(0.7);
+        for (const [id, group] of Object.entries(ctx.groups)) {
+          group.userData.id = id;
+          root.add(group);
+        }
+        const controller = new ExplosionController(root);
+        expect(controller.count).toBeGreaterThan(20);
+        expect(() => controller.dispose()).not.toThrow();
+      }
+    });
+
+    it('builds twelve pistons for the V12 and mirrored opposed pistons for the flat-six', () => {
+      const v12 = buildContext();
+      const animateV12 = buildPistonEngine('v12', v12);
+      expect(v12.groups.pistons.children).toHaveLength(12);
+      expect(v12.groups.rods.children).toHaveLength(12);
+      animateV12(1.35);
+      v12.groups.pistons.traverse((object) => {
+        expect(Number.isFinite(object.position.x)).toBe(true);
+        expect(Number.isFinite(object.position.y)).toBe(true);
+        expect(Number.isFinite(object.position.z)).toBe(true);
+      });
+
+      const flat = buildContext();
+      const animateFlat = buildPistonEngine('flat6', flat);
+      expect(flat.groups.pistons.children).toHaveLength(6);
+      const pistons = flat.groups.pistons.children as THREE.Group[];
+      animateFlat(0.8);
+      // Opposed pairs share a crankpin and point along opposite bank axes.
+      for (let i = 0; i < 3; i++) {
+        const left = pistons[i];
+        const right = pistons[i + 3];
+        expect(left.position.z).toBeLessThan(0);
+        expect(right.position.z).toBeGreaterThan(0);
+        expect(left.position.y).toBeCloseTo(right.position.y, 4);
+      }
+      // ...and sweep in opposite directions as the crank turns.
+      const before = pistons.map((piston) => piston.position.z);
+      animateFlat(0.95);
+      // Opposed pistons move in opposite directions along their own bank axes:
+      // one recedes toward the crank while its partner extends away from it.
+      expect(Math.abs(pistons[0].position.z)).toBeLessThan(Math.abs(before[0]));
+      expect(Math.abs(pistons[3].position.z)).toBeGreaterThan(Math.abs(before[3]));
+      expect(Math.abs(pistons[0].position.z - before[0])).toBeGreaterThan(0.01);
     });
   });
 
@@ -331,7 +515,7 @@ describe('Mechanisms & Engines Simulation Suite', () => {
   });
 
   describe('5. Walkthrough State Machine Transitions', () => {
-    it('provides valid walkthrough stations for all 9 engines', () => {
+    it('provides valid walkthrough stations for every engine', () => {
       for (const engine of allEngineTypes) {
         const stations = WALKTHROUGHS[engine];
         expect(stations).toBeDefined();
@@ -904,6 +1088,142 @@ describe('Mechanisms & Engines Simulation Suite', () => {
       expect(reset.playing).toBe(false);
       expect(reset.reset).toBe(4);
       expect(reset.zoom).toBe(0);
+    });
+  });
+
+  describe('16. Advanced Powertrain Physics & Calibration', () => {
+    it('produces calibrated EA888 and B58 dyno curves near published output', () => {
+      const ea888 = getDynoCurve('ea888-b8');
+      expect(ea888.kind).toBe('si');
+      expect(ea888.points.length).toBeGreaterThan(40);
+      expect(ea888.peakTorqueNm).toBeGreaterThan(330);
+      expect(ea888.peakTorqueNm).toBeLessThan(370);
+      expect(ea888.peakPowerKw).toBeGreaterThan(140);
+      expect(ea888.peakPowerKw).toBeLessThan(170);
+
+      const b58 = getDynoCurve('b58');
+      expect(b58.kind).toBe('si');
+      expect(b58.points.length).toBeGreaterThan(40);
+      expect(b58.peakTorqueNm).toBeGreaterThan(470);
+      expect(b58.peakTorqueNm).toBeLessThanOrEqual(505);
+      expect(b58.peakPowerKw).toBeGreaterThan(265);
+      expect(b58.peakPowerKw).toBeLessThan(300);
+    });
+
+    it('holds a broad forced-induction torque plateau and builds boost with speed', () => {
+      const config = SI_CONFIGS['ea888-b8'];
+      const low = siOperatingPoint(config, 1800, 100, 0);
+      const mid = siOperatingPoint(config, 3500, 100, 0);
+      expect(low.torqueNm).toBeGreaterThan(280);
+      expect(Math.abs(mid.torqueNm - low.torqueNm) / low.torqueNm).toBeLessThan(0.2);
+      expect(mid.boostBar).toBeGreaterThan(siOperatingPoint(config, 1200, 100, 0).boostBar);
+      expect(mid.lambda).toBeGreaterThan(0.8);
+      expect(mid.lambda).toBeLessThan(1);
+    });
+
+    it('models electric torque-speed envelopes, efficiency, and induction slip', () => {
+      const axial = ELECTRIC_CONFIGS['axial-flux-motor'];
+      const low = electricOperatingPoint(axial, 500, 100);
+      const high = electricOperatingPoint(axial, 11000, 100);
+      expect(low.torqueNm).toBeCloseTo(axial.peakTorqueNm, -1);
+      expect(high.torqueNm).toBeLessThan(low.torqueNm);
+      expect(low.efficiency).toBeGreaterThan(0.9);
+      expect(low.powerKW).toBeGreaterThan(0);
+
+      const induction = ELECTRIC_CONFIGS['induction-motor'];
+      const slipping = electricOperatingPoint(induction, 4000, 100);
+      expect(slipping.slipPct).toBeGreaterThan(0);
+      expect(slipping.slipPct).toBeLessThan(4);
+
+      const stepper = ELECTRIC_CONFIGS['stepper-motor'];
+      expect(electricOperatingPoint(stepper, 1400, 100).torqueNm).toBeLessThan(
+        electricOperatingPoint(stepper, 100, 100).torqueNm
+      );
+    });
+
+    it('constructs a closed 720-degree P-V loop and per-cylinder state map', () => {
+      const loop = getPvLoop('b58', 3500, 100, 0);
+      expect(loop.length).toBeGreaterThan(150);
+      expect(Math.max(...loop.map((point) => point.pressureBar))).toBeGreaterThan(30);
+      expect(Math.min(...loop.map((point) => point.pressureBar))).toBeGreaterThan(0);
+      const phases = new Set(loop.map((point) => point.phase));
+      expect(phases.has('intake')).toBe(true);
+      expect(phases.has('compression')).toBe(true);
+      expect(phases.has('power')).toBe(true);
+      expect(phases.has('exhaust')).toBe(true);
+
+      const states = getCylinderStates('b58', 3500, 100, 0, Math.PI * 0.75);
+      expect(states).toHaveLength(6);
+      expect(new Set(states.map((state) => state.index)).size).toBe(6);
+      states.forEach((state) => {
+        expect(state.pressureBar).toBeGreaterThan(0);
+        expect(state.volumeCc).toBeGreaterThan(0);
+      });
+    });
+
+    it('simulates boost lag, thermal warm-up, and crank rotation for the EA888', () => {
+      const simulator = new EngineSimulator('ea888-b8');
+      const inputs = {
+        throttlePct: 55,
+        altitudeMeters: 0,
+        afterburner: false,
+        active: true,
+      };
+      for (let i = 0; i < 240 * 2; i += 1) simulator.step(1 / 240, inputs);
+      const cruise = simulator.snapshot();
+      expect(cruise.rpm).toBeGreaterThan(3000);
+      expect(cruise.torqueNm).toBeGreaterThan(150);
+      expect(cruise.boostBar).toBeGreaterThan(0.5);
+
+      for (let i = 0; i < 240 * 3; i += 1) {
+        simulator.step(1 / 240, { ...inputs, throttlePct: 100 });
+      }
+      const snapshot = simulator.snapshot();
+      expect(snapshot.rpm).toBeGreaterThan(4000);
+      expect(snapshot.boostBar).toBeGreaterThan(0.7);
+      expect(snapshot.coolantTempC).toBeGreaterThan(30);
+      expect(snapshot.oilTempC).toBeGreaterThan(snapshot.coolantTempC);
+      expect(snapshot.torqueNm).toBeGreaterThanOrEqual(0);
+      expect(snapshot.turboRpm).toBeGreaterThan(100000);
+      expect(Number.isFinite(simulator.getCrankAngle())).toBe(true);
+    });
+
+    it('spools an axial-flux machine to commanded speed with bus current', () => {
+      const simulator = new EngineSimulator('axial-flux-motor');
+      for (let i = 0; i < 240 * 2; i += 1) {
+        simulator.step(1 / 240, {
+          throttlePct: 100,
+          altitudeMeters: 0,
+          afterburner: false,
+          active: true,
+        });
+      }
+      const snapshot = simulator.snapshot();
+      expect(snapshot.rpm).toBeGreaterThan(9000);
+      expect(snapshot.powerKW).toBeGreaterThan(100);
+      expect(snapshot.currentA).toBeGreaterThan(100);
+      expect(snapshot.voltageV).toBeGreaterThan(300);
+      expect(snapshot.thermalEfficiencyPct).toBeGreaterThan(88);
+    });
+
+    it('sanitizes NaN inputs for the new SI and electric models', () => {
+      const state = createMockViewerState('ea888-b8');
+      // @ts-expect-error test NaN input
+      state.throttle = NaN;
+      // @ts-expect-error test NaN input
+      state.altitude = NaN;
+      const telem = calculateTelemetry('ea888-b8', state, NaN);
+      expect(Number.isFinite(telem.rpm)).toBe(true);
+      expect(Number.isFinite(telem.torqueNm)).toBe(true);
+      expect(Number.isFinite(telem.powerKW)).toBe(true);
+      expect(Number.isFinite(telem.boostBar)).toBe(true);
+      expect(Number.isFinite(telem.lambda)).toBe(true);
+      expect(Number.isFinite(telem.manifoldPressureKpa)).toBe(true);
+
+      const electric = calculateTelemetry('induction-motor', { ...state, throttle: NaN }, NaN);
+      expect(Number.isFinite(electric.rpm)).toBe(true);
+      expect(Number.isFinite(electric.currentA)).toBe(true);
+      expect(Number.isFinite(electric.slipPct)).toBe(true);
     });
   });
 });

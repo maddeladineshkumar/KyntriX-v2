@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { Check, Search, Sparkles } from 'lucide-react';
 import { ENGINES } from './engineData';
 import type { EngineType } from './types';
+import { getDynoCurve } from './engineDynamics';
+import { isElectric, isPiston } from './studioConfig';
 import { ModalShell } from './studioUi';
 import { cx } from './studioUtils';
 
@@ -22,6 +24,50 @@ const FAMILIES: FamilyFilter[] = [
   'Electric drives',
   'Aerospace systems',
 ];
+
+/** Miniature power curve so each architecture reads at a glance. */
+const EngineSparkline: React.FC<{ engine: EngineType }> = ({ engine }) => {
+  const curve = useMemo(
+    () => (isPiston(engine) || isElectric(engine) ? getDynoCurve(engine) : null),
+    [engine]
+  );
+  if (!curve || curve.points.length < 2) return null;
+
+  const width = 132;
+  const height = 30;
+  const maxPower = Math.max(1, curve.peakPowerKw);
+  const maxRpm = Math.max(1, curve.redlineRpm);
+  const path = curve.points
+    .map((point, index) => {
+      const x = (point.rpm / maxRpm) * width;
+      const y = height - 3 - (point.powerKW / maxPower) * (height - 8);
+      return `${index === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(' ');
+
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="h-7 w-full"
+      role="img"
+      aria-label={`Power curve peaking at ${curve.peakPowerKw.toFixed(0)} kilowatts at ${curve.peakPowerRpm} rpm`}
+      preserveAspectRatio="none"
+    >
+      <defs>
+        <linearGradient id={`spark-${engine}`} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#d97706" stopOpacity="0.34" />
+          <stop offset="100%" stopColor="#d97706" stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+      <path
+        d={`${path} L${width},${height} L0,${height} Z`}
+        fill={`url(#spark-${engine})`}
+        stroke="none"
+      />
+      <path d={path} fill="none" stroke="#b45309" strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  );
+};
 
 export const StudioCatalog: React.FC<StudioCatalogProps> = ({ current, onSelect, onClose }) => {
   const [query, setQuery] = useState('');
@@ -54,7 +100,7 @@ export const StudioCatalog: React.FC<StudioCatalogProps> = ({ current, onSelect,
   return (
     <ModalShell
       title="Mechanism & Propulsion Collection"
-      subtitle="Nine interactive architectures spanning aviation gas turbines, reciprocating engines, rotary power, electric actuation, and a full flight airframe."
+      subtitle={`${entries.length} interactive architectures spanning aviation gas turbines, reciprocating engines, rotary power, electric drives, and a full flight airframe.`}
       icon={<Sparkles className="h-4 w-4" />}
       size="lg"
       onClose={onClose}
@@ -169,6 +215,21 @@ export const StudioCatalog: React.FC<StudioCatalogProps> = ({ current, onSelect,
                       </p>
 
                       <div className="mt-2 flex flex-wrap gap-1">
+                        {meta.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded-md bg-stone-900/90 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="mt-1">
+                        <EngineSparkline engine={id} />
+                      </div>
+
+                      <div className="mt-1 flex flex-wrap gap-1">
                         {meta.specs.slice(0, 2).map((spec) => (
                           <span
                             key={spec.label}

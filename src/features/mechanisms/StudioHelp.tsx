@@ -96,7 +96,7 @@ export const StudioHelp: React.FC<StudioHelpProps> = ({ onClose }) => (
           </SectionLabel>
           <p className="mt-1.5">
             Piston, rotary, and electric drives switch to a dyno stand with torque, brake power,
-            fuel flow, compression ratio, and efficiency — no irrelevant flight controls.
+            fuel flow, boost, efficiency, and a live dyno sweep — no irrelevant flight controls.
           </p>
         </section>
 
@@ -105,7 +105,8 @@ export const StudioHelp: React.FC<StudioHelpProps> = ({ onClose }) => (
             <Activity className="h-3.5 w-3.5" /> Telemetry & Tour
           </SectionLabel>
           <p className="mt-1.5">
-            The Data tab updates at 10 Hz and shows engine-relevant metrics. Guided tours step through
+            The Data tab runs a fixed 240 Hz powertrain solve and publishes telemetry about 12 times
+            per second, with dyno, P-V, and per-cylinder pressure views. Guided tours step through
             each architecture with camera framing, part highlighting, and progress dots.
           </p>
         </section>

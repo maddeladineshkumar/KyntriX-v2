@@ -4,10 +4,19 @@ export type EngineType =
   | 'turboprop'
   | 'turboshaft'
   | 'v8'
+  | 'v12'
+  | 'flat6'
   | 'inline4'
+  | 'ea888-b8'
+  | 'b58'
   | 'rotary'
   | 'bldc-motor'
+  | 'axial-flux-motor'
+  | 'induction-motor'
+  | 'stepper-motor'
   | 'airplane-jet';
+
+export type CyclePhase = 'intake' | 'compression' | 'power' | 'exhaust' | 'n/a';
 
 export interface EngineMeta {
   name: string;
@@ -17,6 +26,8 @@ export interface EngineMeta {
   category: 'AEROSPACE' | 'RECIPROCATING' | 'ROTARY' | 'ELECTROMECHANICAL';
   flow: boolean;
   description: string;
+  /** Short architecture badges shown in the catalogue and inspector. */
+  tags: string[];
   specs: {
     label: string;
     value: string;
@@ -93,6 +104,43 @@ export interface SimulationTelemetry {
   throttlePct: number;
   afterburnerActive: boolean;
   vectoringAngleDeg: number;
+  /** Absolute intake-manifold pressure, kPa. */
+  manifoldPressureKpa: number;
+  /** Gauge boost pressure, bar. */
+  boostBar: number;
+  /** Commanded air-fuel ratio. */
+  afr: number;
+  /** Excess-air ratio (lambda). */
+  lambda: number;
+  /** Ignition advance before top dead centre, crank degrees. */
+  sparkAdvanceDeg: number;
+  /** Brake mean effective pressure, kPa. */
+  bmepKpa: number;
+  /** Volumetric efficiency, percent. */
+  volumetricEfficiencyPct: number;
+  /** Turbocharger shaft speed, rpm. */
+  turboRpm: number;
+  coolantTempC: number;
+  oilTempC: number;
+  intakeAirTempC: number;
+  /** 0 = no knock, 1 = heavy audible knock. */
+  knockIntensity: number;
+  /** Brake specific fuel consumption, g/kWh. */
+  bsfcGPerKwh: number;
+  /** DC bus current, A. */
+  currentA: number;
+  /** DC bus voltage, V. */
+  voltageV: number;
+  /** Electrical input power, kW. */
+  electricalPowerKW: number;
+  /** Induction-motor rotor slip, percent. */
+  slipPct: number;
+  /** Current four-stroke phase of cylinder 1. */
+  cyclePhase: CyclePhase;
+  /** Crank angle within the 720-degree cycle, degrees. */
+  crankAngleDeg: number;
+  /** True while the rev limiter is cutting fuel. */
+  revLimiterActive: boolean;
 }
 
 export interface WalkthroughReturnState {

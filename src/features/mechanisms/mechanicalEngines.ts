@@ -202,25 +202,180 @@ export function createWorkshop(ctx: BuildContext) {
 }
 
 /** Piston engine builder with exact slider-crank kinematics: q = r*cos(a - beta) + sqrt(L^2 - r^2*sin^2(a - beta)) */
-export function buildPistonEngine(kind: 'v8' | 'inline4', ctx: BuildContext) {
+export interface MechanismFrame {
+  load: number;
+  rpm: number;
+  time: number;
+}
+
+export type MechanismAnimator = (theta: number, frame?: MechanismFrame) => void;
+
+export type PistonKind = 'v8' | 'v12' | 'flat6' | 'inline4' | 'ea888-b8' | 'b58';
+
+/** Static geometry of one reciprocating architecture. */
+interface PistonLayout {
+  /** Cylinders per bank. */
+  count: number;
+  /** Cant angle of each bank about the crank axis. */
+  banks: number[];
+  /** Offset of each bank along the crank axis (rods share a journal side by side). */
+  bankX: (bankIndex: number) => number;
+  positions: number[];
+  /** Crankpin angle of each cylinder within a bank. */
+  phases: number[];
+  /** Firing angle of each cylinder within the 720-degree cycle. */
+  fireAngles: number[];
+  /** Cycle offset applied to each successive bank for valve timing and ignition. */
+  bankFireOffset: number;
+  blockHalf: number;
+  camLength: number;
+  camSprocketX: number;
+  mainXs: number[];
+  flyX: number;
+  pulleyX: number;
+  boltCount: number;
+  spindle: number;
+}
+
+const SIX_SPAN = [-2.4, -1.44, -0.48, 0.48, 1.44, 2.4];
+const FOUR_SPAN = [-1.8, -0.6, 0.6, 1.8];
+const SEVEN_MAINS = [-3.2, -2.12, -1.04, 0, 1.04, 2.12, 3.2];
+const FIVE_MAINS = [-2.45, -1.2, 0, 1.2, 2.45];
+
+/**
+ * Geometry table for each piston architecture.
+ *
+ * A 90-degree cross-plane V8 shares every crankpin between banks, a 60-degree
+ * V12 spaces six throws 60 degrees apart so the banks alternate firing every
+ * 60 degrees, and a flat-six places three throws at 120 degrees with mirrored
+ * opposed pistons that reach TDC together and fire 360 degrees apart.
+ */
+function pistonLayout(kind: PistonKind): PistonLayout {
+  if (kind === 'v12') {
+    return {
+      count: 6,
+      banks: [-Math.PI / 6, Math.PI / 6],
+      bankX: (bankIndex) => (bankIndex === 0 ? -0.12 : 0.12),
+      positions: SIX_SPAN,
+      phases: [0, Math.PI / 3, (2 * Math.PI) / 3, Math.PI, (4 * Math.PI) / 3, (5 * Math.PI) / 3],
+      fireAngles: [0, Math.PI / 3, (2 * Math.PI) / 3, Math.PI, (4 * Math.PI) / 3, (5 * Math.PI) / 3],
+      bankFireOffset: Math.PI / 3,
+      blockHalf: 3.46,
+      camLength: 7.7,
+      camSprocketX: -4.18,
+      mainXs: SEVEN_MAINS,
+      flyX: 4.05,
+      pulleyX: -4.1,
+      boltCount: 18,
+      spindle: 8.3,
+    };
+  }
+  if (kind === 'flat6') {
+    return {
+      count: 3,
+      banks: [-Math.PI / 2, Math.PI / 2],
+      bankX: (bankIndex) => (bankIndex === 0 ? -0.1 : 0.1),
+      positions: [-1.36, 0, 1.36],
+      phases: [0, (2 * Math.PI) / 3, (4 * Math.PI) / 3],
+      fireAngles: [0, (2 * Math.PI) / 3, (4 * Math.PI) / 3],
+      bankFireOffset: Math.PI,
+      blockHalf: 1.95,
+      camLength: 4.4,
+      camSprocketX: -2.72,
+      mainXs: [-2.02, -0.7, 0.7, 2.02],
+      flyX: 2.6,
+      pulleyX: -2.62,
+      boltCount: 8,
+      spindle: 5.2,
+    };
+  }
+  if (kind === 'v8') {
+    return {
+      count: 4,
+      banks: [-Math.PI / 4, Math.PI / 4],
+      bankX: (bankIndex) => (bankIndex === 0 ? -0.105 : 0.105),
+      positions: FOUR_SPAN,
+      phases: [0, Math.PI / 2, (3 * Math.PI) / 2, Math.PI],
+      fireAngles: [0, Math.PI / 2, (3 * Math.PI) / 2, Math.PI],
+      bankFireOffset: Math.PI,
+      blockHalf: 2.52,
+      camLength: 5.4,
+      camSprocketX: -2.9,
+      mainXs: FIVE_MAINS,
+      flyX: 3,
+      pulleyX: -3.05,
+      boltCount: 12,
+      spindle: 5.8,
+    };
+  }
+  if (kind === 'b58') {
+    return {
+      count: 6,
+      banks: [0],
+      bankX: () => 0,
+      positions: SIX_SPAN,
+      phases: [0, (2 * Math.PI) / 3, (4 * Math.PI) / 3, (4 * Math.PI) / 3, (2 * Math.PI) / 3, 0],
+      fireAngles: [0, (8 * Math.PI) / 3, (4 * Math.PI) / 3, (10 * Math.PI) / 3, (2 * Math.PI) / 3, 2 * Math.PI],
+      bankFireOffset: 0,
+      blockHalf: 3.46,
+      camLength: 7.7,
+      camSprocketX: -4.18,
+      mainXs: SEVEN_MAINS,
+      flyX: 4.05,
+      pulleyX: -4.1,
+      boltCount: 18,
+      spindle: 8.3,
+    };
+  }
+  return {
+    count: 4,
+    banks: [0],
+    bankX: () => 0,
+    positions: FOUR_SPAN,
+    phases: [0, Math.PI, Math.PI, 0],
+    fireAngles: [0, 3 * Math.PI, Math.PI, 2 * Math.PI],
+    bankFireOffset: 0,
+    blockHalf: 2.52,
+    camLength: 5.4,
+    camSprocketX: -2.9,
+    mainXs: FIVE_MAINS,
+    flyX: 3,
+    pulleyX: -3.05,
+    boltCount: 12,
+    spindle: 5.8,
+  };
+}
+
+/**
+ * Parametric reciprocating-engine builder. Supports the 90-degree cross-plane
+ * V8, the 60-degree V12, a horizontally opposed flat-six, the 2.0-litre
+ * inline-four, the Audi EA888 Gen2 (B8) and BMW B58 inline-six. The same
+ * slider-crank constraint drives every piston; boosted variants add
+ * turbocharger, direct-injection and charge-cooling hardware.
+ */
+export function buildPistonEngine(kind: PistonKind, ctx: BuildContext): MechanismAnimator {
   const w = createWorkshop(ctx);
   const g = ctx.groups;
-  const v8 = kind === 'v8';
+  const layout = pistonLayout(kind);
+  const i6 = kind === 'b58';
+  const boosted = kind === 'ea888-b8' || i6 || kind === 'inline4';
+  const { count, positions, phases, fireAngles, banks, blockHalf, camLength, mainXs, flyX, pulleyX, spindle } =
+    layout;
+  const bankOffset = layout.bankX;
   const r = 0.45;
   const L = 1.75;
   const cy = -0.5;
+  const headWidth = blockHalf * 2 + 0.11;
+  const camSprocketX = layout.camSprocketX;
+  const boltCount = layout.boltCount;
 
   const crank = new T.Group();
   crank.position.y = cy;
   g.crankshaft.add(crank);
 
-  w.cylinder(0.17, 5.8, [0, 0, 0], w.steel, crank, 'Main Crankshaft Spindle', 'x');
-  const positions = [-1.8, -0.6, 0.6, 1.8];
-  const phases = v8
-    ? [0, Math.PI / 2, (3 * Math.PI) / 2, Math.PI]
-    : [0, Math.PI, Math.PI, 0];
+  w.cylinder(0.17, spindle, [0, 0, 0], w.steel, crank, 'Main Crankshaft Spindle', 'x');
 
-  for (let j = 0; j < 4; j++) {
+  for (let j = 0; j < count; j++) {
     const x = positions[j];
     const a = phases[j];
     w.cylinder(0.19, 0.62, [x, Math.cos(a) * r, Math.sin(a) * r], w.polish, crank, 'Crankpin Journal', 'x');
@@ -244,35 +399,44 @@ export function buildPistonEngine(kind: 'v8' | 'inline4', ctx: BuildContext) {
     }
   }
 
-  for (const x of [-2.45, -1.2, 0, 1.2, 2.45]) {
+  for (const x of mainXs) {
     w.cylinder(0.26, 0.22, [x, 0, 0], w.polish, crank, 'Main Journal', 'x');
     w.ring(0.29, 0.07, [x, cy, 0], w.bronze, g.block, 'Main Bearing Saddle', 'x');
   }
 
   const fly = w.gear(1.05, 72, 0.22, crank, 'Flywheel Starter Ring Gear');
-  fly.position.x = 3;
-  w.cylinder(0.72, 0.24, [3, 0, 0], w.dark, crank, 'Flywheel Inertia Disc', 'x');
+  fly.position.x = flyX;
+  w.cylinder(0.72, 0.24, [flyX, 0, 0], w.dark, crank, 'Flywheel Inertia Disc', 'x');
   for (let i = 0; i < 8; i++) {
-    w.bolt([3.15, Math.cos((i / 8) * TAU) * 0.44, Math.sin((i / 8) * TAU) * 0.44], crank, 'x');
+    w.bolt([flyX + 0.15, Math.cos((i / 8) * TAU) * 0.44, Math.sin((i / 8) * TAU) * 0.44], crank, 'x');
   }
 
   const pulley = w.gear(0.58, 32, 0.22, crank, 'Timing Chain Drive Sprocket');
-  pulley.position.x = -3.05;
+  pulley.position.x = pulleyX;
 
   const motions: Array<(a: number) => void> = [];
-  const banks = v8 ? [-Math.PI / 4, Math.PI / 4] : [0];
+  const combustionFlashes: T.Mesh[] = [];
+  const combustionMaterials: T.MeshBasicMaterial[] = [];
+  const combustionLights: T.PointLight[] = [];
+  const wrapCycle = (a: number) => ((a % (TAU * 2)) + TAU * 2) % (TAU * 2);
+  const valveLift = (phi: number, exhaust: boolean) => {
+    const open = exhaust ? 0.92 * Math.PI : 1.82 * Math.PI;
+    const close = exhaust ? 2.12 * Math.PI : 3.18 * Math.PI;
+    if (phi < open || phi > close) return 0;
+    return Math.sin((Math.PI * (phi - open)) / (close - open));
+  };
 
   banks.forEach((beta, bankIndex) => {
     const bank = new T.Group();
     bank.rotation.x = beta;
-    bank.position.set(v8 ? (bankIndex === 0 ? -0.105 : 0.105) : 0, cy, 0);
+    bank.position.set(bankOffset(bankIndex), cy, 0);
     g.block.add(bank);
 
     const blockShape = new T.Shape();
-    blockShape.moveTo(-2.52, -0.78);
-    blockShape.lineTo(2.52, -0.78);
-    blockShape.lineTo(2.52, 0.78);
-    blockShape.lineTo(-2.52, 0.78);
+    blockShape.moveTo(-blockHalf, -0.78);
+    blockShape.lineTo(blockHalf, -0.78);
+    blockShape.lineTo(blockHalf, 0.78);
+    blockShape.lineTo(-blockHalf, 0.78);
     blockShape.closePath();
 
     for (const x of positions) {
@@ -310,18 +474,25 @@ export function buildPistonEngine(kind: 'v8' | 'inline4', ctx: BuildContext) {
 
     const heads = new T.Group();
     heads.rotation.x = beta;
-    heads.position.set(v8 ? (bankIndex === 0 ? -0.105 : 0.105) : 0, cy, 0);
+    heads.position.set(bankOffset(bankIndex), cy, 0);
     g.heads.add(heads);
-    w.box([5.15, 0.34, 1.56], [0, 2.8, 0], w.head, heads, 'Cylinder Head Deck');
-    w.box([5.2, 0.28, 1.5], [0, 3.49, 0], w.cover, heads, 'Camshaft Valve Cover');
+    w.box([headWidth, 0.34, 1.56], [0, 2.8, 0], w.head, heads, 'Cylinder Head Deck');
+    w.box([headWidth + 0.06, 0.28, 1.5], [0, 3.49, 0], w.cover, heads, 'Camshaft Valve Cover');
 
-    for (let i = 0; i < 12; i++) {
-      w.bolt([-2.27 + (i % 6) * 0.91, 3.68, i < 6 ? -0.62 : 0.62], heads);
+    for (let i = 0; i < boltCount; i++) {
+      const perRow = boltCount / 2;
+      const bx = -(blockHalf - 0.25) + (i % perRow) * ((blockHalf - 0.25) * 2) / (perRow - 1);
+      w.bolt([bx, 3.68, i < perRow ? -0.62 : 0.62], heads);
     }
+
+    const combustionLight = new T.PointLight(0xff5a12, 0, 9, 2);
+    combustionLight.position.set(0, 2.68, 0);
+    heads.add(combustionLight);
+    combustionLights.push(combustionLight);
 
     const cams = new T.Group();
     cams.rotation.x = beta;
-    cams.position.set(v8 ? (bankIndex === 0 ? -0.105 : 0.105) : 0, cy, 0);
+    cams.position.set(bankOffset(bankIndex), cy, 0);
     g.valvetrain.add(cams);
 
     const camRotors: T.Group[] = [];
@@ -329,24 +500,25 @@ export function buildPistonEngine(kind: 'v8' | 'inline4', ctx: BuildContext) {
       const cam = new T.Group();
       cam.position.set(0, 3.25, z);
       cams.add(cam);
-      w.cylinder(0.1, 5.4, [0, 0, 0], w.polish, cam, 'DOHC Camshaft Shaft', 'x');
+      w.cylinder(0.1, camLength, [0, 0, 0], w.polish, cam, 'DOHC Camshaft Shaft', 'x');
       for (const x of positions) {
         const lobe = w.cylinder(0.15, 0.17, [x, 0.065, 0], w.dark, cam, 'Egg-Profile Cam Lobe', 'x');
         lobe.rotation.x = 0;
       }
       const wheel = w.gear(0.46, 40, 0.12, cam, 'Camshaft Timing Sprocket');
-      wheel.position.x = -2.9;
+      wheel.position.x = camSprocketX;
       camRotors.push(cam);
     }
 
     const manifolds = new T.Group();
     manifolds.rotation.x = beta;
-    manifolds.position.set(v8 ? (bankIndex === 0 ? -0.105 : 0.105) : 0, cy, 0);
+    manifolds.position.set(bankOffset(bankIndex), cy, 0);
     g.manifolds.add(manifolds);
 
-    for (let j = 0; j < 4; j++) {
+    for (let j = 0; j < count; j++) {
       const x = positions[j];
       const phase = phases[j];
+      const fire = fireAngles[j];
       const n = new T.Vector3(0, Math.cos(beta), Math.sin(beta));
 
       const piston = new T.Group();
@@ -365,12 +537,28 @@ export function buildPistonEngine(kind: 'v8' | 'inline4', ctx: BuildContext) {
         ],
         72
       );
-      w.mesh(pg, w.polish, piston, `Forged Piston #${bankIndex * 4 + j + 1}`);
+      w.mesh(pg, w.polish, piston, `Forged Piston #${bankIndex * count + j + 1}`);
 
       for (const y of [0.17, 0.09, -0.14]) {
         w.ring(0.482, 0.015, [0, y, 0], w.dark, piston, 'Gas Compression Ring');
       }
       w.cylinder(0.095, 0.92, [0, -0.06, 0], w.steel, piston, 'Gudgeon Wrist Pin', 'x');
+
+      // Combustion flash kernel, hidden until ignition.
+      const flashMat = new T.MeshBasicMaterial({
+        color: 0xff7a1a,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: T.AdditiveBlending,
+      });
+      const flash = w.mesh(new T.SphereGeometry(0.245, 18, 12), flashMat, heads, 'Combustion Flame Kernel');
+      flash.userData.excludeFromExplosion = true;
+      flash.position.set(x, 2.58, 0);
+      flash.scale.set(1, 0.62, 1);
+      flash.visible = false;
+      combustionMaterials.push(flashMat);
+      combustionFlashes.push(flash);
 
       const rod = new T.Group();
       g.rods.add(rod);
@@ -382,29 +570,24 @@ export function buildPistonEngine(kind: 'v8' | 'inline4', ctx: BuildContext) {
         w.bolt([0, y, 0.22], rod, 'z', 0.24);
       }
 
-      // Slider-crank constraint equation
+      // Slider-crank constraint equation, evaluated in the bank plane.
       motions.push((theta) => {
         const a = theta + phase;
         const pin = new T.Vector3(
-          x + (v8 ? (bankIndex === 0 ? -0.105 : 0.105) : 0),
+          x + bankOffset(bankIndex),
           cy + r * Math.cos(a),
           r * Math.sin(a)
         );
         const relative = a - beta;
-        const q =
-          r * Math.cos(relative) +
-          Math.sqrt(L * L - r * r * Math.sin(relative) ** 2);
-        const wrist = n
-          .clone()
-          .multiplyScalar(q)
-          .add(new T.Vector3(pin.x, cy, 0));
+        const q = r * Math.cos(relative) + Math.sqrt(L * L - r * r * Math.sin(relative) ** 2);
+        const wrist = n.clone().multiplyScalar(q).add(new T.Vector3(pin.x, cy, 0));
         piston.position.copy(wrist);
         const delta = wrist.clone().sub(pin);
         rod.position.copy(pin).add(wrist).multiplyScalar(0.5);
         rod.quaternion.setFromUnitVectors(Y_AXIS, delta.normalize());
       });
 
-      // Intake and exhaust valves
+      // Intake and exhaust poppet valves with realistic 720-degree timing.
       for (let v = 0; v < 2; v++) {
         const valve = new T.Group();
         valve.position.set(x, 3.0, v ? 0.35 : -0.35);
@@ -423,12 +606,8 @@ export function buildPistonEngine(kind: 'v8' | 'inline4', ctx: BuildContext) {
         w.tube(springPts, 0.014, w.dark, valve, 'Helical Valve Spring');
 
         motions.push((theta) => {
-          const c =
-            (((theta + phase + (j > 1 ? TAU : 0)) % (TAU * 2)) + TAU * 2) % (TAU * 2);
-          const start = v ? 3 * Math.PI : 0;
-          const lift =
-            c >= start && c <= start + Math.PI ? 0.13 * Math.sin(c - start) : 0;
-          valve.position.y = 3 - lift;
+          const phi = wrapCycle(theta - fire + bankIndex * layout.bankFireOffset);
+          valve.position.y = 3 - 0.14 * valveLift(phi, v === 1);
         });
       }
 
@@ -459,20 +638,179 @@ export function buildPistonEngine(kind: 'v8' | 'inline4', ctx: BuildContext) {
       );
     }
 
-    w.box([4.9, 0.45, 0.5], [0, 3.4, -0.95], w.dark, manifolds, 'Intake Plenum Chamber');
+    w.box([blockHalf * 2 - 0.12, 0.45, 0.5], [0, 3.4, -0.95], w.dark, manifolds, 'Intake Plenum Chamber');
     motions.push((theta) => camRotors.forEach((c) => (c.rotation.x = theta / 2)));
   });
 
-  w.box([5.4, 0.55, v8 ? 1.5 : 1.4], [0, -1.35, 0], w.cast, g.block, 'Oil Pan Sump');
-  for (const x of [-2.4, -1.2, 0, 1.2, 2.4]) {
+  w.box(
+    [blockHalf * 2 + 0.36, 0.55, kind === 'flat6' ? 2.7 : kind === 'v8' ? 1.5 : 1.4],
+    [0, -1.35, 0],
+    w.cast,
+    g.block,
+    'Oil Pan Sump'
+  );
+  for (const x of mainXs) {
     for (const z of [-0.66, 0.66]) {
       w.bolt([x, -1.04, z], g.block, 'y');
     }
   }
 
-  const animate = (theta: number) => {
+  let turboRotor: T.Group | null = null;
+  if (boosted) {
+    const turboGroup = new T.Group();
+    turboGroup.position.set(i6 ? 3.45 : 3.02, -0.15, 1.62);
+    g.turbo.add(turboGroup);
+
+    w.cylinder(0.42, 1.15, [0, 0, 0], w.dark, turboGroup, 'Turbocharger Centre Housing', 'x');
+    w.ring(0.56, 0.16, [-0.72, 0, 0], w.cast, turboGroup, 'Turbine Volute Housing', 'x');
+    w.ring(0.5, 0.15, [0.7, 0, 0], w.cast, turboGroup, 'Compressor Volute Housing', 'x');
+    w.cylinder(0.12, 0.34, [0, 0.5, 0.12], w.steel, turboGroup, 'Wastegate Actuator Can', 'y');
+    w.tube(
+      [
+        new T.Vector3(0, 0.32, 0.1),
+        new T.Vector3(0.1, 0.6, 0.2),
+        new T.Vector3(0.45, 0.62, 0.25),
+      ],
+      0.035,
+      w.bronze,
+      turboGroup,
+      'Wastegate Control Linkage'
+    );
+    w.tube(
+      [
+        new T.Vector3(-0.55, 0.25, 0.15),
+        new T.Vector3(-0.55, 0.75, 0.4),
+        new T.Vector3(-0.2, 1.0, 0.55),
+      ],
+      0.05,
+      w.steel,
+      turboGroup,
+      'Turbo Oil Feed Line'
+    );
+    w.tube(
+      [
+        new T.Vector3(0.82, -0.05, 0.12),
+        new T.Vector3(1.3, -0.35, 0.55),
+        new T.Vector3(1.6, -0.8, 0.9),
+      ],
+      0.11,
+      w.steel,
+      turboGroup,
+      'Turbo Downpipe'
+    );
+
+    turboRotor = new T.Group();
+    turboRotor.position.set(0, 0, 0);
+    turboGroup.add(turboRotor);
+    const turbineWheel = w.gear(0.34, 13, 0.12, turboRotor, 'Inconel Turbine Wheel');
+    turbineWheel.position.x = -0.62;
+    const compressorWheel = w.gear(0.31, 11, 0.12, turboRotor, 'Billet Compressor Wheel');
+    compressorWheel.position.x = 0.6;
+    w.cylinder(0.055, 1.4, [0, 0, 0], w.polish, turboRotor, 'Turbocharger Shaft', 'x');
+
+    const charge = new T.Group();
+    charge.position.set(i6 ? 2.2 : 1.9, 0.15, -1.65);
+    g.chargecooler.add(charge);
+    w.box([i6 ? 2.6 : 2.2, 0.9, 0.34], [0, 0, 0], w.titanium, charge, 'Charge-Air Intercooler Core');
+    w.box([0.24, 0.96, 0.42], [-(i6 ? 1.3 : 1.1), 0, 0], w.steel, charge, 'Intercooler End Tank');
+    w.box([0.24, 0.96, 0.42], [i6 ? 1.3 : 1.1, 0, 0], w.steel, charge, 'Intercooler End Tank');
+    w.tube(
+      [
+        new T.Vector3(i6 ? 1.4 : 1.2, 0, -1.65),
+        new T.Vector3(i6 ? 2.3 : 1.9, 0.3, -1.4),
+        new T.Vector3(3.25, 0.3, 1.5),
+        new T.Vector3(3.05, 0.15, 1.7),
+      ],
+      0.12,
+      w.polish,
+      g.chargecooler,
+      'Compressor-to-Intercooler Charge Pipe'
+    );
+    w.tube(
+      [
+        new T.Vector3(-(i6 ? 1.4 : 1.2), 0, -1.65),
+        new T.Vector3(-1.9, 0.35, -1.3),
+        new T.Vector3(-1.6, 0.7, -0.85),
+        new T.Vector3(-0.8, 0.9, -0.8),
+      ],
+      0.12,
+      w.polish,
+      g.chargecooler,
+      'Intercooler-to-Throttle Body Pipe'
+    );
+
+    const fuel = new T.Group();
+    g.fuel.add(fuel);
+    const railX = blockHalf - 0.3;
+    w.cylinder(0.065, railX * 2, [0, 3.12, 0.55], w.steel, fuel, 'High-Pressure Fuel Rail', 'x');
+    for (const x of positions) {
+      w.cylinder(0.055, 0.5, [x, 3.13, 0.3], w.steel, fuel, 'Direct Injector Body', 'z');
+      w.cylinder(0.035, 0.26, [x, 2.88, 0.05], w.polish, fuel, 'Injector Nozzle Tip', 'y');
+      w.tube(
+        [
+          new T.Vector3(x, 3.12, 0.55),
+          new T.Vector3(x, 3.2, 0.65),
+          new T.Vector3(x, 3.2, 0.85),
+        ],
+        0.025,
+        w.dark,
+        fuel,
+        'Injector Electrical Connector'
+      );
+    }
+    w.cylinder(0.18, 0.5, [-railX + 0.15, 3.0, 0.6], w.dark, fuel, 'Cam-Driven High-Pressure Pump', 'x');
+    w.tube(
+      [
+        new T.Vector3(-railX + 0.15, 3.0, 0.6),
+        new T.Vector3(-railX + 0.4, 3.12, 0.6),
+      ],
+      0.04,
+      w.steel,
+      fuel,
+      'High-Pressure Fuel Line'
+    );
+
+    if (i6) {
+      w.cylinder(0.16, 0.46, [-3.9, 3.32, 0.5], w.steel, g.valvetrain, 'Valvetronic Actuator Motor', 'x');
+      w.gear(0.2, 18, 0.1, g.valvetrain, 'Valvetronic Worm Drive').position.set(-3.68, 3.32, 0.5);
+    } else {
+      w.box([0.26, 2.5, 1.35], [-3.22, 1.45, 0], w.cover, g.valvetrain, 'Timing Chain Cover');
+      w.ring(0.66, 0.055, [-3.32, 0.0, 0], w.dark, g.valvetrain, 'Front Crankshaft Seal', 'x');
+    }
+  }
+
+  const animate: MechanismAnimator = (theta, frame) => {
     crank.rotation.x = theta;
     motions.forEach((fn) => fn(theta));
+
+    const load = frame ? Math.max(0, Math.min(1, frame.load)) : 0.55;
+    let peak = 0;
+    let peakX = 0;
+    for (let i = 0; i < combustionFlashes.length; i++) {
+      const cylinderIndex = i % count;
+      const fire = fireAngles[cylinderIndex];
+      const phi = wrapCycle(theta - fire);
+      // Flame kernel grows just after TDC and fades through the power stroke.
+      const burn =
+        phi < Math.PI
+          ? Math.max(0, Math.sin((phi / Math.PI) * Math.PI)) * Math.exp(-phi * 1.4)
+          : 0;
+      const intensity = Math.min(1, burn * (0.25 + load * 0.95));
+      const mat = combustionMaterials[i];
+      const flash = combustionFlashes[i];
+      mat.opacity = intensity * 0.85;
+      flash.visible = intensity > 0.015;
+      flash.scale.setScalar(0.7 + intensity * 0.9);
+      if (intensity > peak) {
+        peak = intensity;
+        peakX = positions[cylinderIndex];
+      }
+    }
+    for (const light of combustionLights) {
+      light.intensity = peak * 5.5;
+      light.position.x = peakX;
+    }
+    if (turboRotor) turboRotor.rotation.x = theta * 4.2;
   };
   animate(0);
   return animate;
@@ -853,6 +1191,287 @@ export function buildElectricMotor(ctx: BuildContext) {
     rotorGroup.rotation.x = theta;
     shaftGroup.rotation.x = theta;
     sunGear.rotation.x = theta;
+  };
+  animate(0);
+  return animate;
+}
+
+/** Double-stator axial-flux traction motor with segmented coreless windings. */
+export function buildAxialFluxMotor(ctx: BuildContext): MechanismAnimator {
+  const w = createWorkshop(ctx);
+  const g = ctx.groups;
+
+  const statorGroup = new T.Group();
+  g.stator.add(statorGroup);
+  for (const x of [-0.36, 0.36]) {
+    w.cylinder(1.62, 0.16, [x, 0, 0], w.steel, statorGroup, 'Segmented Stator Lamination Stack', 'x');
+    w.ring(1.58, 0.06, [x, 0, 0], w.dark, statorGroup, 'Stator Segment Retaining Ring', 'x');
+  }
+
+  const windingGroup = new T.Group();
+  g.windings.add(windingGroup);
+  for (let i = 0; i < 18; i++) {
+    const a = (i / 18) * TAU;
+    for (const x of [-0.49, 0.49]) {
+      const coil = w.box(
+        [0.34, 0.3, 0.17],
+        [x, Math.cos(a) * 1.18, Math.sin(a) * 1.18],
+        w.copper,
+        windingGroup,
+        `Toroidal Phase Coil #${i + 1}`
+      );
+      coil.rotation.x = a;
+    }
+  }
+
+  const rotorGroup = new T.Group();
+  g.rotor.add(rotorGroup);
+  w.cylinder(1.78, 0.2, [0, 0, 0], w.rubber, rotorGroup, 'Carbon-Fibre Rotor Carrier', 'x');
+  for (let i = 0; i < 16; i++) {
+    const a = (i / 16) * TAU;
+    const north = i % 2 === 0;
+    const magnet = w.box(
+      [0.22, 0.34, 0.18],
+      [0, Math.cos(a) * 1.5, Math.sin(a) * 1.5],
+      north ? w.polish : w.titanium,
+      rotorGroup,
+      `Segmented NdFeB Magnet #${i + 1} (${north ? 'N' : 'S'})`
+    );
+    magnet.rotation.x = a;
+  }
+
+  const shaftGroup = new T.Group();
+  g.shaft.add(shaftGroup);
+  w.cylinder(0.34, 4.4, [0, 0, 0], w.polish, shaftGroup, 'Hollow Direct-Drive Output Shaft', 'x');
+  w.cylinder(0.19, 4.5, [0, 0, 0], w.dark, shaftGroup, 'Hollow Shaft Bore', 'x');
+  w.ring(0.62, 0.12, [-1.35, 0, 0], w.bronze, shaftGroup, 'Angular-Contact Bearing', 'x');
+  w.ring(0.62, 0.12, [1.35, 0, 0], w.bronze, shaftGroup, 'Angular-Contact Bearing', 'x');
+
+  const inverter = new T.Group();
+  g.inverter.add(inverter);
+  w.box([1.05, 0.6, 0.9], [0, 1.95, 0], w.dark, inverter, 'SiC Traction Inverter Housing');
+  for (let i = 0; i < 6; i++) {
+    w.box([0.9, 0.04, 0.72], [0, 2.18 + i * 0.045, 0], w.steel, inverter, 'Inverter Cooling Fin');
+  }
+  w.cylinder(0.055, 2.2, [0, 1.65, 0.28], w.copper, inverter, 'Three-Phase Busbar', 'x');
+
+  const encoderGroup = new T.Group();
+  g.encoder.add(encoderGroup);
+  w.ring(0.74, 0.05, [-1.7, 0, 0], w.mat(0x8b5cf6, 0.4, 0.3), encoderGroup, 'Resolver Stator Ring', 'x');
+  w.cylinder(0.44, 0.08, [-1.7, 0, 0], w.dark, encoderGroup, 'Resolver Rotor Lamination', 'x');
+  w.box([0.16, 0.3, 0.44], [-1.85, 0.72, 0], w.dark, encoderGroup, 'Resolver Signal Connector');
+
+  const housingGroup = new T.Group();
+  g.housing.add(housingGroup);
+  for (const x of [-0.72, 0.72]) {
+    w.ring(2.02, 0.16, [x, 0, 0], w.cast, housingGroup, 'Cooling-Jacket End Flange', 'x');
+  }
+  w.cylinder(2.04, 0.95, [0, 0, 0], w.cast, housingGroup, 'Water-Cooled Outer Housing', 'x');
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * TAU;
+    w.box(
+      [1.0, 0.08, 0.18],
+      [0, Math.cos(a) * 2.08, Math.sin(a) * 2.08],
+      w.cast,
+      housingGroup,
+      'Axial Cooling Fin'
+    ).rotation.x = a;
+  }
+  w.box([0.55, 0.35, 0.45], [0, 2.2, 0.1], w.steel, housingGroup, 'Coolant Inlet Port');
+
+  const animate: MechanismAnimator = (theta) => {
+    rotorGroup.rotation.x = theta;
+    shaftGroup.rotation.x = theta;
+    inverter.rotation.x = Math.sin(theta * 0.2) * 0.01;
+  };
+  animate(0);
+  return animate;
+}
+
+/** Three-phase induction motor with a copper squirrel-cage rotor. */
+export function buildInductionMotor(ctx: BuildContext): MechanismAnimator {
+  const w = createWorkshop(ctx);
+  const g = ctx.groups;
+
+  const statorGroup = new T.Group();
+  g.stator.add(statorGroup);
+  w.cylinder(1.72, 2.0, [0, 0, 0], w.steel, statorGroup, 'Laminated Stator Core', 'x');
+  w.cylinder(1.36, 2.04, [0, 0, 0], w.dark, statorGroup, 'Stator Bore Lamination Stack', 'x');
+  for (let i = 0; i < 24; i++) {
+    const a = (i / 24) * TAU;
+    const tooth = w.box(
+      [1.96, 0.26, 0.12],
+      [0, Math.cos(a) * 1.3, Math.sin(a) * 1.3],
+      w.steel,
+      statorGroup,
+      `Stator Slot Tooth #${i + 1}`
+    );
+    tooth.rotation.x = a;
+  }
+
+  const windingGroup = new T.Group();
+  g.windings.add(windingGroup);
+  for (let i = 0; i < 24; i++) {
+    const a = (i / 24) * TAU;
+    const coil = w.box(
+      [1.7, 0.3, 0.2],
+      [0, Math.cos(a) * 1.52, Math.sin(a) * 1.52],
+      i % 3 === 0 ? w.copper : i % 3 === 1 ? w.bronze : w.polish,
+      windingGroup,
+      `Distributed ${i % 3 === 0 ? 'U' : i % 3 === 1 ? 'V' : 'W'}-Phase Coil #${i + 1}`
+    );
+    coil.rotation.x = a;
+  }
+
+  const rotorGroup = new T.Group();
+  g.rotor.add(rotorGroup);
+  w.cylinder(1.24, 1.9, [0, 0, 0], w.dark, rotorGroup, 'Rotor Lamination Core', 'x');
+  for (let i = 0; i < 28; i++) {
+    const a = (i / 28) * TAU;
+    w.cylinder(0.075, 2.0, [0, Math.cos(a) * 1.12, Math.sin(a) * 1.12], w.copper, rotorGroup, `Squirrel-Cage Copper Bar #${i + 1}`, 'x');
+  }
+  for (const x of [-0.98, 0.98]) {
+    w.ring(1.15, 0.1, [x, 0, 0], w.copper, rotorGroup, 'Short-Circuit End Ring', 'x');
+  }
+
+  const shaftGroup = new T.Group();
+  g.shaft.add(shaftGroup);
+  w.cylinder(0.3, 4.2, [0, 0, 0], w.polish, shaftGroup, 'Induction Rotor Shaft', 'x');
+  w.ring(0.48, 0.11, [-1.25, 0, 0], w.bronze, shaftGroup, 'Deep-Groove Ball Bearing', 'x');
+  w.ring(0.48, 0.11, [1.25, 0, 0], w.bronze, shaftGroup, 'Cylindrical Roller Bearing', 'x');
+
+  const encoderGroup = new T.Group();
+  g.encoder.add(encoderGroup);
+  w.ring(0.6, 0.04, [-1.6, 0, 0], w.mat(0x8b5cf6, 0.4, 0.3), encoderGroup, 'Incremental Encoder Disc', 'x');
+  w.box([0.12, 0.28, 0.4], [-1.75, 0.62, 0], w.dark, encoderGroup, 'Encoder Optical Read Head');
+
+  const housingGroup = new T.Group();
+  g.housing.add(housingGroup);
+  w.cylinder(1.9, 2.2, [0, 0, 0], w.cast, housingGroup, 'Motor Frame', 'x');
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * TAU;
+    w.box(
+      [2.1, 0.1, 0.2],
+      [0, Math.cos(a) * 2.0, Math.sin(a) * 2.0],
+      w.cast,
+      housingGroup,
+      'Axial Cooling Fin'
+    ).rotation.x = a;
+  }
+  w.box([0.7, 0.45, 0.55], [0, 2.05, 0], w.dark, housingGroup, 'Terminal Box');
+  w.cylinder(0.05, 0.6, [0, 2.4, 0.1], w.copper, housingGroup, 'Phase Terminal Stud', 'y');
+
+  const animate: MechanismAnimator = (theta) => {
+    rotorGroup.rotation.x = theta;
+    shaftGroup.rotation.x = theta;
+  };
+  animate(0);
+  return animate;
+}
+
+/** Two-phase hybrid stepper with visible tooth detents. */
+export function buildStepperMotor(ctx: BuildContext): MechanismAnimator {
+  const w = createWorkshop(ctx);
+  const g = ctx.groups;
+
+  const statorGroup = new T.Group();
+  g.stator.add(statorGroup);
+  w.cylinder(1.45, 1.5, [0, 0, 0], w.steel, statorGroup, 'Eight-Pole Stator Core', 'x');
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * TAU;
+    const pole = w.box(
+      [1.62, 0.5, 0.34],
+      [0, Math.cos(a) * 1.05, Math.sin(a) * 1.05],
+      w.steel,
+      statorGroup,
+      `Stator Pole #${i + 1}`
+    );
+    pole.rotation.x = a;
+    for (let k = -3; k <= 3; k++) {
+      w.box(
+        [1.5, 0.1, 0.28],
+        [k * 0.17, Math.cos(a) * 1.34, Math.sin(a) * 1.34],
+        w.dark,
+        statorGroup,
+        'Stator Pole Tooth'
+      ).rotation.x = a;
+    }
+  }
+
+  const windingGroup = new T.Group();
+  g.windings.add(windingGroup);
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * TAU;
+    const phaseA = i % 4 < 2;
+    const coil = w.box(
+      [0.62, 0.65, 0.42],
+      [0, Math.cos(a) * 1.03, Math.sin(a) * 1.03],
+      phaseA ? w.copper : w.bronze,
+      windingGroup,
+      `Phase ${phaseA ? 'A' : 'B'} Coil #${i + 1}`
+    );
+    coil.rotation.x = a;
+    w.tube(
+      [
+        new T.Vector3(0.38, Math.cos(a) * 1.03, Math.sin(a) * 1.03),
+        new T.Vector3(0.9, Math.cos(a) * 1.5, Math.sin(a) * 1.65),
+        new T.Vector3(1.2, Math.cos(a) * 1.9, Math.sin(a) * 2.0),
+      ],
+      0.035,
+      phaseA ? w.copper : w.bronze,
+      windingGroup,
+      'Phase Lead Wire'
+    );
+  }
+
+  const rotorGroup = new T.Group();
+  g.rotor.add(rotorGroup);
+  w.cylinder(0.82, 1.15, [0, 0, 0], w.dark, rotorGroup, 'Hybrid Rotor Magnet Core', 'x');
+  for (let i = 0; i < 50; i++) {
+    const a = (i / 50) * TAU;
+    w.box(
+      [0.5, 0.2, 0.12],
+      [0, Math.cos(a) * 0.86, Math.sin(a) * 0.86],
+      w.steel,
+      rotorGroup,
+      `Rotor Tooth #${i + 1}`
+    ).rotation.x = a;
+  }
+  w.ring(0.9, 0.08, [-0.5, 0, 0], w.dark, rotorGroup, 'Rotor Cup A', 'x');
+  w.ring(0.9, 0.08, [0.5, 0, 0], w.dark, rotorGroup, 'Rotor Cup B', 'x');
+
+  const shaftGroup = new T.Group();
+  g.shaft.add(shaftGroup);
+  w.cylinder(0.22, 3.4, [0, 0, 0], w.polish, shaftGroup, 'Precision Output Shaft', 'x');
+  w.ring(0.38, 0.09, [-0.95, 0, 0], w.bronze, shaftGroup, 'Preloaded Ball Bearing', 'x');
+  w.ring(0.38, 0.09, [0.95, 0, 0], w.bronze, shaftGroup, 'Preloaded Ball Bearing', 'x');
+
+  const encoderGroup = new T.Group();
+  g.encoder.add(encoderGroup);
+  w.ring(0.48, 0.035, [-1.3, 0, 0], w.mat(0x8b5cf6, 0.4, 0.3), encoderGroup, 'Magnetic Encoder Magnet', 'x');
+  w.box([0.1, 0.24, 0.32], [-1.45, 0.5, 0], w.dark, encoderGroup, 'Encoder ASIC Board');
+
+  const housingGroup = new T.Group();
+  g.housing.add(housingGroup);
+  for (const x of [-0.78, 0.78]) {
+    w.box([0.22, 2.25, 2.25], [x, 0, 0], w.cast, housingGroup, 'NEMA 34 End Plate');
+    for (const [y, z] of [
+      [0.82, 0.82],
+      [-0.82, 0.82],
+      [0.82, -0.82],
+      [-0.82, -0.82],
+    ]) {
+      w.cylinder(0.075, 0.28, [x + Math.sign(x) * 0.02, y, z], w.dark, housingGroup, 'Mounting Bolt Hole', 'x');
+    }
+  }
+  w.box([1.4, 0.3, 2.05], [0, 1.03, 0], w.cast, housingGroup, 'Motor Body Heatsink Rail');
+  w.box([0.55, 0.35, 0.5], [0.9, 0.2, 0.9], w.dark, housingGroup, 'Terminal Connector Block');
+
+  const stepAngle = TAU / 200;
+  const animate: MechanismAnimator = (theta) => {
+    const snapped = Math.round(theta / stepAngle) * stepAngle;
+    rotorGroup.rotation.x = snapped;
+    shaftGroup.rotation.x = snapped;
   };
   animate(0);
   return animate;

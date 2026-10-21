@@ -67,7 +67,10 @@ export class ExplosionController {
     const labelCounts = new Map<string, number>();
 
     for (const source of sources) {
-      const mat = (source.material as T.MeshStandardMaterial).clone();
+      // Combustion flashes and other additive FX use MeshBasicMaterial and are
+      // not part of the exploded hardware bill.
+      if (!(source.material instanceof T.MeshStandardMaterial)) continue;
+      const mat = source.material.clone();
       mat.clippingPlanes = [];
       mat.emissive.setHex(0);
       mat.emissiveIntensity = 0;
